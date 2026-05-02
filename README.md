@@ -9,32 +9,65 @@
 
 ---
 
-## 🚀 Enterprise Quickstart (V1.0.0)
+## 🚀 Installation (via JitPack)
 
-Gradle Lighthouse 2.0 is fully compatible with **Gradle Configuration Cache** and **Isolated Projects**.
+### 1. Root Configuration
+In your root `settings.gradle.kts`, ensure you have access to the JitPack repository:
 
-### 1. Root Project Setup
-Add the plugin to your root `build.gradle.kts`:
+```kotlin
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        google()
+        mavenCentral()
+        maven("https://jitpack.io")
+    }
+    resolutionStrategy {
+        eachPlugin {
+            if (target.id.id == "com.gradlelighthouse.plugin") {
+                useModule("com.github.dev-vikas-soni:gradle-lighthouse:${requested.version}")
+            }
+        }
+    }
+}
+```
 
+In your root `build.gradle.kts`:
 ```kotlin
 plugins {
     id("com.gradlelighthouse.plugin") version "1.0.0"
 }
+```
 
-lighthouse {
-    failOnSeverity.set("FATAL") // Optional: Block CI on critical issues
-    enableSarifReport.set(true)   // Optional: For GitHub Security Tab integration
+### 2. Module Configuration
+Apply the plugin to all sub-modules you wish to audit. For example, in a module's `build.gradle.kts`:
+```kotlin
+plugins {
+    id("com.android.application") // or com.android.library / org.jetbrains.kotlin.multiplatform
+    id("com.gradlelighthouse.plugin")
 }
 ```
 
-### 2. Module Setup
-Apply the plugin to all sub-modules you wish to audit:
+---
+
+## 🛠️ Configuration Options (DSL)
+
+Customize the strictness and behavior of the audit using the `lighthouse` block in any `build.gradle.kts` file where the plugin is applied:
 
 ```kotlin
-subprojects {
-    plugins.withId("com.android.application") { apply(plugin = "com.gradlelighthouse.plugin") }
-    plugins.withId("com.android.library") { apply(plugin = "com.gradlelighthouse.plugin") }
-    plugins.withId("org.jetbrains.kotlin.multiplatform") { apply(plugin = "com.gradlelighthouse.plugin") }
+lighthouse {
+    // === Core Toggles ===
+    enableBuildSpeed.set(true)         // Audits KAPT usage, caching, jetifier
+    enableAppSize.set(true)            // Checks minification, resources
+    enableStabilityCheck.set(true)     // R8 missing keep rules, reflection hazards
+    enableModernizationCheck.set(true) // XML vs Compose ratios
+    enableKmpCheck.set(true)           // Cross-platform structure validation
+    enablePlayPolicy.set(true)         // AndroidManifest.xml Play Store compliance
+    
+    // === CI/CD Integration ===
+    failOnSeverity.set("FATAL")        // Options: NONE, INFO, WARNING, ERROR, FATAL
+    enableSarifReport.set(true)        // Generate SARIF for GitHub Security Tab
+    enableJunitXmlReport.set(true)     // Generate JUnit for Jenkins/Bitrise Test Tabs
 }
 ```
 
