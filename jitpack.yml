@@ -1,6 +1,0 @@
-# JitPack configuration
-jdk:
-  - openjdk17
-# For Kotlin/Gradle compatibility
-install:
-  - ./gradlew publishToMavenLocal -x test
