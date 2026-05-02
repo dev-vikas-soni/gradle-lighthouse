@@ -1,4 +1,4 @@
-name: DroidUnplugged CI
+name: Gradle Lighthouse CI
 
 on:
   push:
@@ -42,11 +42,11 @@ jobs:
       - name: Run on Example Project
         run: |
           cd example
-          ../gradlew depAudit --no-daemon --stacktrace
+          ../gradlew lighthouseAudit --no-daemon --stacktrace
 
       - name: Verify Configuration Cache
-        run: ./gradlew depAudit --configuration-cache --no-daemon
-        continue-on-error: true  # Log but don't block until fully CC-safe
+        run: ./gradlew lighthouseAudit --configuration-cache --no-daemon
+        continue-on-error: true
 
       - name: Upload Reports
         if: always()
@@ -54,10 +54,9 @@ jobs:
         with:
           name: reports-${{ matrix.os }}-gradle${{ matrix.gradle }}-jdk${{ matrix.jdk }}
           path: |
-            **/build/reports/depAuditor/
+            **/build/reports/lighthouse/
           retention-days: 7
 
-  # Upload SARIF to GitHub Security tab (Linux + latest Gradle only)
   security:
     name: Security Analysis
     runs-on: ubuntu-latest
@@ -77,11 +76,11 @@ jobs:
         uses: gradle/actions/setup-gradle@v4
 
       - name: Run Audit
-        run: ./gradlew depAudit --no-daemon
+        run: ./gradlew lighthouseAudit --no-daemon
 
       - name: Upload SARIF
         uses: github/codeql-action/upload-sarif@v3
         if: always()
         with:
-          sarif_file: build/reports/depAuditor/
-          category: droidunplugged
+          sarif_file: build/reports/lighthouse/
+          category: gradle-lighthouse
