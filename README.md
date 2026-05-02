@@ -1,6 +1,6 @@
 # Gradle Lighthouse: 360° Architectural Intelligence for Android & KMP
 
-![Version: 1.0.5](https://img.shields.io/badge/Version-1.0.5--Enterprise-orange.svg)
+![Version: 1.0.6](https://img.shields.io/badge/Version-1.0.6--Enterprise-orange.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=flat&logo=kotlin&logoColor=white)
 ![Gradle](https://img.shields.io/badge/Gradle-8.x--Ready-green.svg)
@@ -35,7 +35,7 @@ pluginManagement {
 In your root `build.gradle.kts`:
 ```kotlin
 plugins {
-    id("com.gradlelighthouse.plugin") version "1.0.5"
+    id("com.gradlelighthouse.plugin") version "1.0.6"
 }
 ```
 

@@ -4,7 +4,8 @@ plugins {
     `maven-publish`
 }
 
-// group and version are picked up from gradle.properties for JitPack compatibility
+group = "com.gradlelighthouse"
+version = project.findProperty("version") ?: "1.0.6"
 
 repositories {
     mavenCentral()
