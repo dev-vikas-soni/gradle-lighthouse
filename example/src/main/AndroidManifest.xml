@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.example.app">
+
+    <!-- 1. DANGEROUS PERMISSION: Should trigger PlayPolicyAuditor High Risk Error -->
+    <uses-permission android:name="android.permission.READ_SMS" />
+    <uses-permission android:name="android.permission.INTERNET" /> <!-- Safe, ignored -->
+
+    <application>
+        <!-- 2. BAD ACTIVITY: Has intent-filter but missing android:exported -->
+        <activity android:name=".MainActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 3. GOOD ACTIVITY: Has Exported flag correctly set -->
+        <activity android:name=".SettingsActivity" android:exported="false">
+             <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+            </intent-filter>
+        </activity>
+
+        <!-- 4. BAD RECEIVER: Has intent filter, missing exported -->
+        <receiver android:name=".BootReceiver">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
+    </application>
+</manifest>

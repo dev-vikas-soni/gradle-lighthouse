@@ -1,0 +1,50 @@
+# IDE and Tooling
+.idea/
+**/.idea/
+.DS_Store
+**/.DS_Store
+*.iml
+.gradle
+/local.properties
+/build
+/bin
+/captures
+.externalNativeBuild
+.cxx
+local.properties
+
+# Log/OS Files
+*.log
+
+# Android Studio generated files and folders
+captures/
+.externalNativeBuild/
+.cxx/
+*.aab
+*.apk
+output-metadata.json
+
+# IntelliJ
+misc.xml
+deploymentTargetDropDown.xml
+render.experimental.xml
+
+# Keystore files
+*.jks
+*.keystore
+
+# Google Services (e.g. APIs or Firebase)
+google-services.json
+
+# Android Profiling
+*.hprof
+
+# Kotlin Cache
+.kotlin/
+.kotlin_module
+
+# VS Code
+.vscode/
+
+# Ignore nested build directories (like in the /example module)
+*/build/
