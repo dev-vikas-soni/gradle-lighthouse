@@ -105,15 +105,27 @@ class LighthousePlugin : Plugin<Project> {
         })
 
         task.dependencyData.set(project.provider {
-            val targetConfigNames = setOf(
+            val variant = extension.targetVariant.get()
+            val baseConfigNames = setOf(
                 "implementation", "api", "compileOnly",
-                "kapt", "ksp", "testImplementation", "debugImplementation",
-                "commonMainImplementation", "commonMainApi",
+                "kapt", "ksp", "commonMainImplementation", "commonMainApi",
                 "androidMainImplementation", "androidMainApi"
             )
+            
             project.configurations
                 .filter { config ->
-                    targetConfigNames.any { config.name.equals(it, ignoreCase = true) || config.name.contains(it, ignoreCase = true) }
+                    val name = config.name.toLowerCase()
+                    if (variant.isNotBlank()) {
+                        val v = variant.toLowerCase()
+                        // If variant is "release", include "implementation" (base) and "releaseImplementation" (variant specific).
+                        // Exclude "debugImplementation".
+                        val isBase = baseConfigNames.any { name == it.toLowerCase() }
+                        val isVariantSpecific = name.contains(v)
+                        isBase || isVariantSpecific
+                    } else {
+                        // Default: include all base configs and any configs containing them (e.g. debugImplementation)
+                        baseConfigNames.any { name.contains(it.toLowerCase()) }
+                    }
                 }
                 .flatMap { config ->
                     config.dependencies.filterIsInstance<ExternalDependency>().map { dep ->

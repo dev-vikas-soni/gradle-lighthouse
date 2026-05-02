@@ -50,13 +50,18 @@ plugins {
 
 ---
 
-## 🛠️ Configuration Options (DSL)
+## 🛠️ Zero Configuration (Out-of-the-Box)
 
-Customize the strictness and behavior of the audit using the `lighthouse` block in any `build.gradle.kts` file where the plugin is applied:
+Lighthouse is built around **Convention over Configuration**. By simply applying the plugin, **every auditor and CI/CD report is enabled by default!** 
+
+You only need to add the `lighthouse { ... }` block if you want to turn a specific feature **off**, target a specific build variant, or change the build-breaking threshold:
 
 ```kotlin
 lighthouse {
-    // === Core Toggles ===
+    // === Core Targeting ===
+    targetVariant.set("release")       // ONLY audit 'release' dependencies, ignores debug noise
+
+    // === Auditor Toggles (All TRUE by default) ===
     enableBuildSpeed.set(true)         // Audits KAPT usage, caching, jetifier
     enableAppSize.set(true)            // Checks minification, resources
     enableStabilityCheck.set(true)     // R8 missing keep rules, reflection hazards
@@ -64,8 +69,8 @@ lighthouse {
     enableKmpCheck.set(true)           // Cross-platform structure validation
     enablePlayPolicy.set(true)         // AndroidManifest.xml Play Store compliance
     
-    // === CI/CD Integration ===
-    failOnSeverity.set("FATAL")        // Options: NONE, INFO, WARNING, ERROR, FATAL
+    // === CI/CD Integration (All TRUE by default) ===
+    failOnSeverity.set("NONE")         // Options: NONE, INFO, WARNING, ERROR, FATAL
     enableSarifReport.set(true)        // Generate SARIF for GitHub Security Tab
     enableJunitXmlReport.set(true)     // Generate JUnit for Jenkins/Bitrise Test Tabs
 }

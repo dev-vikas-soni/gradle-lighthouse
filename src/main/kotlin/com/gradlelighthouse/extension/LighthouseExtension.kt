@@ -22,8 +22,15 @@ import org.gradle.api.provider.Property
 abstract class LighthouseExtension {
 
     // ==========================
-    // Auditor Toggles
+    // Core Toggles
     // ==========================
+
+    /** 
+     * Target a specific variant for auditing (e.g., "release", "productionRelease"). 
+     * If set, only dependencies matching this variant's configuration will be audited.
+     * Default: "" (audits all standard configurations like implementation, releaseImplementation, etc.)
+     */
+    abstract val targetVariant: Property<String>
 
     /** Enables analysis of unused dependencies, leaked APIs, and dynamic versions. Default: true */
     abstract val enableDependencyHealth: Property<Boolean>
@@ -80,6 +87,7 @@ abstract class LighthouseExtension {
 
     init {
         // Safe conventions (defaults) for all properties
+        targetVariant.convention("")
         enableDependencyHealth.convention(true)
         enablePlayPolicy.convention(true)
         enableCatalogMigration.convention(true)

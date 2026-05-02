@@ -79,23 +79,33 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
         val globalRank = HealthScoreEngine.ArchitectRank.fromScore(avgScore)
         val scoreColor = HealthScoreEngine.scoreColor(avgScore)
 
-        val moduleTilesHtml = reports.sortedByDescending { it.score }.joinToString("") { report ->
-            val color = HealthScoreEngine.scoreColor(report.score)
-            val rank = HealthScoreEngine.ArchitectRank.fromScore(report.score)
-            """
-            <div class="module-tile" style="border-top: 4px solid $color">
-                <div class="module-name">${esc(report.moduleName)}</div>
-                <div class="module-score" style="color: $color">${report.score}%</div>
-                <div class="module-rank">${rank.displayName}</div>
-                <div class="module-hint">${esc(report.topResolution)}</div>
-                <div class="module-stats">
-                    <span class="stat-fatal">${report.fatalCount}F</span>
-                    <span class="stat-error">${report.errorCount}E</span>
-                    <span class="stat-warn">${report.warningCount}W</span>
-                </div>
-                <a href="${esc(report.moduleName)}-index.html" class="view-link">View Report &rarr;</a>
-            </div>
-            """.trimIndent()
+        val groupedReports = reports.groupBy { it.layer }.toSortedMap()
+
+        val moduleTilesHtml = buildString {
+            groupedReports.forEach { (layerName, layerReports) ->
+                append("""<div class="layer-section" style="margin-bottom: 40px;">""")
+                append("""<h2 class="layer-title" style="font-size: 1.4rem; font-weight: 800; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px;">$layerName Layer <span style="font-size: 0.9rem; color: var(--text-dim); font-weight: 600;">(${layerReports.size} modules)</span></h2>""")
+                append("""<div class="health-grid">""")
+                layerReports.sortedBy { it.score }.forEach { report ->
+                    val color = HealthScoreEngine.scoreColor(report.score)
+                    val rank = HealthScoreEngine.ArchitectRank.fromScore(report.score)
+                    append("""
+                        <div class="module-tile" style="border-top: 4px solid $color">
+                            <div class="module-name">${esc(report.projectPath)}</div>
+                            <div class="module-score" style="color: $color">${report.score}%</div>
+                            <div class="module-rank">${rank.displayName}</div>
+                            <div class="module-hint">${esc(report.topResolution)}</div>
+                            <div class="module-stats">
+                                <span class="stat-fatal">${report.fatalCount}F</span>
+                                <span class="stat-error">${report.errorCount}E</span>
+                                <span class="stat-warn">${report.warningCount}W</span>
+                            </div>
+                            <a href="${esc(report.moduleName)}-index.html" class="view-link">View Report &rarr;</a>
+                        </div>
+                    """.trimIndent())
+                }
+                append("</div></div>")
+            }
         }
 
         val criticalBacklog = reports.filter { it.fatalCount > 0 || it.score < 70 }
@@ -105,13 +115,32 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
                 """
                 <div class="critical-item">
                     <div class="critical-header">
-                        <span class="critical-name">:${esc(report.moduleName)}</span>
+                        <span class="critical-name">${esc(report.projectPath)}</span>
                         <span class="critical-score" style="color: ${HealthScoreEngine.scoreColor(report.score)}">${report.score}%</span>
                     </div>
                     <div class="critical-hint">${esc(report.topResolution)}</div>
                 </div>
                 """.trimIndent()
             }
+            
+        val scoreEnginePanel = """
+            <div class="sidebar-card" style="background: var(--card); border-color: var(--border); margin-top: 30px;">
+                <div class="stat-label" style="color: var(--text); margin-bottom: 15px;">Scoring Engine</div>
+                <div style="font-size: 0.85rem; color: var(--text-dim); line-height: 1.6;">
+                    Health Score uses an exponential decay model to prioritize critical fixes without demoralizing teams:
+                    <div style="background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.8rem; margin: 10px 0; color: var(--text);">
+                        Score = 100 × 0.98<sup>(Total Impact)</sup>
+                    </div>
+                    <b>Impact Weights:</b>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><span style="color: var(--danger)">Fatal: 35.0</span></li>
+                        <li><span style="color: #ef4444">Error: 15.0</span></li>
+                        <li><span style="color: var(--warning)">Warning: 5.0</span></li>
+                        <li><span style="color: var(--info)">Info: 1.0</span></li>
+                    </ul>
+                </div>
+            </div>
+        """.trimIndent()
 
         val htmlContent = buildDashboardHtml(
             avgScore = avgScore,
@@ -122,6 +151,7 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
             totalErrors = totalErrors,
             moduleTilesHtml = moduleTilesHtml,
             criticalBacklog = criticalBacklog,
+            scoreEnginePanel = scoreEnginePanel,
             gradleVersion = gradleVersionStr.get()
         )
 
@@ -142,6 +172,7 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
         totalErrors: Int,
         moduleTilesHtml: String,
         criticalBacklog: String,
+        scoreEnginePanel: String,
         gradleVersion: String
     ): String = """
 <!DOCTYPE html>
@@ -249,15 +280,14 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
         <div class="main-grid">
             <div>
                 <div style="font-weight: 800; font-size: 1.3rem; margin-bottom: 25px; color: var(--text);">Module Health Map</div>
-                <div class="health-grid">
-                    $moduleTilesHtml
-                </div>
+                $moduleTilesHtml
             </div>
             <aside>
                 <div class="sidebar-card" style="background: rgba(220,38,38,0.03); border-color: rgba(220,38,38,0.15);">
                     <div class="stat-label" style="color: var(--danger); margin-bottom: 20px;">Critical Risk Backlog</div>
                     ${if (criticalBacklog.isBlank()) "<div style='color: var(--success); font-weight: 600;'>No critical risks. Excellent.</div>" else criticalBacklog}
                 </div>
+                $scoreEnginePanel
             </aside>
         </div>
 
@@ -276,6 +306,7 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
     private fun parseReportJson(json: String): ModuleReportData? {
         return try {
             val moduleName = extractJsonString(json, "module") ?: return null
+            val projectPath = extractJsonString(json, "path") ?: ""
             val score = extractJsonInt(json, "score") ?: 0
             val rank = extractJsonString(json, "rank") ?: "Unknown"
             val fatalCount = extractJsonInt(json, "fatalCount") ?: 0
@@ -283,7 +314,7 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
             val warningCount = extractJsonInt(json, "warningCount") ?: 0
             val topResolution = extractJsonString(json, "topResolution") ?: "Run audit for details."
 
-            ModuleReportData(moduleName, score, rank, fatalCount, errorCount, warningCount, topResolution)
+            ModuleReportData(moduleName, projectPath, score, rank, fatalCount, errorCount, warningCount, topResolution)
         } catch (_: Exception) {
             null
         }
@@ -314,11 +345,18 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
 
     data class ModuleReportData(
         val moduleName: String,
+        val projectPath: String,
         val score: Int,
         val rank: String,
         val fatalCount: Int,
         val errorCount: Int,
         val warningCount: Int,
         val topResolution: String
-    )
+    ) {
+        val layer: String get() {
+            if (projectPath.isBlank() || projectPath == ":") return "Root"
+            val segments = projectPath.split(":").filter { it.isNotEmpty() }
+            return if (segments.isNotEmpty()) segments.first().capitalize() else "Root"
+        }
+    }
 }

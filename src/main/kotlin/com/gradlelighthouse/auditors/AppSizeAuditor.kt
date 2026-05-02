@@ -23,33 +23,35 @@ class AppSizeAuditor : Auditor {
         val issues = mutableListOf<AuditIssue>()
         ConsoleLogger.auditorStart(name, "📦", "[SIZE]", "Scrutinizing resource management and shrinking rules...")
 
-        // 1. Check build file for shrinking configuration
-        val content = context.buildFileContent
-        if (content.isNotBlank()) {
-            if (!(content.contains("isMinifyEnabled = true") || content.contains("minifyEnabled true"))) {
-                issues.add(AuditIssue(
-                    category = name,
-                    severity = Severity.ERROR,
-                    title = "Code Shrinking (R8) Disabled",
-                    reasoning = "The 'isMinifyEnabled' flag is set to false or missing in your build script. This prevents R8 from performing tree-shaking and optimization.",
-                    impactAnalysis = "Massive binary bloat (estimated 5MB - 15MB) caused by unused methods, classes, and library overhead. This leads to higher 'Cancel' rates during Play Store downloads, especially in emerging markets.",
-                    resolution = "Set 'isMinifyEnabled = true' in your release build type. This will activate R8 to strip dead code and obfuscate your logic.",
-                    roiAfterFix = "Significant binary size reduction, improved startup time due to smaller DEX files, and basic protection against reverse-engineering.",
-                    sourceFile = context.buildFile.absolutePath
-                ))
-            }
+        // 1. Check build file for shrinking configuration (Application modules only)
+        if (context.pluginIds.contains("com.android.application")) {
+            val content = context.buildFileContent
+            if (content.isNotBlank()) {
+                if (!(content.contains("isMinifyEnabled = true") || content.contains("minifyEnabled true"))) {
+                    issues.add(AuditIssue(
+                        category = name,
+                        severity = Severity.ERROR,
+                        title = "Code Shrinking (R8) Disabled",
+                        reasoning = "The 'isMinifyEnabled' flag is set to false or missing in your build script. This prevents R8 from performing tree-shaking and optimization.",
+                        impactAnalysis = "Massive binary bloat (estimated 5MB - 15MB) caused by unused methods, classes, and library overhead. This leads to higher 'Cancel' rates during Play Store downloads, especially in emerging markets.",
+                        resolution = "Set 'isMinifyEnabled = true' in your release build type. This will activate R8 to strip dead code and obfuscate your logic.",
+                        roiAfterFix = "Significant binary size reduction, improved startup time due to smaller DEX files, and basic protection against reverse-engineering.",
+                        sourceFile = context.buildFile.absolutePath
+                    ))
+                }
 
-            if (!(content.contains("isShrinkResources = true") || content.contains("shrinkResources true"))) {
-                issues.add(AuditIssue(
-                    category = name,
-                    severity = Severity.ERROR,
-                    title = "Resource Shrinking (ResGuard) Disabled",
-                    reasoning = "Resource shrinking is disabled. R8 can remove dead code, but unused XML layouts, drawables, and raw assets require 'isShrinkResources' to be enabled.",
-                    impactAnalysis = "Unreferenced assets (like unused 4K images or legacy layouts) are still bundled into the final APK, wasting user storage space and bandwidth.",
-                    resolution = "Set 'isShrinkResources = true' in your release build type. Note: This requires 'isMinifyEnabled' to be true.",
-                    roiAfterFix = "Optimized asset handling and a leaner, more modular APK package.",
-                    sourceFile = context.buildFile.absolutePath
-                ))
+                if (!(content.contains("isShrinkResources = true") || content.contains("shrinkResources true"))) {
+                    issues.add(AuditIssue(
+                        category = name,
+                        severity = Severity.ERROR,
+                        title = "Resource Shrinking (ResGuard) Disabled",
+                        reasoning = "Resource shrinking is disabled. R8 can remove dead code, but unused XML layouts, drawables, and raw assets require 'isShrinkResources' to be enabled.",
+                        impactAnalysis = "Unreferenced assets (like unused 4K images or legacy layouts) are still bundled into the final APK, wasting user storage space and bandwidth.",
+                        resolution = "Set 'isShrinkResources = true' in your release build type. Note: This requires 'isMinifyEnabled' to be true.",
+                        roiAfterFix = "Optimized asset handling and a leaner, more modular APK package.",
+                        sourceFile = context.buildFile.absolutePath
+                    ))
+                }
             }
         }
 

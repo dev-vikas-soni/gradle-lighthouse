@@ -160,7 +160,7 @@ object HtmlReportGenerator {
     /**
      * Generates the module-report JSON for aggregation.
      */
-    fun generateJson(projectName: String, issues: List<AuditIssue>): String {
+    fun generateJson(projectName: String, projectPath: String, issues: List<AuditIssue>): String {
         val report = HealthScoreEngine.generateReport(issues)
 
         val topIssue = issues.maxByOrNull {
@@ -184,6 +184,7 @@ object HtmlReportGenerator {
 
         return """{
   "module": "${escJson(projectName)}",
+  "path": "${escJson(projectPath)}",
   "score": ${report.score},
   "rank": "${report.rank.displayName}",
   "fatalCount": ${report.fatalCount},

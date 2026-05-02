@@ -142,7 +142,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
         ConsoleLogger.info("📊", "[HTML]", "Report: ${htmlFile.toURI()}")
 
         // JSON Report (for aggregation)
-        val jsonContent = HtmlReportGenerator.generateJson(name, allIssues)
+        val jsonContent = HtmlReportGenerator.generateJson(name, modulePath.get(), allIssues)
         val jsonFile = File(outputDir, "module-report.json")
         jsonFile.writeText(jsonContent)
 
