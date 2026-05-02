@@ -4,8 +4,8 @@ plugins {
     `maven-publish`
 }
 
-group = "com.gradlelighthouse"
-version = project.findProperty("version") ?: "1.0.6"
+group = "com.github.dev-vikas-soni"
+version = "1.0.8"
 
 repositories {
     mavenCentral()
