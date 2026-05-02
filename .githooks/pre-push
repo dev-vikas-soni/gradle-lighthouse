@@ -1,0 +1,16 @@
+#!/bin/sh
+
+# Pre-push hook to ensure all tests pass before pushing to remote
+
+echo "Running Pre-Push Checks (Tests)..."
+
+# Run all tests
+./gradlew test --no-daemon
+
+if [ $? -ne 0 ]; then
+    echo "❌ Tests failed! Please fix failing tests before pushing."
+    exit 1
+fi
+
+echo "✅ Pre-Push Checks Passed!"
+exit 0

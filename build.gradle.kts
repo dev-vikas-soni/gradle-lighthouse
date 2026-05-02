@@ -2,6 +2,7 @@ plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
     `maven-publish`
+    id("io.gitlab.arturbosch.detekt") version "1.23.6"
 }
 
 group = "com.gradlelighthouse"

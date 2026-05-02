@@ -1,0 +1,17 @@
+#!/bin/sh
+
+# Pre-commit hook to ensure code quality before allowing a commit
+
+echo "Running Pre-Commit Checks (Detekt)..."
+
+# Run Detekt
+./gradlew detekt --no-daemon
+
+if [ $? -ne 0 ]; then
+    echo "❌ Detekt failed! Please fix the code quality issues before committing."
+    echo "Tip: You can run './gradlew detektGenerateConfig' to generate a baseline or fix formatting issues."
+    exit 1
+fi
+
+echo "✅ Pre-Commit Checks Passed!"
+exit 0
