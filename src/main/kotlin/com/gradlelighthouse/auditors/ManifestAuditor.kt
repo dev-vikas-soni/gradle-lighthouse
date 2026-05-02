@@ -62,7 +62,8 @@ class ManifestAuditor : Auditor {
         matches.forEach { match ->
             val tagContent = match.value
             if (!tagContent.contains("android:permission")) {
-                val componentType = match.groupValues[1].capitalize(Locale.ROOT)
+                val rawType = match.groupValues[1]
+                val componentType = if (rawType.isNotEmpty()) rawType.substring(0, 1).toUpperCase() + rawType.substring(1) else rawType
                 issues.add(AuditIssue(
                     category = "Security",
                     severity = Severity.ERROR,
