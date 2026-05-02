@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "com.gradlelighthouse"
-version = project.findProperty("version") ?: "2.0.0"
+version = project.findProperty("version") ?: "1.0.0"
 
 repositories {
     mavenCentral()

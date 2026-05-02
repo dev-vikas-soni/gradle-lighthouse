@@ -20,7 +20,7 @@ import java.util.Locale
  */
 object HtmlReportGenerator {
 
-    private const val PLUGIN_VERSION = "2.0.0"
+    private const val PLUGIN_VERSION = "1.0.0"
 
     /**
      * Generates a complete HTML report for a module.

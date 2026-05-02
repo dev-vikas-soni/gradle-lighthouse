@@ -1,6 +1,6 @@
 # Gradle Lighthouse: 360° Architectural Intelligence for Android & KMP
 
-![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0--Enterprise-orange.svg)
+![Version: 1.0.0](https://img.shields.io/badge/Version-1.0.0--Enterprise-orange.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=flat&logo=kotlin&logoColor=white)
 ![Gradle](https://img.shields.io/badge/Gradle-8.x--Ready-green.svg)
@@ -9,7 +9,7 @@
 
 ---
 
-## 🚀 Enterprise Quickstart (V2.0.0)
+## 🚀 Enterprise Quickstart (V1.0.0)
 
 Gradle Lighthouse 2.0 is fully compatible with **Gradle Configuration Cache** and **Isolated Projects**.
 
@@ -18,7 +18,7 @@ Add the plugin to your root `build.gradle.kts`:
 
 ```kotlin
 plugins {
-    id("com.gradlelighthouse.plugin") version "2.0.0"
+    id("com.gradlelighthouse.plugin") version "1.0.0"
 }
 
 lighthouse {
@@ -79,7 +79,7 @@ subprojects {
 | `./gradlew lighthouseAggregate` | `project-dashboard.html` | **The Global Dashboard**: Aggregated "Intelligence Map" with ROI prescriptions. |
 
 ### 🔒 CI/CD & Security Integration
-V2.0.0 introduces industry-standard reporting for automation:
+V1.0.0 introduces industry-standard reporting for automation:
 *   **SARIF v2.1.0**: Native integration with **GitHub Security Tab** for inline PR annotations.
 *   **JUnit XML**: View architectural violations as test failures in Jenkins, GitLab, or Azure DevOps.
 
