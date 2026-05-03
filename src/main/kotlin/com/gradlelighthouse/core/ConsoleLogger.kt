@@ -68,7 +68,7 @@ object ConsoleLogger {
      * └─────────────────────────────────────────────────┘
      */
     fun printDashboard(
-        moduleName: String,
+        @Suppress("UNUSED_PARAMETER") moduleName: String,
         score: Int,
         previousScore: Int?,
         rank: HealthScoreEngine.ArchitectRank,
@@ -133,7 +133,6 @@ object ConsoleLogger {
         }
 
         if (nextRank != null && (fatalCount + errorCount) > 0) {
-            val pointsNeeded = nextRank.minScore - score.coerceAtLeast(0)
             printBoxLine("${CYAN}💡 Fix ${fatalCount + errorCount} issues to unlock ${nextRank.displayName}${RESET}", width)
         }
 

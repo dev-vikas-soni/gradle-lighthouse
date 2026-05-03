@@ -18,6 +18,10 @@ import java.util.Properties
  */
 class LighthousePlugin : Plugin<Project> {
 
+    companion object {
+        const val VERSION = "2.0.0"
+    }
+
     override fun apply(project: Project) {
 
         val extension = project.extensions.create(
@@ -38,7 +42,7 @@ class LighthousePlugin : Plugin<Project> {
                     task.description = "Aggregates intelligence reports from all modules into a Global Dashboard."
 
                     task.gradleVersionStr.set(project.gradle.gradleVersion)
-                    task.pluginVersion.set(project.version.toString())
+                    task.pluginVersion.set(VERSION)
                     task.reportOutputDir.set(project.layout.buildDirectory.dir("reports/lighthouse"))
 
                     project.subprojects.forEach { sub ->
@@ -86,7 +90,7 @@ class LighthousePlugin : Plugin<Project> {
             }
         })
 
-        task.pluginVersion.set(project.version.toString())
+        task.pluginVersion.set(VERSION)
 
         task.gradleProps.set(project.provider {
             val propsFile = File(project.rootDir, "gradle.properties")
@@ -266,6 +270,7 @@ class LighthousePlugin : Plugin<Project> {
             proj.configurations.forEach { config ->
                 config.dependencies.forEach { dep ->
                     if (dep is org.gradle.api.artifacts.ProjectDependency) {
+                        @Suppress("DEPRECATION")
                         deps.add(dep.dependencyProject.path)
                     }
                 }

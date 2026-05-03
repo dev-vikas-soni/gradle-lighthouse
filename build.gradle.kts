@@ -12,11 +12,11 @@ repositories {
     mavenCentral()
 }
 
-// Ensure Kotlin compiles with modern settings
-tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
-    kotlinOptions {
-        jvmTarget = "17"
-        freeCompilerArgs = listOf("-Xjvm-default=all")
+// Modern Kotlin compiler options (no deprecation warnings)
+kotlin {
+    compilerOptions {
+        jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
+        freeCompilerArgs.addAll("-Xjvm-default=all")
     }
 }
 

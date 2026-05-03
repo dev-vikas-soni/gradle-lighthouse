@@ -126,9 +126,6 @@ class BuildSpeedAuditor : Auditor {
         }
 
         // 5. kotlin-android-extensions deprecation check
-        val hasAndroidExtensions = context.pluginIds.any {
-            it.contains("kotlin-android-extensions") || it.contains("kotlin-parcelize")
-        } || context.buildFileContent.contains("kotlin-android-extensions")
 
         if (context.buildFileContent.contains("kotlin-android-extensions")) {
             issues.add(AuditIssue(
