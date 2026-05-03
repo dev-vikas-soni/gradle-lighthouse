@@ -79,12 +79,11 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
                 append("""<div class="health-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">""")
                 layerReports.sortedBy { it.score }.forEach { report ->
                     val color = HealthScoreEngine.scoreColor(report.score)
-                    val rank = HealthScoreEngine.ArchitectRank.fromScore(report.score)
                     append("""
                         <div class="module-tile" style="border-top: 4px solid $color; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: var(--shadow);">
                             <div class="module-name" style="font-weight: 800; font-size: 1.1rem; margin-bottom: 5px;">${esc(report.projectPath)}</div>
                             <div class="module-score" style="font-size: 1.8rem; font-weight: 900; color: $color;">${report.score}%</div>
-                            <div class="module-rank" style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); font-weight: 700; margin-bottom: 10px;">${rank.displayName}</div>
+                            <div class="module-rank" style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); font-weight: 700; margin-bottom: 10px;">${report.rank}</div>
                             <div class="module-stats" style="display: flex; gap: 8px; margin-bottom: 15px;">
                                 <span class="stat-fatal" style="background: rgba(220,38,38,0.1); color: #dc2626; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800;">${report.fatalCount}F</span>
                                 <span class="stat-error" style="background: rgba(239,68,68,0.1); color: #ef4444; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800;">${report.errorCount}E</span>
@@ -215,12 +214,13 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
             val moduleName = extractJsonString(json, "module") ?: return null
             val projectPath = extractJsonString(json, "path") ?: ""
             val score = extractJsonInt(json, "score") ?: 0
+            val rank = extractJsonString(json, "rank") ?: "Unknown"
             val fatalCount = extractJsonInt(json, "fatalCount") ?: 0
             val errorCount = extractJsonInt(json, "errorCount") ?: 0
             val warningCount = extractJsonInt(json, "warningCount") ?: 0
             val topResolution = extractJsonString(json, "topResolution") ?: ""
 
-            ModuleReportData(moduleName, projectPath, score, fatalCount, errorCount, warningCount, topResolution)
+            ModuleReportData(moduleName, projectPath, score, rank, fatalCount, errorCount, warningCount, topResolution)
         } catch (_: Exception) {
             null
         }
@@ -242,6 +242,7 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
         val moduleName: String,
         val projectPath: String,
         val score: Int,
+        val rank: String,
         val fatalCount: Int,
         val errorCount: Int,
         val warningCount: Int,
