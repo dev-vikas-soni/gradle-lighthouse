@@ -1,6 +1,6 @@
 pluginManagement {
     repositories {
-        mavenLocal()
+        mavenLocal()  // For local testing before publishing
         gradlePluginPortal()
         google()
         mavenCentral()

@@ -36,20 +36,23 @@ object JunitXmlReportGenerator {
 
         val grouped = issues.groupBy { it.category }
 
-        // Generate categories as test suites
-        val categories = listOf(
+        // Generate categories as test suites — dynamically from actual issues + known defaults
+        val defaultCategories = listOf(
             "Stability", "Performance", "Modernization", "AppSize",
-            "DependencyHealth", "PlayStorePolicy", "Architecture"
+            "DependencyHealth", "PlayStorePolicy", "Architecture",
+            "BuildPerformance", "Security", "Quality", "Complexity",
+            "DependencyHygiene", "Trends"
         )
+        val allCategories = (defaultCategories + grouped.keys).distinct().sorted()
 
-        val testSuites = categories.map { category ->
+        val testSuites = allCategories.map { category ->
             val categoryIssues = grouped[category] ?: emptyList()
             buildTestSuite(moduleName, category, categoryIssues, timestamp)
         }
 
         return buildString {
             appendLine("""<?xml version="1.0" encoding="UTF-8"?>""")
-            appendLine("""<testsuites name="Gradle Lighthouse-$moduleName" tests="${issues.size + categories.size}" failures="${issues.count { it.severity == Severity.FATAL || it.severity == Severity.ERROR }}" errors="0" time="0">""")
+            appendLine("""<testsuites name="Gradle Lighthouse-$moduleName" tests="${issues.size + allCategories.size}" failures="${issues.count { it.severity == Severity.FATAL || it.severity == Severity.ERROR }}" errors="0" time="0">""")
             testSuites.forEach { appendLine(it) }
             appendLine("</testsuites>")
         }

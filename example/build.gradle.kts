@@ -1,6 +1,6 @@
 plugins {
     id("java-library")
-    id("com.gradlelighthouse.plugin") version "1.0.0"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.0.0"
 }
 
 // 1. DANGEROUS REPO: Should trigger JCenter Sunset Error
