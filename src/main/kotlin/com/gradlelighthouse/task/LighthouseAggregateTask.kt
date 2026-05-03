@@ -37,12 +37,15 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
     @get:Input
     abstract val gradleVersionStr: Property<String>
 
+    @get:Input
+    abstract val pluginVersion: Property<String>
+
     @get:OutputDirectory
     abstract val reportOutputDir: DirectoryProperty
 
     @TaskAction
     fun aggregate() {
-        ConsoleLogger.section("📊", "[AGG]", "Aggregating Gradle Lighthouse Global Intelligence (V${LighthouseTask.PLUGIN_VERSION})...")
+        ConsoleLogger.section("📊", "[AGG]", "Aggregating Gradle Lighthouse Global Intelligence (V${pluginVersion.get()})...")
 
         val moduleReports = mutableListOf<ModuleReportData>()
 
@@ -122,7 +125,7 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
                 </div>
                 """.trimIndent()
             }
-            
+
         val scoreEnginePanel = """
             <div class="sidebar-card" style="background: var(--card); border-color: var(--border); margin-top: 30px;">
                 <div class="stat-label" style="color: var(--text); margin-bottom: 15px;">Scoring Engine</div>
@@ -258,7 +261,7 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
             <div>
                 <h1>Gradle Lighthouse</h1>
                 <div style="display: flex; gap: 15px; margin-top:15px; align-items: center; flex-wrap: wrap;">
-                    <span class="env-badge">V${LighthouseTask.PLUGIN_VERSION}</span>
+                    <span class="env-badge">V${pluginVersion.get()}</span>
                     <span style="color: var(--text-dim); font-size: 0.95rem; font-weight: 600;">Global Intelligence Dashboard</span>
                     <span style="color: var(--border);">|</span>
                     <span style="color: var(--text-dim); font-size: 0.95rem; font-weight: 600;">Gradle $gradleVersion</span>
@@ -292,7 +295,7 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
         </div>
 
         <footer>
-            &copy; 2026 Gradle Lighthouse &bull; Architectural Intelligence Protocol V${LighthouseTask.PLUGIN_VERSION}
+            &copy; 2026 Gradle Lighthouse &bull; Architectural Intelligence Protocol V${pluginVersion.get()}
         </footer>
     </div>
 </body>

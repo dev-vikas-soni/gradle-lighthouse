@@ -37,6 +37,7 @@ class LighthousePlugin : Plugin<Project> {
                     task.description = "Aggregates intelligence reports from all modules into a Global Dashboard."
 
                     task.gradleVersionStr.set(project.gradle.gradleVersion)
+                    task.pluginVersion.set(project.version.toString())
                     task.reportOutputDir.set(project.layout.buildDirectory.dir("reports/lighthouse"))
 
                     project.subprojects.forEach { sub ->
@@ -84,6 +85,8 @@ class LighthousePlugin : Plugin<Project> {
             }
         })
 
+        task.pluginVersion.set(project.version.toString())
+
         task.gradleProps.set(project.provider {
             val propsFile = File(project.rootDir, "gradle.properties")
             if (propsFile.exists()) {
@@ -111,7 +114,7 @@ class LighthousePlugin : Plugin<Project> {
                 "kapt", "ksp", "commonMainImplementation", "commonMainApi",
                 "androidMainImplementation", "androidMainApi"
             )
-            
+
             project.configurations
                 .filter { config ->
                     val name = config.name.toLowerCase()
@@ -129,7 +132,7 @@ class LighthousePlugin : Plugin<Project> {
                 }
                 .flatMap { config ->
                     config.dependencies.filterIsInstance<ExternalDependency>().map { dep ->
-                        "${config.name}|${dep.group ?: ""}|${dep.name}|${dep.version ?: ""}"
+                        "${config.name}|${dep.group}|${dep.name}|${dep.version}"
                     }
                 }
         })

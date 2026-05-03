@@ -83,7 +83,7 @@ object SarifReportGenerator {
                 appendLine("""        "locations": [{""")
                 appendLine("""          "physicalLocation": {""")
                 appendLine("""            "artifactLocation": {""")
-                appendLine("""              "uri": "${escapeJson(issue.sourceFile!!)}",""")
+                appendLine("""              "uri": "${escapeJson(issue.sourceFile)}",""")
                 appendLine("""              "uriBaseId": "%SRCROOT%"  """)
                 appendLine("""            }""")
                 if (issue.sourceLine != null) {

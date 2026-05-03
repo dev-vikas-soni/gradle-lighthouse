@@ -33,10 +33,6 @@ import javax.inject.Inject
  */
 abstract class LighthouseTask @Inject constructor() : DefaultTask() {
 
-    companion object {
-        const val PLUGIN_VERSION = "1.0.0"
-    }
-
     init {
         group = "Gradle Lighthouse"
         description = "Executes the 360° Android Project Health and Architecture Audit."
@@ -51,6 +47,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
     @get:Input abstract val buildFileContent: Property<String>
     @get:Input abstract val gradleVersionStr: Property<String>
     @get:Input abstract val pluginIds: SetProperty<String>
+    @get:Input abstract val pluginVersion: Property<String>
     @get:Input abstract val gradleProps: MapProperty<String, String>
     @get:Input abstract val hasVersionCatalog: Property<Boolean>
 
@@ -93,8 +90,9 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
     @TaskAction
     fun execute() {
         val name = moduleName.get()
+        val version = pluginVersion.get()
 
-        ConsoleLogger.section("🚀", "[DU]", "Gradle Lighthouse Lighthouse V$PLUGIN_VERSION")
+        ConsoleLogger.section("🚀", "[LH]", "Gradle Lighthouse V$version")
         ConsoleLogger.info("📡", "[SCAN]", "Scanning Architecture: ${modulePath.get()}")
         ConsoleLogger.rule()
 
@@ -106,7 +104,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
         val activeAuditors = buildAuditorList(enabledSet)
 
         if (activeAuditors.isEmpty()) {
-            ConsoleLogger.warn("No auditors are enabled in the `lighthouseAuditor { }` block.")
+            ConsoleLogger.warn("No auditors are enabled in the `lighthouse { }` block.")
             return
         }
 
@@ -124,7 +122,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
                     title = "Auditor '${auditor.name}' encountered an error",
                     reasoning = "The ${auditor.name} auditor threw an exception during analysis: ${e.message}",
                     impactAnalysis = "This auditor's checks were skipped for this module. Other auditors ran normally.",
-                    resolution = "This may be a plugin bug. Please report it at https://github.com/dev-vikas-soni/gradle-dep-auditor/issues with your build.gradle.kts.",
+                    resolution = "This may be a plugin bug. Please report it at https://github.com/dev-vikas-soni/gradle-lighthouse/issues with your build.gradle.kts.",
                     roiAfterFix = "Full audit coverage for this module."
                 ))
             }
@@ -148,7 +146,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
 
         // SARIF Report
         if (enableSarif.get()) {
-            val sarifContent = SarifReportGenerator.generate(name, PLUGIN_VERSION, allIssues)
+            val sarifContent = SarifReportGenerator.generate(name, version, allIssues)
             val sarifFile = File(outputDir, "${name}-report.sarif")
             sarifFile.writeText(sarifContent)
             ConsoleLogger.info("🔒", "[SARIF]", "SARIF: ${sarifFile.toURI()}")

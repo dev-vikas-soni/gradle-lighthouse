@@ -4,9 +4,6 @@ plugins {
     `maven-publish`
 }
 
-group = "com.github.dev-vikas-soni"
-version = "1.0.8"
-
 repositories {
     mavenCentral()
 }

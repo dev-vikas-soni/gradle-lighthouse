@@ -1,6 +1,6 @@
 # Gradle Lighthouse: 360° Architectural Intelligence for Android & KMP
 
-![Version: 1.0.8](https://img.shields.io/badge/Version-1.0.8--Enterprise-orange.svg)
+![Version: 1.0.9](https://img.shields.io/badge/Version-1.0.9--Enterprise-orange.svg)
 ![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)
 ![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=flat&logo=kotlin&logoColor=white)
 ![Gradle](https://img.shields.io/badge/Gradle-8.x--Ready-green.svg)
@@ -35,7 +35,7 @@ pluginManagement {
 In your root `build.gradle.kts`:
 ```kotlin
 plugins {
-    id("com.gradlelighthouse.plugin") version "1.0.8"
+    id("com.gradlelighthouse.plugin") version "1.0.9"
 }
 ```
 
@@ -52,7 +52,7 @@ plugins {
 
 ## 🛠️ Zero Configuration (Out-of-the-Box)
 
-Lighthouse is built around **Convention over Configuration**. By simply applying the plugin, **every auditor and CI/CD report is enabled by default!** 
+Lighthouse is built around **Convention over Configuration**. By simply applying the plugin, **every auditor and CI/CD report is enabled by default!**
 
 You only need to add the `lighthouse { ... }` block if you want to turn a specific feature **off**, target a specific build variant, or change the build-breaking threshold:
 
@@ -68,7 +68,7 @@ lighthouse {
     enableModernizationCheck.set(true) // XML vs Compose ratios
     enableKmpCheck.set(true)           // Cross-platform structure validation
     enablePlayPolicy.set(true)         // AndroidManifest.xml Play Store compliance
-    
+
     // === CI/CD Integration (All TRUE by default) ===
     failOnSeverity.set("NONE")         // Options: NONE, INFO, WARNING, ERROR, FATAL
     enableSarifReport.set(true)        // Generate SARIF for GitHub Security Tab

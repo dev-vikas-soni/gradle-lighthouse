@@ -62,7 +62,6 @@ object JunitXmlReportGenerator {
         timestamp: String
     ): String {
         val failures = issues.count { it.severity == Severity.FATAL || it.severity == Severity.ERROR }
-        val warnings = issues.count { it.severity == Severity.WARNING }
 
         return buildString {
             appendLine("""  <testsuite name="$category" package="com.gradlelighthouse.$moduleName" tests="${issues.size + 1}" failures="$failures" errors="0" skipped="0" timestamp="$timestamp">""")
