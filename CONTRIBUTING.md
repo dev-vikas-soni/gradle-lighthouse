@@ -1,64 +1,65 @@
-# Contributing to Gradle Lighthouse
+# Contributing to Gradle Lighthouse 🏗️
 
-First off, thank you for considering contributing to Gradle Lighthouse. It's people like you that make Gradle Lighthouse such a great tool for the Android and Kotlin Multiplatform community.
+First off, thank you for considering contributing to Gradle Lighthouse! It's people like you that make Lighthouse a powerful tool for the global Android community.
 
-## Where do I go from here?
+## 🚀 How to Add a New Auditor
 
-If you've noticed a bug or have a feature request, check our [Issues](https://github.com/dev-vikas-soni/gradle-lighthouse/issues) first. If not, create a new issue!
+The heart of Lighthouse is its modular **Auditor** system. Adding a new check is as simple as implementing the `Auditor` interface.
 
-## Setting up your environment
+### 1. Create your Auditor class
+Create a new file in `src/main/kotlin/com/gradlelighthouse/auditors/`:
 
-1. Fork the repo and clone your fork.
-2. Ensure you have **JDK 17** installed.
-3. Open the project in IntelliJ IDEA or Android Studio.
-4. Run `./gradlew build` to ensure everything compiles and tests pass.
+```kotlin
+class MyCustomAuditor : Auditor {
+    override val name = "MyCustomCheck"
 
-## Adding a New Auditor
+    override fun audit(context: AuditContext): List<AuditIssue> {
+        val issues = mutableListOf<AuditIssue>()
 
-This is the most common contribution. Follow these steps:
+        // Use the context to inspect the project
+        if (context.pluginIds.contains("some-problematic-plugin")) {
+            issues.add(AuditIssue(
+                category = name,
+                severity = Severity.WARNING,
+                title = "Problematic Plugin Detected",
+                reasoning = "This plugin is known to slow down configuration by 200ms.",
+                impactAnalysis = "Slower developer feedback loop.",
+                resolution = "Migrate to the modern alternative: 'com.example.modern'.",
+                roiAfterFix = "Estimated 15s saved per day per developer."
+            ))
+        }
 
-1. Create a class implementing `Auditor` in `src/main/kotlin/com/gradlelighthouse/auditors/`.
-2. Your auditor must be **stateless** — all data comes from the `AuditContext` parameter.
-3. If new data is required from the Gradle graph:
-   - Add a field to `AuditContext`
-   - Capture it in `LighthousePlugin.kt` during configuration phase
-   - Add a serialized `@Input` property to `LighthouseTask`
-4. Add a toggle `Property<Boolean>` in `LighthouseExtension` with `.convention(true)`.
-5. Add the mapping in `LighthousePlugin.enabledAuditorNames` provider block.
-6. Register the auditor in `LighthouseTask.buildAuditorList()`.
-7. Write a test using `GradleRunner` + `@TempDir` in `src/test/kotlin/`.
-
-## Making Changes
-
-1. Create a new branch for your feature/bugfix.
-2. Make your changes in the `src/main/kotlin` directory.
-3. Run `./gradlew check` to run the test suite.
-4. Run `./gradlew validatePlugins` to ensure plugin descriptors are valid.
-
-## Coding Standards
-
-* Follow the standard [Kotlin style guide](https://kotlinlang.org/docs/coding-conventions.html).
-* All logic must be **Configuration Cache safe** — never access `Project` inside `@TaskAction` or auditors.
-* Keep auditors stateless and pure: `AuditContext → List<AuditIssue>`.
-* Use plain text in `AuditIssue` fields — HTML escaping is handled by report generators.
-* New categories? Update `JunitXmlReportGenerator` and `HtmlReportGenerator` category lists.
-
-## Submitting a Pull Request
-
-1. Push your branch to your fork.
-2. Open a Pull Request against the `main` branch.
-3. Fill out the Pull Request template completely.
-4. Ensure all CI checks pass (build + validatePlugins).
-5. A maintainer will review your code and may request changes.
-
-## Publishing
-
-Only maintainers can publish to Gradle Plugin Portal:
-
-```bash
-export GRADLE_PUBLISH_KEY=xxx
-export GRADLE_PUBLISH_SECRET=xxx
-./gradlew publishPlugins
+        return issues
+    }
+}
 ```
 
-Thank you for your contributions!
+### 2. Register it in `LighthouseTask.kt`
+Add your auditor to the `buildAuditorList` method:
+
+```kotlin
+if ("MyCustomCheck" in enabled) auditors.add(MyCustomAuditor())
+```
+
+### 3. Add a toggle in `LighthouseExtension.kt`
+Ensure users can opt-out if needed:
+
+```kotlin
+val enableMyCustomCheck: Property<Boolean> = objects.property(Boolean::class.java).convention(true)
+```
+
+## 🛠️ Development Setup
+
+1.  Clone the repo.
+2.  Run `./gradlew build` to verify the environment.
+3.  Use `./gradlew publishToMavenLocal` to test your changes in a local sample project.
+
+## ✅ Pull Request Guidelines
+
+- Ensure all new auditors are **Configuration Cache compatible** (only use data from the `AuditContext`).
+- Include a brief explanation of the "ROI" of your new check.
+- Update the `README.md` features table if you add a major new capability.
+
+---
+
+**Happy coding! Together, we'll build the fastest Android projects on earth.**
