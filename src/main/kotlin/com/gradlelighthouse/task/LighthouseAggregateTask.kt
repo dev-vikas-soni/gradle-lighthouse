@@ -111,6 +111,25 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
                 """.trimIndent()
             }
 
+        val scoreEnginePanel = """
+            <div class="sidebar-card" style="background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 24px; box-shadow: var(--shadow); margin-top: 30px;">
+                <div class="stat-label" style="color: var(--text); margin-bottom: 15px;">Scoring Engine</div>
+                <div style="font-size: 0.85rem; color: var(--text-dim); line-height: 1.6;">
+                    Health Score uses an exponential decay model to prioritize critical fixes without demoralizing teams:
+                    <div style="background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.8rem; margin: 10px 0; color: var(--text);">
+                        Score = 100 × 0.98<sup>(Total Impact)</sup>
+                    </div>
+                    <b>Impact Weights:</b>
+                    <ul style="margin-left: 20px; margin-top: 5px;">
+                        <li><span style="color: var(--danger)">Fatal: 35.0</span></li>
+                        <li><span style="color: #ef4444">Error: 15.0</span></li>
+                        <li><span style="color: var(--warning)">Warning: 5.0</span></li>
+                        <li><span style="color: var(--info)">Info: 1.0</span></li>
+                    </ul>
+                </div>
+            </div>
+        """.trimIndent()
+
         val htmlContent = buildDashboardHtml(
             avgScore = avgScore,
             scoreColor = scoreColor,
@@ -120,6 +139,7 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
             totalErrors = totalErrors,
             moduleTilesHtml = moduleTilesHtml,
             criticalBacklog = criticalBacklog,
+            scoreEnginePanel = scoreEnginePanel,
             gradleVersion = gradleVersionStr.get()
         )
 
@@ -136,6 +156,7 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
         totalErrors: Int,
         moduleTilesHtml: String,
         criticalBacklog: String,
+        scoreEnginePanel: String,
         gradleVersion: String
     ): String = """
 <!DOCTYPE html>
@@ -198,6 +219,7 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
                     <div class="stat-label" style="color: var(--danger); margin-bottom: 20px;">Critical Risks</div>
                     $criticalBacklog
                 </div>
+                $scoreEnginePanel
             </aside>
         </div>
 
