@@ -69,27 +69,33 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
         val globalRank = HealthScoreEngine.ArchitectRank.fromScore(avgScore)
         val scoreColor = HealthScoreEngine.scoreColor(avgScore)
 
-        // Grouping logic: identifies the architectural layer (app, core, data, domain, etc.)
+        // Grouping logic: identifies the architectural layer (app, core, data, domain, feature, etc.)
         val groupedReports = reports.groupBy { it.layer }.toSortedMap()
 
         val moduleTilesHtml = buildString {
             groupedReports.forEach { (layerName, layerReports) ->
-                append("""<div class="layer-section" style="margin-bottom: 40px; width: 100%;">""")
-                append("""<h2 class="layer-title" style="font-size: 1.5rem; font-weight: 800; color: var(--text); border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 20px; text-transform: capitalize;">$layerName</h2>""")
-                append("""<div class="health-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px;">""")
-                layerReports.sortedBy { it.score }.forEach { report ->
+                append("""<div class="layer-section" style="margin-bottom: 50px; width: 100%;">""")
+                append("""<h2 class="layer-title" style="font-size: 1.6rem; font-weight: 800; color: var(--text); border-bottom: 3px solid var(--accent); padding-bottom: 8px; margin-bottom: 25px; text-transform: uppercase; letter-spacing: 0.05em;">$layerName Layer</h2>""")
+                append("""<div class="health-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 24px;">""")
+
+                // Sort modules by path within their layer
+                layerReports.sortedBy { it.projectPath }.forEach { report ->
                     val color = HealthScoreEngine.scoreColor(report.score)
                     append("""
-                        <div class="module-tile" style="border-top: 4px solid $color; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: var(--shadow);">
-                            <div class="module-name" style="font-weight: 800; font-size: 1.1rem; margin-bottom: 5px;">${esc(report.projectPath)}</div>
-                            <div class="module-score" style="font-size: 1.8rem; font-weight: 900; color: $color;">${report.score}%</div>
-                            <div class="module-rank" style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); font-weight: 700; margin-bottom: 10px;">${report.rank}</div>
-                            <div class="module-stats" style="display: flex; gap: 8px; margin-bottom: 15px;">
-                                <span class="stat-fatal" style="background: rgba(220,38,38,0.1); color: #dc2626; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800;">${report.fatalCount}F</span>
-                                <span class="stat-error" style="background: rgba(239,68,68,0.1); color: #ef4444; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800;">${report.errorCount}E</span>
-                                <span class="stat-warn" style="background: rgba(245,158,11,0.1); color: #f59e0b; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800;">${report.warningCount}W</span>
+                        <div class="module-tile" style="border-top: 4px solid $color; background: var(--card); border: 1px solid var(--border); border-radius: 16px; padding: 24px; box-shadow: var(--shadow); transition: transform 0.2s;">
+                            <div class="module-name" style="font-weight: 800; font-size: 1.15rem; margin-bottom: 6px; color: var(--text);">${esc(report.projectPath)}</div>
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 15px;">
+                                <div>
+                                    <div class="module-score" style="font-size: 2rem; font-weight: 900; color: $color; line-height: 1;">${report.score}%</div>
+                                    <div class="module-rank" style="font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); font-weight: 700; margin-top: 4px;">${report.rank}</div>
+                                </div>
+                                <div class="module-stats" style="display: flex; gap: 6px;">
+                                    <span class="stat-fatal" style="background: rgba(220,38,38,0.1); color: #dc2626; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800;">${report.fatalCount}F</span>
+                                    <span class="stat-error" style="background: rgba(239,68,68,0.1); color: #ef4444; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800;">${report.errorCount}E</span>
+                                    <span class="stat-warn" style="background: rgba(245,158,11,0.1); color: #f59e0b; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800;">${report.warningCount}W</span>
+                                </div>
                             </div>
-                            <a href="${esc(report.moduleName)}-index.html" style="text-decoration: none; font-weight: 800; font-size: 0.8rem; color: var(--accent); text-transform: uppercase;">View Report &rarr;</a>
+                            <a href="${esc(report.moduleName)}-index.html" style="display: inline-block; text-decoration: none; font-weight: 800; font-size: 0.8rem; color: var(--accent); text-transform: uppercase; border: 1px solid var(--accent); padding: 8px 16px; border-radius: 8px; transition: all 0.2s;">View Full Audit &rarr;</a>
                         </div>
                     """.trimIndent())
                 }
@@ -113,18 +119,18 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
 
         val scoreEnginePanel = """
             <div class="sidebar-card" style="background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 24px; box-shadow: var(--shadow); margin-top: 30px;">
-                <div class="stat-label" style="color: var(--text); margin-bottom: 15px;">Scoring Engine</div>
+                <div class="stat-label" style="color: var(--text); margin-bottom: 15px; font-weight: 800; font-size: 0.8rem; text-transform: uppercase;">Scoring Engine</div>
                 <div style="font-size: 0.85rem; color: var(--text-dim); line-height: 1.6;">
                     Health Score uses an exponential decay model to prioritize critical fixes without demoralizing teams:
-                    <div style="background: rgba(0,0,0,0.05); padding: 10px; border-radius: 8px; font-family: monospace; font-size: 0.8rem; margin: 10px 0; color: var(--text);">
+                    <div style="background: rgba(0,0,0,0.05); padding: 12px; border-radius: 10px; font-family: 'SF Mono', monospace; font-size: 0.85rem; margin: 12px 0; color: var(--text); border: 1px solid var(--border);">
                         Score = 100 × 0.98<sup>(Total Impact)</sup>
                     </div>
                     <b>Impact Weights:</b>
-                    <ul style="margin-left: 20px; margin-top: 5px;">
-                        <li><span style="color: var(--danger)">Fatal: 35.0</span></li>
-                        <li><span style="color: #ef4444">Error: 15.0</span></li>
-                        <li><span style="color: var(--warning)">Warning: 5.0</span></li>
-                        <li><span style="color: var(--info)">Info: 1.0</span></li>
+                    <ul style="margin-left: 20px; margin-top: 8px; list-style-type: none;">
+                        <li><span style="color: var(--danger); font-weight: 700;">Fatal: 35.0</span></li>
+                        <li><span style="color: #ef4444; font-weight: 700;">Error: 15.0</span></li>
+                        <li><span style="color: var(--warning); font-weight: 700;">Warning: 5.0</span></li>
+                        <li><span style="color: var(--info); font-weight: 700;">Info: 1.0</span></li>
                     </ul>
                 </div>
             </div>
@@ -179,17 +185,18 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
             }
         }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: -apple-system, system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.5; }
         .container { max-width: 1400px; margin: 0 auto; padding: 60px 40px; }
         header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 60px; }
-        h1 { font-weight: 900; font-size: 3rem; color: var(--accent); }
-        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 50px; }
-        .stat-card { background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 24px; box-shadow: var(--shadow); }
-        .stat-val { font-size: 2.5rem; font-weight: 800; }
-        .stat-label { font-size: 0.75rem; text-transform: uppercase; color: var(--text-dim); font-weight: 800; margin-top: 5px; }
+        h1 { font-weight: 900; font-size: 3.5rem; color: var(--accent); margin: 0; }
+        .stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px; margin-bottom: 60px; }
+        .stat-card { background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 24px; box-shadow: var(--shadow); text-align: center; }
+        .stat-val { font-size: 2.8rem; font-weight: 800; line-height: 1.2; }
+        .stat-label { font-size: 0.8rem; text-transform: uppercase; color: var(--text-dim); font-weight: 800; margin-top: 8px; letter-spacing: 0.05em; }
         .main-grid { display: grid; grid-template-columns: 3fr 1fr; gap: 40px; }
         .sidebar-card { background: var(--card); border: 1px solid var(--border); padding: 30px; border-radius: 24px; box-shadow: var(--shadow); }
-        footer { margin-top: 100px; text-align: center; color: var(--text-dim); font-size: 0.8rem; padding: 40px 0; border-top: 1px solid var(--border); }
+        footer { margin-top: 100px; text-align: center; color: var(--text-dim); font-size: 0.85rem; padding: 60px 0; border-top: 1px solid var(--border); }
+        .module-tile:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); border-color: var(--accent) !important; }
     </style>
 </head>
 <body>
@@ -197,11 +204,13 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
         <header>
             <div>
                 <h1>Gradle Lighthouse</h1>
-                <div style="margin-top:10px; color: var(--text-dim); font-weight: 600;">Global Dashboard &bull; Gradle $gradleVersion &bull; V${pluginVersion.get()}</div>
+                <div style="margin-top:12px; color: var(--text-dim); font-weight: 600; font-size: 1.1rem;">
+                    Global Dashboard &bull; Gradle $gradleVersion &bull; V${pluginVersion.get()}
+                </div>
             </div>
             <div style="text-align: right">
                 <div class="stat-label">Project Maturity</div>
-                <div style="font-size: 1.8rem; font-weight: 900; color: var(--accent)">${globalRank.displayName}</div>
+                <div style="font-size: 2rem; font-weight: 900; color: var(--accent)">${globalRank.displayName}</div>
             </div>
         </header>
 
@@ -216,15 +225,15 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
             <div>$moduleTilesHtml</div>
             <aside>
                 <div class="sidebar-card">
-                    <div class="stat-label" style="color: var(--danger); margin-bottom: 20px;">Critical Risks</div>
-                    $criticalBacklog
+                    <div class="stat-label" style="color: var(--danger); margin-bottom: 20px; font-size: 0.8rem;">Critical Risks</div>
+                    ${if (criticalBacklog.isEmpty()) "<div style='color: var(--success); font-weight: 700;'>No high-risk modules found.</div>" else criticalBacklog}
                 </div>
                 $scoreEnginePanel
             </aside>
         </div>
 
         <footer>
-            &copy; 2026 Gradle Lighthouse Protocol V${pluginVersion.get()}
+            &copy; 2026 Gradle Lighthouse &bull; Architectural Intelligence Protocol V${pluginVersion.get()}
         </footer>
     </div>
 </body>
@@ -234,16 +243,17 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
     private fun parseReportJson(json: String): ModuleReportData? {
         return try {
             val moduleName = extractJsonString(json, "module") ?: return null
-            val projectPath = extractJsonString(json, "path") ?: ""
+            val projectPath = extractJsonString(json, "path") ?: ":$moduleName"
             val score = extractJsonInt(json, "score") ?: 0
-            val rank = extractJsonString(json, "rank") ?: "Unknown"
+            val rank = extractJsonString(json, "rank") ?: HealthScoreEngine.ArchitectRank.fromScore(score).displayName
             val fatalCount = extractJsonInt(json, "fatalCount") ?: 0
             val errorCount = extractJsonInt(json, "errorCount") ?: 0
             val warningCount = extractJsonInt(json, "warningCount") ?: 0
             val topResolution = extractJsonString(json, "topResolution") ?: ""
 
             ModuleReportData(moduleName, projectPath, score, rank, fatalCount, errorCount, warningCount, topResolution)
-        } catch (_: Exception) {
+        } catch (e: Exception) {
+            ConsoleLogger.error("Failed to parse module report: ${e.message}")
             null
         }
     }
