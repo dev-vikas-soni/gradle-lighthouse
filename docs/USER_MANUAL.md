@@ -51,18 +51,24 @@ You can customize the strictness and behavior of the audit using the `lighthouse
 
 ```kotlin
 lighthouse {
+    // === Core Targeting ===
+    targetVariant.set("release")      // Audit specific variant (optional)
+
     // === Core Toggles ===
-    enableBuildSpeed.set(true)        // Audits KAPT usage, caching, jetifier
-    enableAppSize.set(true)           // Checks minification, resources
-    enableStabilityCheck.set(true)    // R8 missing keep rules, reflection hazards
+    enableDependencyHealth.set(true)   // Audits unused deps & dynamic versions
+    enableBuildSpeed.set(true)         // Audits KAPT usage, caching, jetifier
+    enableAppSize.set(true)            // Checks minification, resources
+    enableStabilityCheck.set(true)     // R8 missing keep rules, reflection hazards
+    enableCatalogMigration.set(true)   // Scans for TOML readiness
+    enableConflictCheck.set(true)      // Detects version jumps
     enableModernizationCheck.set(true) // XML vs Compose ratios
-    enableKmpCheck.set(true)          // Cross-platform structure validation
-    enablePlayPolicy.set(true)        // AndroidManifest.xml Play Store compliance
-    
+    enableKmpCheck.set(true)           // Cross-platform structure validation
+    enablePlayPolicy.set(true)         // AndroidManifest.xml Play Store compliance
+
     // === CI/CD Integration ===
-    failOnSeverity.set("FATAL")       // Options: NONE, INFO, WARNING, ERROR, FATAL
-    enableSarifReport.set(true)       // Generate SARIF for GitHub
-    enableJunitXmlReport.set(true)    // Generate JUnit for Jenkins/Bitrise
+    failOnSeverity.set("NONE")         // Options: NONE, INFO, WARNING, ERROR, FATAL
+    enableSarifReport.set(true)        // Generate SARIF for GitHub
+    enableJunitXmlReport.set(true)     // Generate JUnit for CI
 }
 ```
 
@@ -82,7 +88,7 @@ To audit the entire multi-module project and aggregate the findings into a singl
 ```bash
 ./gradlew lighthouseAggregate
 ```
-**Output:** An HTML report is generated at `build/reports/lighthouse/global-dashboard.html`.
+**Output:** An HTML report is generated at `build/reports/lighthouse/project-dashboard.html`.
 
 ---
 
@@ -97,16 +103,16 @@ steps:
     run: ./gradlew lighthouseAggregate
 
   - name: Upload SARIF report
-    uses: github/codeql-action/upload-sarif@v2
+    uses: github/codeql-action/upload-sarif@v3
     if: always()
     with:
-      sarif_file: build/reports/lighthouse/global-sarif.json
+      sarif_file: build/reports/lighthouse/
       category: gradle-lighthouse
 ```
 
 ### 4.2 Jenkins / Bitrise (JUnit XML)
 Configure your CI test parser to read the generated XML files. Gradle Lighthouse outputs JUnit XML matching the standard Apache Surefire schema.
-Path: `build/reports/lighthouse/module-junit.xml`
+Path: `build/reports/lighthouse/{module}-report.xml`
 
 ---
 
