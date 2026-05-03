@@ -283,7 +283,12 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
         val layer: String get() {
             if (projectPath.isBlank() || projectPath == ":") return "Root"
             val segments = projectPath.split(":").filter { it.isNotEmpty() }
-            return if (segments.isNotEmpty()) segments.first() else "Root"
+            val raw = if (segments.isNotEmpty()) segments.first() else "Root"
+            return if (raw.length > 1) {
+                raw.substring(0, 1).toUpperCase(java.util.Locale.ROOT) + raw.substring(1)
+            } else {
+                raw.toUpperCase(java.util.Locale.ROOT)
+            }
         }
     }
 }

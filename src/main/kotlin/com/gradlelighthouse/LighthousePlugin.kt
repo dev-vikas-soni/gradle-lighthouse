@@ -138,7 +138,7 @@ class LighthousePlugin : Plugin<Project> {
         })
 
         task.resolvedDependencyData.set(project.provider {
-            captureResolvedDependencies(project)
+            captureResolvedDependencies(project, extension)
         })
 
         task.sourceSetData.set(project.provider {
@@ -166,8 +166,16 @@ class LighthousePlugin : Plugin<Project> {
         task.reportOutputDir.set(project.layout.buildDirectory.dir("reports/lighthouse"))
     }
 
-    private fun captureResolvedDependencies(project: Project): List<String> {
-        val configNames = listOf("releaseRuntimeClasspath", "runtimeClasspath")
+    private fun captureResolvedDependencies(project: Project, extension: LighthouseExtension): List<String> {
+        val variant = extension.targetVariant.get().toLowerCase()
+        
+        // Dynamically determine the best configuration to audit
+        val configNames = if (variant.isNotBlank()) {
+            listOf("${variant}RuntimeClasspath", "releaseRuntimeClasspath", "runtimeClasspath")
+        } else {
+            listOf("releaseRuntimeClasspath", "runtimeClasspath")
+        }
+        
         val config = configNames.mapNotNull { project.configurations.findByName(it) }.firstOrNull()
             ?: return emptyList()
 
