@@ -3,7 +3,7 @@
 **Build Intelligence for Android & Kotlin Multiplatform**
 
 [![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/io.github.dev-vikas-soni.lighthouse?label=Gradle%20Plugin%20Portal&color=orange)](https://plugins.gradle.org/plugin/io.github.dev-vikas-soni.lighthouse)
-[![Version: 2.0.0](https://img.shields.io/badge/Version-2.0.0-orange.svg)](https://github.com/dev-vikas-soni/gradle-lighthouse/releases)
+[![Version: 2.0.1](https://img.shields.io/badge/Version-2.0.1-orange.svg)](https://github.com/dev-vikas-soni/gradle-lighthouse/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=flat&logo=kotlin&logoColor=white)
 ![Gradle 8.x](https://img.shields.io/badge/Gradle-8.x-green.svg)
@@ -31,7 +31,7 @@
 ```kotlin
 // build.gradle.kts
 plugins {
-    id("io.github.dev-vikas-soni.lighthouse") version "2.0.0"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.0.1"
 }
 ```
 
@@ -48,7 +48,7 @@ plugins {
 ### Single Module
 ```kotlin
 plugins {
-    id("io.github.dev-vikas-soni.lighthouse") version "2.0.0"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.0.1"
 }
 ```
 
@@ -58,13 +58,13 @@ Apply to root `build.gradle.kts` for the aggregate dashboard, and each module fo
 ```kotlin
 // root build.gradle.kts
 plugins {
-    id("io.github.dev-vikas-soni.lighthouse") version "2.0.0"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.0.1"
 }
 
 // each module build.gradle.kts
 plugins {
     id("com.android.library")
-    id("io.github.dev-vikas-soni.lighthouse") version "2.0.0"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.0.1"
 }
 ```
 

@@ -1,12 +1,14 @@
+import org.gradle.plugin.compatibility.compatibility
+
 plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
     `maven-publish`
-    id("com.gradle.plugin-publish") version "1.3.0"
+    id("com.gradle.plugin-publish") version "2.1.1"
 }
 
 group = "io.github.dev-vikas-soni"
-version = "2.0.0"
+version = "2.0.1"
 
 repositories {
     mavenCentral()
@@ -38,8 +40,13 @@ gradlePlugin {
                 "and 20+ architectural checks for Android and Kotlin Multiplatform projects. " +
                 "Zero-config, SARIF + JUnit CI/CD integration, colorful terminal dashboards."
             implementationClass = "com.gradlelighthouse.LighthousePlugin"
+            compatibility {
+                features {
+                    configurationCache.set(true)
+                }
+            }
             tags.set(listOf(
-                "android", "kotlin", "gradle", "lint", "architecture",
+                "android", "kotlin", "lint", "architecture",
                 "build-performance", "dependency-analysis", "health-score",
                 "kmp", "multiplatform", "ci-cd", "sarif", "security"
             ))
