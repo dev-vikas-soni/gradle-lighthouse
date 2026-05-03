@@ -23,13 +23,13 @@ class LighthousePluginTest {
         buildFile = File(testProjectDir, "build.gradle.kts").apply {
             writeText("""
                 plugins {
-                    id("com.gradlelighthouse.plugin")
+                    id("io.github.dev-vikas-soni.lighthouse")
                 }
-                
+
                 repositories {
                     mavenCentral()
                 }
-                
+
                 lighthouse {
                     enableDependencyHealth.set(true)
                 }
@@ -62,7 +62,7 @@ class LighthousePluginTest {
 
         assertTrue(result.output.contains("Gradle Lighthouse"), "Output should contain plugin header")
         assertTrue(result.output.contains("Analysis Complete"), "Output should contain completion message")
-        
+
         val reportFile = File(testProjectDir, "build/reports/lighthouse/test-project-index.html")
         assertTrue(reportFile.exists(), "HTML report should be generated at ${reportFile.absolutePath}")
     }

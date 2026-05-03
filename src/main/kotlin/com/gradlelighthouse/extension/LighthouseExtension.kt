@@ -25,8 +25,8 @@ abstract class LighthouseExtension {
     // Core Toggles
     // ==========================
 
-    /** 
-     * Target a specific variant for auditing (e.g., "release", "productionRelease"). 
+    /**
+     * Target a specific variant for auditing (e.g., "release", "productionRelease").
      * If set, only dependencies matching this variant's configuration will be audited.
      * Default: "" (audits all standard configurations like implementation, releaseImplementation, etc.)
      */
@@ -58,6 +58,30 @@ abstract class LighthouseExtension {
 
     /** Enables Kotlin Multiplatform project structure checks. Default: true */
     abstract val enableKmpCheck: Property<Boolean>
+
+    /** Enables Configuration Cache readiness and build performance deep-dive. Default: true */
+    abstract val enableConfigCacheCheck: Property<Boolean>
+
+    /** Enables module dependency graph analysis and cycle detection. Default: true */
+    abstract val enableModuleGraphCheck: Property<Boolean>
+
+    /** Enables unused dependency detection. Default: true */
+    abstract val enableUnusedDependencyCheck: Property<Boolean>
+
+    /** Enables test coverage presence checks. Default: true */
+    abstract val enableTestCoverageCheck: Property<Boolean>
+
+    /** Enables version catalog hygiene checks. Default: true */
+    abstract val enableVersionCatalogHygiene: Property<Boolean>
+
+    /** Enables security and compliance scanning. Default: true */
+    abstract val enableSecurityCheck: Property<Boolean>
+
+    /** Enables module size and complexity metrics. Default: true */
+    abstract val enableModuleSizeCheck: Property<Boolean>
+
+    /** Enables historical trend tracking across runs. Default: true */
+    abstract val enableTrendTracking: Property<Boolean>
 
     // ==========================
     // CI/CD Integration
@@ -97,6 +121,14 @@ abstract class LighthouseExtension {
         enableConflictCheck.convention(true)
         enableModernizationCheck.convention(true)
         enableKmpCheck.convention(true)
+        enableConfigCacheCheck.convention(true)
+        enableModuleGraphCheck.convention(true)
+        enableUnusedDependencyCheck.convention(true)
+        enableTestCoverageCheck.convention(true)
+        enableVersionCatalogHygiene.convention(true)
+        enableSecurityCheck.convention(true)
+        enableModuleSizeCheck.convention(true)
+        enableTrendTracking.convention(true)
         failOnSeverity.convention("NONE")
         enableSarifReport.convention(true)
         enableJunitXmlReport.convention(true)

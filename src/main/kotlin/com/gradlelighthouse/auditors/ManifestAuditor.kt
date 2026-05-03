@@ -64,7 +64,7 @@ class ManifestAuditor : Auditor {
             if (!tagContent.contains("android:permission")) {
                 val rawType = match.groupValues[1]
                 val componentType = if (rawType.isNotEmpty()) {
-                    rawType.substring(0, 1).toUpperCase(java.util.Locale.ROOT) + rawType.substring(1)
+                    rawType.substring(0, 1).uppercase(java.util.Locale.ROOT) + rawType.substring(1)
                 } else rawType
                 issues.add(AuditIssue(
                     category = "Security",

@@ -53,7 +53,13 @@ data class AuditContext(
     val sourceSets: List<SourceSetSnapshot>,
 
     /** Whether a Version Catalog TOML file exists at the root */
-    val hasVersionCatalog: Boolean
+    val hasVersionCatalog: Boolean,
+
+    /** Module dependency graph: module path -> set of dependency module paths */
+    val moduleDependencyGraph: Map<String, Set<String>> = emptyMap(),
+
+    /** Current health score (set during trend tracking after initial scoring) */
+    val currentScore: Int? = null
 ) : Serializable {
 
     companion object {

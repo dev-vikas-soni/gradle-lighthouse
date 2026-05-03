@@ -7,6 +7,7 @@ import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ExternalDependency
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import java.io.File
@@ -41,7 +42,7 @@ class LighthousePlugin : Plugin<Project> {
                     task.reportOutputDir.set(project.layout.buildDirectory.dir("reports/lighthouse"))
 
                     project.subprojects.forEach { sub ->
-                        sub.plugins.withId("com.gradlelighthouse.plugin") {
+                        sub.plugins.withId("io.github.dev-vikas-soni.lighthouse") {
                             val subAuditTask = sub.tasks.named("lighthouseAudit", LighthouseTask::class.java)
                             task.dependsOn(subAuditTask)
                             task.moduleReportDirs.from(subAuditTask.flatMap { it.reportOutputDir })
@@ -117,17 +118,17 @@ class LighthousePlugin : Plugin<Project> {
 
             project.configurations
                 .filter { config ->
-                    val name = config.name.toLowerCase()
+                    val name = config.name.lowercase()
                     if (variant.isNotBlank()) {
-                        val v = variant.toLowerCase()
+                        val v = variant.lowercase()
                         // If variant is "release", include "implementation" (base) and "releaseImplementation" (variant specific).
                         // Exclude "debugImplementation".
-                        val isBase = baseConfigNames.any { name == it.toLowerCase() }
+                        val isBase = baseConfigNames.any { name == it.lowercase() }
                         val isVariantSpecific = name.contains(v)
                         isBase || isVariantSpecific
                     } else {
                         // Default: include all base configs and any configs containing them (e.g. debugImplementation)
-                        baseConfigNames.any { name.contains(it.toLowerCase()) }
+                        baseConfigNames.any { name.contains(it.lowercase()) }
                     }
                 }
                 .flatMap { config ->
@@ -145,6 +146,10 @@ class LighthousePlugin : Plugin<Project> {
             captureSourceSets(project)
         })
 
+        task.moduleDependencyGraphData.set(project.provider {
+            captureModuleDependencyGraph(project)
+        })
+
         task.enabledAuditorNames.set(project.provider {
             val enabled = mutableSetOf<String>()
             if (extension.enableDependencyHealth.get()) enabled.add("DependencyHealth")
@@ -156,6 +161,14 @@ class LighthousePlugin : Plugin<Project> {
             if (extension.enableConflictCheck.get()) enabled.add("ConflictIntelligence")
             if (extension.enableModernizationCheck.get()) enabled.add("Modernization")
             if (extension.enableKmpCheck.get()) enabled.add("KmpStructure")
+            if (extension.enableConfigCacheCheck.get()) enabled.add("ConfigCacheReadiness")
+            if (extension.enableModuleGraphCheck.get()) enabled.add("ModuleGraph")
+            if (extension.enableUnusedDependencyCheck.get()) enabled.add("UnusedDependency")
+            if (extension.enableTestCoverageCheck.get()) enabled.add("TestCoverage")
+            if (extension.enableVersionCatalogHygiene.get()) enabled.add("VersionCatalogHygiene")
+            if (extension.enableSecurityCheck.get()) enabled.add("Security")
+            if (extension.enableModuleSizeCheck.get()) enabled.add("ModuleSize")
+            if (extension.enableTrendTracking.get()) enabled.add("TrendTracking")
             enabled
         })
 
@@ -167,15 +180,15 @@ class LighthousePlugin : Plugin<Project> {
     }
 
     private fun captureResolvedDependencies(project: Project, extension: LighthouseExtension): List<String> {
-        val variant = extension.targetVariant.get().toLowerCase()
-        
+        val variant = extension.targetVariant.get().lowercase()
+
         // Dynamically determine the best configuration to audit
         val configNames = if (variant.isNotBlank()) {
             listOf("${variant}RuntimeClasspath", "releaseRuntimeClasspath", "runtimeClasspath")
         } else {
             listOf("releaseRuntimeClasspath", "runtimeClasspath")
         }
-        
+
         val config = configNames.mapNotNull { project.configurations.findByName(it) }.firstOrNull()
             ?: return emptyList()
 
@@ -236,6 +249,31 @@ class LighthousePlugin : Plugin<Project> {
             results.add("main|${if (mainKotlin.exists()) mainKotlin.absolutePath else ""}|${if (mainJava.exists()) mainJava.absolutePath else ""}|${if (mainRes.exists()) mainRes.absolutePath else ""}|${if (mainManifest.exists()) mainManifest.absolutePath else ""}|${if (mainAssets.exists()) mainAssets.absolutePath else ""}")
         }
 
+        return results
+    }
+
+    private fun captureModuleDependencyGraph(project: Project): List<String> {
+        val results = mutableListOf<String>()
+        // For each subproject, capture its project dependencies
+        val allProjects = if (project == project.rootProject) {
+            project.allprojects
+        } else {
+            setOf(project)
+        }
+
+        allProjects.forEach { proj ->
+            val deps = mutableSetOf<String>()
+            proj.configurations.forEach { config ->
+                config.dependencies.forEach { dep ->
+                    if (dep is org.gradle.api.artifacts.ProjectDependency) {
+                        deps.add(dep.dependencyProject.path)
+                    }
+                }
+            }
+            if (deps.isNotEmpty()) {
+                results.add("${proj.path}|${deps.joinToString(",")}")
+            }
+        }
         return results
     }
 }

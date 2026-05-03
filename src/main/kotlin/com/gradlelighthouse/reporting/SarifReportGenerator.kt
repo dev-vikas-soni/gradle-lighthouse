@@ -62,7 +62,7 @@ object SarifReportGenerator {
             appendLine("""            "defaultConfiguration": { "level": "$level" },""")
             appendLine("""            "properties": {""")
             appendLine("""              "category": "${escapeJson(issue.category)}",""")
-            appendLine("""              "tags": ["android", "${escapeJson(issue.category.toLowerCase(Locale.ROOT))}"]""")
+            appendLine("""              "tags": ["android", "${escapeJson(issue.category.lowercase(Locale.ROOT))}"]""")
             appendLine("""            }""")
             append("          }")
         }

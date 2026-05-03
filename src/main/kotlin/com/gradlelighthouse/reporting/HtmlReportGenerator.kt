@@ -38,8 +38,13 @@ object HtmlReportGenerator {
             """<tr><td><b>${esc(it.category)}</b></td><td style="color: var(--danger); font-weight: 700;">-${it.points}</td><td><span style="font-size: 0.85rem">${esc(it.primaryBottleneck)}</span></td></tr>"""
         }
 
-        val categories = listOf("Stability", "PlayStorePolicy", "DependencyHealth", "Performance", "AppSize", "Modernization", "Architecture")
+        val defaultCategories = listOf(
+            "Stability", "PlayStorePolicy", "DependencyHealth", "Performance", "AppSize",
+            "Modernization", "Architecture", "BuildPerformance", "Security", "Quality",
+            "Complexity", "DependencyHygiene", "Trends"
+        )
         val groupedIssues = issues.groupBy { it.category }
+        val categories = (defaultCategories + groupedIssues.keys).distinct().filter { groupedIssues.containsKey(it) || it in defaultCategories }
 
         val tabsHtml = categories.mapIndexed { index, cat ->
             val count = groupedIssues[cat]?.size ?: 0

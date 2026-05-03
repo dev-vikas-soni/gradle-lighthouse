@@ -2,10 +2,11 @@ plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
     `maven-publish`
+    id("com.gradle.plugin-publish") version "1.3.0"
 }
 
-group = "com.github.dev-vikas-soni"
-version = "1.1.0"
+group = "io.github.dev-vikas-soni"
+version = "2.0.0"
 
 repositories {
     mavenCentral()
@@ -25,13 +26,23 @@ java {
 }
 
 gradlePlugin {
+    website.set("https://github.com/dev-vikas-soni/gradle-lighthouse")
+    vcsUrl.set("https://github.com/dev-vikas-soni/gradle-lighthouse")
+
     plugins {
         create("lighthouse") {
-            id = "com.gradlelighthouse.plugin"
-            displayName = "Gradle Lighthouse: 360° Architectural Intelligence"
-            description = "Enterprise-grade Gradle diagnostic engine for Android & KMP projects. " +
-                "Detects R8 landmines, manifest hazards, dependency conflicts, and build bottlenecks."
+            id = "io.github.dev-vikas-soni.lighthouse"
+            displayName = "Gradle Lighthouse — Build Intelligence for Android & KMP"
+            description = "Enterprise-grade Gradle diagnostic engine: health scoring, dependency analysis, " +
+                "build performance auditing, module graph visualization, security scanning, " +
+                "and 20+ architectural checks for Android and Kotlin Multiplatform projects. " +
+                "Zero-config, SARIF + JUnit CI/CD integration, colorful terminal dashboards."
             implementationClass = "com.gradlelighthouse.LighthousePlugin"
+            tags.set(listOf(
+                "android", "kotlin", "gradle", "lint", "architecture",
+                "build-performance", "dependency-analysis", "health-score",
+                "kmp", "multiplatform", "ci-cd", "sarif", "security"
+            ))
         }
     }
 }

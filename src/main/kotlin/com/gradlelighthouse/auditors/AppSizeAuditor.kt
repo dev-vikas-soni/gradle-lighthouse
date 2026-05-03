@@ -79,7 +79,7 @@ class AppSizeAuditor : Auditor {
 
         val bitmapExtensions = setOf("png", "jpg", "jpeg", "bmp")
         val bitmapCount = legacyDrawable.listFiles()
-            ?.count { it.isFile && it.extension.toLowerCase(java.util.Locale.ROOT) in bitmapExtensions }
+            ?.count { it.isFile && it.extension.lowercase(java.util.Locale.ROOT) in bitmapExtensions }
             ?: 0
 
         if (bitmapCount > 5) {

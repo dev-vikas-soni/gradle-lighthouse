@@ -63,6 +63,9 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
     /** Serialized source set data as "setName|kotlinDir|javaDir|resDir|manifestPath|assetsPath" */
     @get:Input abstract val sourceSetData: ListProperty<String>
 
+    /** Serialized module dependency graph as "modulePath|dep1,dep2,dep3" */
+    @get:Input abstract val moduleDependencyGraphData: ListProperty<String>
+
     // Internal file paths (not for up-to-date checks, but serializable for CC)
     @get:Internal abstract val moduleDirPath: Property<String>
     @get:Internal abstract val rootDirPath: Property<String>
@@ -132,6 +135,51 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
         ConsoleLogger.info("🎯", "[DONE]", "[$name] Analysis Complete. Exporting Intelligence...")
         val outputDir = reportOutputDir.get().asFile
         if (!outputDir.exists()) outputDir.mkdirs()
+
+        // Calculate health score
+        val healthReport = com.gradlelighthouse.core.HealthScoreEngine.generateReport(allIssues)
+
+        // Save trend history if TrendTracking is enabled
+        var previousScore: Int? = null
+        if ("TrendTracking" in enabledAuditorNames.get()) {
+            previousScore = TrendTrackingAuditor().getPreviousScore(File(rootDirPath.get()), name)
+            TrendTrackingAuditor().saveScore(File(rootDirPath.get()), name, healthReport.score)
+        }
+
+        // Print colorful terminal dashboard
+        val passedChecks = mutableListOf<String>()
+        val gradlePropsMap = gradleProps.get()
+        if (gradlePropsMap["org.gradle.caching"] == "true") passedChecks.add("Build caching enabled")
+        if (gradlePropsMap["org.gradle.parallel"] == "true") passedChecks.add("Parallel execution enabled")
+        if (gradlePropsMap["android.enableJetifier"] != "true") passedChecks.add("Jetifier disabled")
+        if (gradlePropsMap["org.gradle.configuration-cache"] == "true") passedChecks.add("Configuration Cache enabled")
+        if (gradlePropsMap["android.nonTransitiveRClass"] == "true") passedChecks.add("Non-transitive R classes enabled")
+
+        val topIssueLines = allIssues
+            .sortedByDescending { it.severity.ordinal }
+            .take(5)
+            .map { issue ->
+                val icon = when (issue.severity) {
+                    com.gradlelighthouse.core.Severity.FATAL -> "\u001B[31m💀"
+                    com.gradlelighthouse.core.Severity.ERROR -> "\u001B[31m❌"
+                    com.gradlelighthouse.core.Severity.WARNING -> "\u001B[33m⚠️ "
+                    com.gradlelighthouse.core.Severity.INFO -> "\u001B[34mℹ️ "
+                }
+                "$icon ${issue.title}\u001B[0m"
+            }
+
+        ConsoleLogger.printDashboard(
+            moduleName = name,
+            score = healthReport.score,
+            previousScore = previousScore,
+            rank = healthReport.rank,
+            fatalCount = healthReport.fatalCount,
+            errorCount = healthReport.errorCount,
+            warningCount = healthReport.warningCount,
+            infoCount = healthReport.infoCount,
+            topIssues = topIssueLines,
+            passedChecks = passedChecks
+        )
 
         // HTML Report
         val htmlContent = HtmlReportGenerator.generate(name, version, gradleVersionStr.get(), allIssues)
@@ -237,7 +285,8 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
             repositories = repos,
             gradleProperties = gradleProps.get(),
             sourceSets = sourceSets,
-            hasVersionCatalog = hasVersionCatalog.get()
+            hasVersionCatalog = hasVersionCatalog.get(),
+            moduleDependencyGraph = parseModuleDependencyGraph()
         )
     }
 
@@ -259,7 +308,26 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
             auditors.add(StartupPerformanceAuditor())
         }
         if ("KmpStructure" in enabled) auditors.add(KmpStructureAuditor())
+        if ("ConfigCacheReadiness" in enabled) auditors.add(ConfigCacheReadinessAuditor())
+        if ("ModuleGraph" in enabled) auditors.add(ModuleGraphAuditor())
+        if ("UnusedDependency" in enabled) auditors.add(UnusedDependencyAuditor())
+        if ("TestCoverage" in enabled) auditors.add(TestCoverageAuditor())
+        if ("VersionCatalogHygiene" in enabled) auditors.add(VersionCatalogHygieneAuditor())
+        if ("Security" in enabled) auditors.add(SecurityAuditor())
+        if ("ModuleSize" in enabled) auditors.add(ModuleSizeAuditor())
+        if ("TrendTracking" in enabled) auditors.add(TrendTrackingAuditor())
 
         return auditors
+    }
+
+    private fun parseModuleDependencyGraph(): Map<String, Set<String>> {
+        val graph = mutableMapOf<String, MutableSet<String>>()
+        moduleDependencyGraphData.get().forEach { line ->
+            val parts = line.split("|", limit = 2)
+            val module = parts.getOrElse(0) { "" }
+            val deps = parts.getOrElse(1) { "" }.split(",").filter { it.isNotBlank() }.toMutableSet()
+            if (module.isNotEmpty()) graph[module] = deps
+        }
+        return graph
     }
 }

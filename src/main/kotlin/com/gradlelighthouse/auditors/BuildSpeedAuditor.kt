@@ -32,7 +32,7 @@ class BuildSpeedAuditor : Auditor {
 
         if (hasKaptPlugin || kaptDeps.isNotEmpty()) {
             val migratableCount = kaptDeps.count { dep ->
-                kspSupportedLibs.any { dep.name.toLowerCase(java.util.Locale.ROOT).contains(it) }
+                kspSupportedLibs.any { dep.name.lowercase(java.util.Locale.ROOT).contains(it) }
             }
 
             val timeSavedPerBuild = migratableCount * 15 // ~15s per clean build cycle
@@ -101,6 +101,59 @@ class BuildSpeedAuditor : Auditor {
             ))
         }
 
+        // 4. Unnecessary BuildConfig generation
+        val isLibrary = context.pluginIds.any { it.contains("com.android.library") }
+        val isApp = context.pluginIds.any { it.contains("com.android.application") }
+        if (isLibrary || isApp) {
+            val hasBuildConfigUsage = hasBuildConfigImport(context)
+            val disablesBuildConfig = context.buildFileContent.contains("buildConfig = false") ||
+                context.buildFileContent.contains("buildConfig.set(false)") ||
+                context.buildFileContent.contains("generateBuildConfig = false") ||
+                context.buildFileContent.contains("buildFeatures") && context.buildFileContent.contains("buildConfig = false")
+
+            if (!hasBuildConfigUsage && !disablesBuildConfig && isLibrary) {
+                issues.add(AuditIssue(
+                    category = "Performance",
+                    severity = Severity.WARNING,
+                    title = "Unnecessary BuildConfig Generation",
+                    reasoning = "Library module '${context.projectName}' generates BuildConfig.java by default but no source files import it. This creates unnecessary compilation work for every build.",
+                    impactAnalysis = "Every module generates and compiles BuildConfig.java even if unused. In 50+ module projects this adds seconds to clean builds and pollutes the classpath.",
+                    resolution = "Disable BuildConfig generation in your android {} block:\n\nbuildFeatures {\n    buildConfig = false\n}",
+                    roiAfterFix = "Fewer generated sources, faster compilation, smaller classpath.",
+                    sourceFile = context.buildFile.absolutePath
+                ))
+            }
+        }
+
+        // 5. kotlin-android-extensions deprecation check
+        val hasAndroidExtensions = context.pluginIds.any {
+            it.contains("kotlin-android-extensions") || it.contains("kotlin-parcelize")
+        } || context.buildFileContent.contains("kotlin-android-extensions")
+
+        if (context.buildFileContent.contains("kotlin-android-extensions")) {
+            issues.add(AuditIssue(
+                category = "Performance",
+                severity = Severity.ERROR,
+                title = "Deprecated kotlin-android-extensions Plugin Detected",
+                reasoning = "The kotlin-android-extensions plugin is deprecated since Kotlin 1.8 and removed in newer versions. Synthetic view bindings are no longer maintained.",
+                impactAnalysis = "This plugin generates synthetic accessor code that increases compile time and breaks with Compose. It blocks Kotlin version upgrades past 1.8.",
+                resolution = "Replace synthetic imports with View Binding:\n1. Remove id(\"kotlin-android-extensions\") from plugins\n2. Enable viewBinding { enabled = true } in buildFeatures\n3. Replace kotlinx.android.synthetic imports with binding.viewId",
+                roiAfterFix = "Unblocks Kotlin version upgrades. View Binding is compile-time safe and faster.",
+                sourceFile = context.buildFile.absolutePath
+            ))
+        }
+
         return issues
+    }
+
+    private fun hasBuildConfigImport(context: AuditContext): Boolean {
+        return context.sourceSets.any { sourceSet ->
+            (sourceSet.kotlinDirs + sourceSet.javaDirs).any { dir ->
+                dir.exists() && dir.walkTopDown().any { file ->
+                    (file.extension == "kt" || file.extension == "java") &&
+                        try { file.readText().contains("BuildConfig") } catch (_: Exception) { false }
+                }
+            }
+        }
     }
 }
