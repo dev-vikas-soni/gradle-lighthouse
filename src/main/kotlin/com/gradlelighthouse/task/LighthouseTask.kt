@@ -134,7 +134,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
         if (!outputDir.exists()) outputDir.mkdirs()
 
         // HTML Report
-        val htmlContent = HtmlReportGenerator.generate(name, gradleVersionStr.get(), allIssues)
+        val htmlContent = HtmlReportGenerator.generate(name, version, gradleVersionStr.get(), allIssues)
         val htmlFile = File(outputDir, "${name}-index.html")
         htmlFile.writeText(htmlContent)
         ConsoleLogger.info("📊", "[HTML]", "Report: ${htmlFile.toURI()}")

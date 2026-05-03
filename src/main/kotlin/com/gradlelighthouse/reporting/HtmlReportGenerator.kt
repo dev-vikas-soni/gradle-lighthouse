@@ -20,17 +20,16 @@ import java.util.Locale
  */
 object HtmlReportGenerator {
 
-    private const val PLUGIN_VERSION = "1.0.9"
-
     /**
      * Generates a complete HTML report for a module.
      *
      * @param projectName Module name
+     * @param pluginVersion Plugin version string
      * @param gradleVersion Gradle version string
      * @param issues List of audit findings
      * @return Complete HTML document string
      */
-    fun generate(projectName: String, gradleVersion: String, issues: List<AuditIssue>): String {
+    fun generate(projectName: String, pluginVersion: String, gradleVersion: String, issues: List<AuditIssue>): String {
         val dateString = SimpleDateFormat("MMM dd, yyyy - HH:mm:ss", Locale.ROOT).format(Date())
         val report = HealthScoreEngine.generateReport(issues)
         val scoreColor = HealthScoreEngine.scoreColor(report.score)
@@ -102,7 +101,7 @@ object HtmlReportGenerator {
                     <div>
                         <h1 class="brand-title">Gradle Lighthouse</h1>
                         <div style="color:var(--text-dim); font-weight: 600;">${esc(projectName)} &bull; Intelligence Audit &bull; $dateString</div>
-                        <div class="env-badge">Gradle $gradleVersion | V$PLUGIN_VERSION</div>
+                        <div class="env-badge">Gradle $gradleVersion | V$pluginVersion</div>
                     </div>
                     <div class="card score-widget" style="padding: 15px 40px; border-radius: 24px;">
                         <div class="circle" style="border-color: $scoreColor; color: $scoreColor;" role="img" aria-label="Health Score: ${report.score}%">${report.score}</div>
@@ -142,7 +141,7 @@ object HtmlReportGenerator {
             // Footer
             appendLine("""
                 <footer>
-                    &copy; 2026 Gradle Lighthouse &bull; Architectural Intelligence Protocol V$PLUGIN_VERSION
+                    &copy; 2026 Gradle Lighthouse &bull; Architectural Intelligence Protocol V$pluginVersion
                 </footer>
             """.trimIndent())
 
