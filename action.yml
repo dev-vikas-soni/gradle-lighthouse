@@ -56,7 +56,7 @@ runs:
 
     - name: PR Comment
       if: inputs.comment-on-pr == 'true' && github.event_name == 'pull_request' && always()
-      uses: actions/github-script@v7
+      uses: actions/github-script@v9
       with:
         script: |
           const score = '${{ steps.reports.outputs.score }}';
