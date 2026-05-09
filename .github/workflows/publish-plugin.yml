@@ -20,10 +20,10 @@ jobs:
           cache: 'gradle'
 
       - name: Validate Gradle Wrapper
-        uses: gradle/actions/wrapper-validation@v3
+        uses: gradle/actions/wrapper-validation@v6
 
       - name: Publish to Plugin Portal
-        uses: gradle/actions/setup-gradle@v3
+        uses: gradle/actions/setup-gradle@v6
         with:
           arguments: publishPlugins
         env:
