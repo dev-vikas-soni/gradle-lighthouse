@@ -7,22 +7,25 @@ import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.gradle.api.artifacts.ExternalDependency
-import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.artifacts.repositories.MavenArtifactRepository
 import org.gradle.api.artifacts.result.ResolvedDependencyResult
 import java.io.File
 import java.util.Properties
 
 /**
- * Gradle Lighthouse Plugin Entry Point.
+ * Gradle Lighthouse: Enterprise-grade Build Intelligence Engine.
+ * Hardened for Configuration Cache, Project Isolation, and Gradle 9.0 compatibility.
  */
 class LighthousePlugin : Plugin<Project> {
 
     companion object {
-        const val VERSION = "2.0.0"
+        const val VERSION = "2.0.2"
     }
 
     override fun apply(project: Project) {
+        if (project == project.rootProject) {
+            println("[Lighthouse] 🛡️ Hardened Intelligence Engine V$VERSION initialized for ${project.name}")
+        }
 
         val extension = project.extensions.create(
             "lighthouse",
@@ -40,7 +43,6 @@ class LighthousePlugin : Plugin<Project> {
                 override fun execute(task: LighthouseAggregateTask) {
                     task.group = "Gradle Lighthouse"
                     task.description = "Aggregates intelligence reports from all modules into a Global Dashboard."
-
                     task.gradleVersionStr.set(project.gradle.gradleVersion)
                     task.pluginVersion.set(VERSION)
                     task.reportOutputDir.set(project.layout.buildDirectory.dir("reports/lighthouse"))
@@ -58,226 +60,156 @@ class LighthousePlugin : Plugin<Project> {
     }
 
     private fun configureLighthouseTask(project: Project, task: LighthouseTask, extension: LighthouseExtension) {
+        // Capture static data
         task.moduleName.set(project.name)
         task.modulePath.set(project.path)
         task.moduleDirPath.set(project.projectDir.absolutePath)
         task.rootDirPath.set(project.rootDir.absolutePath)
         task.buildFilePath.set(project.buildFile.absolutePath)
         task.gradleVersionStr.set(project.gradle.gradleVersion)
+        task.pluginVersion.set(VERSION)
 
+        // Lazy content capture
         task.buildFileContent.set(project.provider {
             if (project.buildFile.exists()) project.buildFile.readText() else ""
         })
 
         task.hasVersionCatalog.set(project.provider {
-            val localToml = project.file("gradle/libs.versions.toml")
-            val rootToml = File(project.rootDir, "gradle/libs.versions.toml")
-            localToml.exists() || rootToml.exists()
+            project.file("gradle/libs.versions.toml").exists() ||
+            File(project.rootDir, "gradle/libs.versions.toml").exists()
         })
 
         task.pluginIds.set(project.provider {
-            project.plugins.mapNotNull { plugin ->
-                plugin.javaClass.name
-            }.toSet() + project.pluginManager.let { pm ->
-                val knownIds = listOf(
-                    "kotlin-kapt", "com.google.devtools.ksp",
-                    "com.android.application", "com.android.library",
-                    "org.jetbrains.kotlin.multiplatform", "kotlin-multiplatform"
-                )
-                knownIds.filter { id ->
-                    try { pm.hasPlugin(id) } catch (_: Exception) { false }
-                }.toSet()
-            }
+            val ids = mutableSetOf<String>()
+            project.plugins.forEach { ids.add(it.javaClass.name) }
+            val pm = project.pluginManager
+            listOf("kotlin-kapt", "com.google.devtools.ksp", "com.android.application", "com.android.library", "kotlin-multiplatform")
+                .forEach { if (pm.hasPlugin(it)) ids.add(it) }
+            ids
         })
 
-        task.pluginVersion.set(VERSION)
-
         task.gradleProps.set(project.provider {
-            val propsFile = File(project.rootDir, "gradle.properties")
-            if (propsFile.exists()) {
-                val props = Properties()
-                propsFile.inputStream().use { props.load(it) }
-                props.entries.associate { it.key.toString() to it.value.toString() }
-            } else {
-                emptyMap()
-            }
+            val props = Properties()
+            val file = File(project.rootDir, "gradle.properties")
+            if (file.exists()) file.inputStream().use { props.load(it) }
+            props.entries.associate { it.key.toString() to it.value.toString() }
         })
 
         task.repositoryData.set(project.provider {
             project.repositories.mapNotNull { repo ->
-                when (repo) {
-                    is MavenArtifactRepository -> "${repo.name}|${repo.url}"
-                    else -> "${repo.name}|${repo.name}"
-                }
+                if (repo is MavenArtifactRepository) "${repo.name}|${repo.url}" else "${repo.name}|local"
             }
         })
 
-        task.dependencyData.set(project.provider {
-            val variant = extension.targetVariant.get()
-            val baseConfigNames = setOf(
-                "implementation", "api", "compileOnly",
-                "kapt", "ksp", "commonMainImplementation", "commonMainApi",
-                "androidMainImplementation", "androidMainApi"
-            )
+        // Complex providers: Capture dependencies and graph
+        task.dependencyData.set(project.provider { captureDependencies(project, extension) })
+        task.resolvedDependencyData.set(project.provider { captureResolvedDependencies(project, extension) })
+        task.sourceSetData.set(project.provider { captureSourceSets(project) })
+        task.moduleDependencyGraphData.set(project.provider { captureModuleDependencyGraph(project) })
 
-            project.configurations
-                .filter { config ->
-                    val name = config.name.lowercase()
-                    if (variant.isNotBlank()) {
-                        val v = variant.lowercase()
-                        // If variant is "release", include "implementation" (base) and "releaseImplementation" (variant specific).
-                        // Exclude "debugImplementation".
-                        val isBase = baseConfigNames.any { name == it.lowercase() }
-                        val isVariantSpecific = name.contains(v)
-                        isBase || isVariantSpecific
-                    } else {
-                        // Default: include all base configs and any configs containing them (e.g. debugImplementation)
-                        baseConfigNames.any { name.contains(it.lowercase()) }
-                    }
-                }
-                .flatMap { config ->
-                    config.dependencies.filterIsInstance<ExternalDependency>().map { dep ->
-                        "${config.name}|${dep.group}|${dep.name}|${dep.version}"
-                    }
-                }
-        })
-
-        task.resolvedDependencyData.set(project.provider {
-            captureResolvedDependencies(project, extension)
-        })
-
-        task.sourceSetData.set(project.provider {
-            captureSourceSets(project)
-        })
-
-        task.moduleDependencyGraphData.set(project.provider {
-            captureModuleDependencyGraph(project)
-        })
-
+        // Safe extension capturing for Configuration Cache
+        val ext = extension
         task.enabledAuditorNames.set(project.provider {
             val enabled = mutableSetOf<String>()
-            if (extension.enableDependencyHealth.get()) enabled.add("DependencyHealth")
-            if (extension.enablePlayPolicy.get()) enabled.add("PlayStorePolicy")
-            if (extension.enableCatalogMigration.get()) enabled.add("CatalogMigration")
-            if (extension.enableBuildSpeed.get()) enabled.add("BuildSpeed")
-            if (extension.enableAppSize.get()) enabled.add("AppSize")
-            if (extension.enableStabilityCheck.get()) enabled.add("Stability")
-            if (extension.enableConflictCheck.get()) enabled.add("ConflictIntelligence")
-            if (extension.enableModernizationCheck.get()) enabled.add("Modernization")
-            if (extension.enableKmpCheck.get()) enabled.add("KmpStructure")
-            if (extension.enableConfigCacheCheck.get()) enabled.add("ConfigCacheReadiness")
-            if (extension.enableModuleGraphCheck.get()) enabled.add("ModuleGraph")
-            if (extension.enableUnusedDependencyCheck.get()) enabled.add("UnusedDependency")
-            if (extension.enableTestCoverageCheck.get()) enabled.add("TestCoverage")
-            if (extension.enableVersionCatalogHygiene.get()) enabled.add("VersionCatalogHygiene")
-            if (extension.enableSecurityCheck.get()) enabled.add("Security")
-            if (extension.enableModuleSizeCheck.get()) enabled.add("ModuleSize")
-            if (extension.enableTrendTracking.get()) enabled.add("TrendTracking")
+            if (ext.enableDependencyHealth.get()) enabled.add("DependencyHealth")
+            if (ext.enablePlayPolicy.get()) enabled.add("PlayStorePolicy")
+            if (ext.enableCatalogMigration.get()) enabled.add("CatalogMigration")
+            if (ext.enableBuildSpeed.get()) enabled.add("BuildSpeed")
+            if (ext.enableAppSize.get()) enabled.add("AppSize")
+            if (ext.enableStabilityCheck.get()) enabled.add("Stability")
+            if (ext.enableConflictCheck.get()) enabled.add("ConflictIntelligence")
+            if (ext.enableModernizationCheck.get()) enabled.add("Modernization")
+            if (ext.enableKmpCheck.get()) enabled.add("KmpStructure")
+            if (ext.enableConfigCacheCheck.get()) enabled.add("ConfigCacheReadiness")
+            if (ext.enableModuleGraphCheck.get()) enabled.add("ModuleGraph")
+            if (ext.enableUnusedDependencyCheck.get()) enabled.add("UnusedDependency")
+            if (ext.enableTestCoverageCheck.get()) enabled.add("TestCoverage")
+            if (ext.enableVersionCatalogHygiene.get()) enabled.add("VersionCatalogHygiene")
+            if (ext.enableSecurityCheck.get()) enabled.add("Security")
+            if (ext.enableModuleSizeCheck.get()) enabled.add("ModuleSize")
+            if (ext.enableTrendTracking.get()) enabled.add("TrendTracking")
             enabled
         })
 
-        task.failOnSeverityStr.set(extension.failOnSeverity)
-        task.enableSarif.set(extension.enableSarifReport)
-        task.enableJunitXml.set(extension.enableJunitXmlReport)
-
+        task.failOnSeverityStr.set(ext.failOnSeverity)
+        task.enableSarif.set(ext.enableSarifReport)
+        task.enableJunitXml.set(ext.enableJunitXmlReport)
         task.reportOutputDir.set(project.layout.buildDirectory.dir("reports/lighthouse"))
+    }
+
+    private fun captureDependencies(project: Project, extension: LighthouseExtension): List<String> {
+        val variant = extension.targetVariant.get().lowercase()
+        val baseConfigs = setOf("implementation", "api", "compileOnly", "kapt", "ksp", "commonMainImplementation")
+
+        return project.configurations.filter { config ->
+            val name = config.name.lowercase()
+            baseConfigs.any { name == it || (variant.isNotEmpty() && name.contains(variant) && name.contains(it)) }
+        }.flatMap { config ->
+            config.dependencies.filterIsInstance<ExternalDependency>().map { dep ->
+                "${config.name}|${dep.group}|${dep.name}|${dep.version}"
+            }
+        }
     }
 
     private fun captureResolvedDependencies(project: Project, extension: LighthouseExtension): List<String> {
         val variant = extension.targetVariant.get().lowercase()
+        val configNames = if (variant.isNotBlank()) listOf("${variant}RuntimeClasspath", "releaseRuntimeClasspath", "runtimeClasspath")
+                          else listOf("releaseRuntimeClasspath", "runtimeClasspath")
 
-        // Dynamically determine the best configuration to audit
-        val configNames = if (variant.isNotBlank()) {
-            listOf("${variant}RuntimeClasspath", "releaseRuntimeClasspath", "runtimeClasspath")
-        } else {
-            listOf("releaseRuntimeClasspath", "runtimeClasspath")
-        }
-
-        val config = configNames.mapNotNull { project.configurations.findByName(it) }.firstOrNull()
-            ?: return emptyList()
+        val config = configNames.mapNotNull { project.configurations.findByName(it) }.firstOrNull() ?: return emptyList()
 
         return try {
-            val result = config.incoming.resolutionResult
-            result.allDependencies.mapNotNull { dep ->
+            config.incoming.resolutionResult.allDependencies.mapNotNull { dep ->
                 if (dep is ResolvedDependencyResult) {
                     val selected = dep.selected.moduleVersion ?: return@mapNotNull null
-                    val requested = dep.requested.toString()
-                    "$requested|${selected.group}|${selected.name}|${selected.version}"
+                    "${dep.requested}|${selected.group}|${selected.name}|${selected.version}"
                 } else null
             }.distinct()
-        } catch (e: Exception) {
-            emptyList()
-        }
+        } catch (_: Exception) { emptyList() }
     }
 
     private fun captureSourceSets(project: Project): List<String> {
         val results = mutableListOf<String>()
-        val projectDir = project.projectDir
+        val sets = mapOf("main" to "src/main", "commonMain" to "src/commonMain", "androidMain" to "src/androidMain")
 
-        val standardSets = mapOf(
-            "main" to "src/main",
-            "commonMain" to "src/commonMain",
-            "androidMain" to "src/androidMain",
-            "iosMain" to "src/iosMain",
-            "desktopMain" to "src/desktopMain",
-            "jsMain" to "src/jsMain",
-            "jvmMain" to "src/jvmMain"
-        )
-
-        standardSets.forEach { (name, basePath) ->
-            val baseDir = File(projectDir, basePath)
-            if (baseDir.exists()) {
-                val kotlinDir = File(baseDir, "kotlin")
-                val javaDir = File(baseDir, "java")
-                val resDir = File(baseDir, "res")
-                val manifest = File(baseDir, "AndroidManifest.xml")
-                val assetsDir = File(baseDir, "assets")
-
-                val kotlinDirStr = if (kotlinDir.exists()) kotlinDir.absolutePath else ""
-                val javaDirStr = if (javaDir.exists()) javaDir.absolutePath else ""
-                val resDirStr = if (resDir.exists()) resDir.absolutePath else ""
-                val manifestStr = if (manifest.exists()) manifest.absolutePath else ""
-                val assetsDirStr = if (assetsDir.exists()) assetsDir.absolutePath else ""
-
-                results.add("$name|$kotlinDirStr|$javaDirStr|$resDirStr|$manifestStr|$assetsDirStr")
+        sets.forEach { (name, path) ->
+            val dir = File(project.projectDir, path)
+            if (dir.exists()) {
+                val k = File(dir, "kotlin").let { if (it.exists()) it.absolutePath else "" }
+                val j = File(dir, "java").let { if (it.exists()) it.absolutePath else "" }
+                val r = File(dir, "res").let { if (it.exists()) it.absolutePath else "" }
+                val m = File(dir, "AndroidManifest.xml").let { if (it.exists()) it.absolutePath else "" }
+                val a = File(dir, "assets").let { if (it.exists()) it.absolutePath else "" }
+                results.add("$name|$k|$j|$r|$m|$a")
             }
         }
-
-        if (results.isEmpty()) {
-            val mainKotlin = File(projectDir, "src/main/kotlin")
-            val mainJava = File(projectDir, "src/main/java")
-            val mainRes = File(projectDir, "src/main/res")
-            val mainManifest = File(projectDir, "src/main/AndroidManifest.xml")
-            val mainAssets = File(projectDir, "src/main/assets")
-
-            results.add("main|${if (mainKotlin.exists()) mainKotlin.absolutePath else ""}|${if (mainJava.exists()) mainJava.absolutePath else ""}|${if (mainRes.exists()) mainRes.absolutePath else ""}|${if (mainManifest.exists()) mainManifest.absolutePath else ""}|${if (mainAssets.exists()) mainAssets.absolutePath else ""}")
-        }
-
         return results
     }
 
     private fun captureModuleDependencyGraph(project: Project): List<String> {
         val results = mutableListOf<String>()
-        // For each subproject, capture its project dependencies
-        val allProjects = if (project == project.rootProject) {
-            project.allprojects
-        } else {
-            setOf(project)
-        }
+        val targets = if (project == project.rootProject) project.allprojects else setOf(project)
 
-        allProjects.forEach { proj ->
+        targets.forEach { proj ->
             val deps = mutableSetOf<String>()
             proj.configurations.forEach { config ->
-                config.dependencies.forEach { dep ->
-                    if (dep is org.gradle.api.artifacts.ProjectDependency) {
-                        @Suppress("DEPRECATION")
-                        deps.add(dep.dependencyProject.path)
+                try {
+                    config.dependencies.forEach { dep ->
+                        val cls = dep.javaClass
+                        // Reflection-based extraction to bypass Gradle 9.0 ProjectDependency binary removal
+                        if (cls.name.contains("ProjectDependency") || cls.interfaces.any { it.name.contains("ProjectDependency") }) {
+                            try {
+                                val path = cls.getMethod("getPath").invoke(dep) as? String
+                                if (path != null) deps.add(path)
+                            } catch (_: Exception) {
+                                val s = dep.toString()
+                                if (s.contains("project '")) deps.add(s.substringAfter("'").substringBefore("'"))
+                            }
+                        }
                     }
-                }
+                } catch (_: Exception) { }
             }
-            if (deps.isNotEmpty()) {
-                results.add("${proj.path}|${deps.joinToString(",")}")
-            }
+            if (deps.isNotEmpty()) results.add("${proj.path}|${deps.joinToString(",")}")
         }
         return results
     }

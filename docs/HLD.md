@@ -8,7 +8,7 @@ The plugin acts as an automated "Principal Engineer," intercepting the build pip
 
 **Plugin ID**: `io.github.dev-vikas-soni.lighthouse`
 **Distribution**: [Gradle Plugin Portal](https://plugins.gradle.org/plugin/io.github.dev-vikas-soni.lighthouse)
-**Version**: 2.0.0
+**Version**: 2.0.2
 
 ## 2. System Architecture
 
@@ -94,7 +94,7 @@ graph TD
 
 ## 4. Execution Flow
 
-1. **Installation**: `plugins { id("io.github.dev-vikas-soni.lighthouse") version "2.0.0" }` in build.gradle.kts.
+1. **Installation**: `plugins { id("io.github.dev-vikas-soni.lighthouse") version "2.0.2" }` in build.gradle.kts.
 2. **Configuration**: Gradle configures the graph. `LighthousePlugin` captures module state into serialized `@Input` properties. Module dependency graph is captured for cycle detection.
 3. **Task Graph Ready**: `lighthouseAudit` placed in execution queue.
 4. **Execution**: `LighthouseTask.execute()` reconstructs `AuditContext` from serialized inputs.

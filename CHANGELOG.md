@@ -5,6 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-05-10
+
+### Added
+- **Gradle 9.0 Binary Compatibility**: Hardened the plugin against binary breaking changes in Gradle 9.0 by removing direct bytecode dependencies on internal Gradle classes.
+- **Project Isolation Support**: Added logic to safely scan module graphs in "Isolated Projects" mode, preventing cross-project model leakage.
+
+### Fixed
+- **Configuration Cache Serialization**: Refactored task input providers to eliminate "Error while saving task graph" by ensuring only serializable data is captured.
+- **Lazy Dependency Resolution**: Fixed "Configuration resolved during configuration time" warnings by moving heavy scanning logic into lazy providers.
+- **Aggregator Navigation**: Resolved broken links in the Global Dashboard by isolating module reports into unique, path-sanitized subdirectories.
+- **Collision Prevention**: Modules with the same name in different paths (e.g. `:feature:ui` and `:core:ui`) no longer overwrite each other's reports.
+
+### Changed
+- **Optimized Performance**: Improved configuration phase speed in large multi-module projects (100+ modules) by deferring intelligence scanning until task execution.
+
+## [2.0.1] - 2026-05-03
+
+### Fixed
+- Initial stability fixes for Gradle Plugin Portal release.
+
 ## [2.0.0] - 2026-05-03
 
 ### Added

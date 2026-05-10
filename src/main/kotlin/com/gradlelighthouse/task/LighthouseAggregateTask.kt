@@ -40,12 +40,31 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
         ConsoleLogger.section("📊", "[AGG]", "Aggregating Gradle Lighthouse Global Intelligence (V${pluginVersion.get()})...")
 
         val moduleReports = mutableListOf<ModuleReportData>()
+        val outputDir = reportOutputDir.get().asFile
+        if (!outputDir.exists()) outputDir.mkdirs()
 
         moduleReportDirs.files.forEach { dir ->
             val reportFile = File(dir, "module-report.json")
             if (reportFile.exists()) {
                 val data = parseReportJson(reportFile.readText())
-                if (data != null) moduleReports.add(data)
+                if (data != null) {
+                    moduleReports.add(data)
+
+                    // Expert navigation fix: Use sanitized path for unique subdirectories
+                    // This prevents collisions if modules have same name (e.g. :feature:ui and :core:ui)
+                    val safeFolderName = data.projectPath.replace(":", "-").trim('-').ifBlank { "root" }
+                    val moduleHtmlName = "${data.moduleName}-index.html"
+                    val sourceHtml = File(dir, moduleHtmlName)
+
+                    if (sourceHtml.exists()) {
+                        val targetSubDir = File(outputDir, safeFolderName)
+                        targetSubDir.mkdirs()
+                        sourceHtml.copyTo(File(targetSubDir, moduleHtmlName), overwrite = true)
+
+                        // Also store the relative path for the link
+                        data.relativeReportPath = "$safeFolderName/$moduleHtmlName"
+                    }
+                }
             }
         }
 
@@ -95,7 +114,7 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
                                     <span class="stat-warn" style="background: rgba(245,158,11,0.1); color: #f59e0b; padding: 2px 8px; border-radius: 6px; font-size: 0.7rem; font-weight: 800;">${report.warningCount}W</span>
                                 </div>
                             </div>
-                            <a href="${esc(report.moduleName)}-index.html" style="display: inline-block; text-decoration: none; font-weight: 800; font-size: 0.8rem; color: var(--accent); text-transform: uppercase; border: 1px solid var(--accent); padding: 8px 16px; border-radius: 8px; transition: all 0.2s;">View Full Audit &rarr;</a>
+                            <a href="${esc(report.relativeReportPath)}" style="display: inline-block; text-decoration: none; font-weight: 800; font-size: 0.8rem; color: var(--accent); text-transform: uppercase; border: 1px solid var(--accent); padding: 8px 16px; border-radius: 8px; transition: all 0.2s;">View Full Audit &rarr;</a>
                         </div>
                     """.trimIndent())
                 }
@@ -280,6 +299,8 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
         val warningCount: Int,
         val topResolution: String
     ) {
+        var relativeReportPath: String = ""
+
         val layer: String get() {
             if (projectPath.isBlank() || projectPath == ":") return "Root"
             val segments = projectPath.split(":").filter { it.isNotEmpty() }

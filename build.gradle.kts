@@ -1,5 +1,4 @@
 import org.gradle.plugin.compatibility.compatibility
-
 plugins {
     `kotlin-dsl`
     `java-gradle-plugin`
@@ -8,7 +7,7 @@ plugins {
 }
 
 group = "io.github.dev-vikas-soni"
-version = "2.0.1"
+version = "2.1.0"
 
 repositories {
     mavenCentral()
