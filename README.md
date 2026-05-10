@@ -3,6 +3,7 @@
 **Build Intelligence for Android & Kotlin Multiplatform**
 
 [![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/io.github.dev-vikas-soni.lighthouse?label=Gradle%20Plugin%20Portal&color=orange)](https://plugins.gradle.org/plugin/io.github.dev-vikas-soni.lighthouse)
+[![GitHub Marketplace](https://img.shields.io/badge/Marketplace-Gradle%20Lighthouse-orange.svg?style=flat&logo=github)](https://github.com/marketplace/actions/gradle-lighthouse)
 [![Version: 2.1.1](https://img.shields.io/badge/Version-2.1.1-orange.svg)](https://github.com/dev-vikas-soni/gradle-lighthouse/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=flat&logo=kotlin&logoColor=white)

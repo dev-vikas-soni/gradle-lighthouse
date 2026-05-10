@@ -194,7 +194,7 @@ This will:
 steps:
   - run: ./gradlew lighthouseAudit lighthouseAggregate
 
-  - uses: github/codeql-action/upload-sarif@v3
+  - uses: github/codeql-action/upload-sarif@v4
     if: always()
     with:
       sarif_file: build/reports/lighthouse/
