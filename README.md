@@ -23,7 +23,19 @@
 │  💡 Fix 2 errors to unlock Expert rank                    │
 └──────────────────────────────────────────────────────────┘
 ```
+<img width="294" height="350" alt="nia_score_engine" src="https://github.com/user-attachments/assets/16c1b00a-538b-4fdf-952c-cb4dd7f2f14c" />
 
+
+<img width="1025" height="779" alt="nia_project_dashboard" src="https://github.com/user-attachments/assets/9406882f-da48-40e7-a1f2-d2766540e521" />
+
+
+<img width="1134" height="764" alt="nia_module_wise_report_card" src="https://github.com/user-attachments/assets/f056e01e-6f9b-4cc2-926b-0486912cd880" />
+
+
+<img width="1223" height="792" alt="actual_nia_project_dashbaord" src="https://github.com/user-attachments/assets/cc8b6fca-da3d-4c25-98f1-0f85c191d38b" />
+
+
+<img width="1223" height="785" alt="actual_nia_module_dashbaord" src="https://github.com/user-attachments/assets/4c0e4b32-eb17-4a24-b63d-160699a65f1f" />
 ---
 
 ## ⚡ Quick Start (One Line)
