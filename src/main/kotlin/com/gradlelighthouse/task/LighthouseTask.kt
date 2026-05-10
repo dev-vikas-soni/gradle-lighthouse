@@ -11,6 +11,7 @@ import com.gradlelighthouse.reporting.SarifReportGenerator
 import com.gradlelighthouse.reporting.JunitXmlReportGenerator
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
+import org.gradle.work.DisableCachingByDefault
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
@@ -31,6 +32,7 @@ import javax.inject.Inject
  * and passed as task `@Input` properties. The `@TaskAction` method has **zero** `project` access,
  * ensuring full compatibility with Gradle Configuration Cache (8.x+) and Isolated Projects (9.x+).
  */
+@DisableCachingByDefault(because = "Audit reports should be fresh and depend on non-file state like project configurations.")
 abstract class LighthouseTask @Inject constructor() : DefaultTask() {
 
     init {

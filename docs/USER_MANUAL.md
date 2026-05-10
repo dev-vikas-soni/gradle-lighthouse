@@ -12,7 +12,7 @@ Simply add to your `build.gradle.kts`:
 
 ```kotlin
 plugins {
-    id("io.github.dev-vikas-soni.lighthouse") version "2.0.2"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.1.1"
 }
 ```
 
@@ -25,13 +25,13 @@ Apply to the **root** project for the aggregate dashboard, and to **each module*
 ```kotlin
 // root build.gradle.kts
 plugins {
-    id("io.github.dev-vikas-soni.lighthouse") version "2.0.2"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.1.1"
 }
 
 // each module's build.gradle.kts
 plugins {
     id("com.android.library")
-    id("io.github.dev-vikas-soni.lighthouse") version "2.0.2"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.1.1"
 }
 ```
 
@@ -175,7 +175,7 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      - uses: dev-vikas-soni/gradle-lighthouse@v2
+      - uses: dev-vikas-soni/gradle-lighthouse@v2.1.1
         with:
           fail-on-severity: 'ERROR'
           upload-sarif: 'true'

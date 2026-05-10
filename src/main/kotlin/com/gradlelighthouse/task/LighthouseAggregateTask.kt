@@ -6,16 +6,15 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.tasks.Input
-import org.gradle.api.tasks.InputFiles
-import org.gradle.api.tasks.OutputDirectory
-import org.gradle.api.tasks.TaskAction
+import org.gradle.api.tasks.*
+import org.gradle.work.DisableCachingByDefault
 import java.io.File
 import javax.inject.Inject
 
 /**
  * Aggregates health reports from all sub-modules into a single Global Dashboard.
  */
+@DisableCachingByDefault(because = "Aggregation should always reflect the latest state of all modules.")
 abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
 
     init {
@@ -24,6 +23,7 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
     }
 
     @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
     abstract val moduleReportDirs: ConfigurableFileCollection
 
     @get:Input

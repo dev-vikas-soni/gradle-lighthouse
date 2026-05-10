@@ -7,7 +7,7 @@ plugins {
 }
 
 group = "io.github.dev-vikas-soni"
-version = "2.1.0"
+version = "2.1.1"
 
 repositories {
     mavenCentral()
@@ -17,7 +17,7 @@ repositories {
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
-        freeCompilerArgs.addAll("-Xjvm-default=all")
+        freeCompilerArgs.addAll("-jvm-default=no-compatibility")
     }
 }
 
