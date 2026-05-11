@@ -11,6 +11,8 @@
 
 > *"Google Lighthouse for your Gradle builds"* — One plugin, 20+ architectural checks, zero configuration.
 
+> ⭐️ **If you find this tool helpful in reducing your build times, please consider starring the repository! It helps the project grow.** ⭐️
+
 ```
 ┌──────────────────────────────────────────────────────────┐
 │  🏗️  Gradle Lighthouse — Score: 72/100 (+8)              │
@@ -186,6 +188,15 @@ Score uses exponential decay: `score = 100 × 0.98^(weighted_impact)`
 | 🔧 Standard | 70-84 | Good baseline, room to improve |
 | ⚠️ At Risk | 50-69 | Technical debt accumulating |
 | 🔴 Legacy | <50 | Urgent modernization needed |
+
+### 🏅 Show Off Your Score
+
+Once you achieve a great score, show it off in your project's `README.md`! It helps spread the word and shows you care about build health.
+
+```markdown
+[![Lighthouse Score](https://img.shields.io/badge/Lighthouse-92%2F100-success)](https://github.com/dev-vikas-soni/gradle-lighthouse)
+```
+*(Replace `92` with your actual score, and change the color to `success` (green), `yellow`, or `red` depending on your rank!)*
 
 ---
 
