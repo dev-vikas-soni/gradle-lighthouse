@@ -298,7 +298,11 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
         if ("DependencyHealth" in enabled) auditors.add(DependencyAuditor())
         if ("PlayStorePolicy" in enabled) auditors.add(PlayPolicyAuditor())
         if ("CatalogMigration" in enabled) auditors.add(CatalogMigrationAuditor())
-        if ("BuildSpeed" in enabled) auditors.add(BuildSpeedAuditor())
+        if ("BuildSpeed" in enabled) {
+            auditors.add(BuildSpeedAuditor())
+            auditors.add(JvmOptimizationAuditor())
+            auditors.add(CiCdOptimizationAuditor())
+        }
         if ("AppSize" in enabled) auditors.add(AppSizeAuditor())
         if ("Stability" in enabled) {
             auditors.add(ProguardSafetyAuditor())
