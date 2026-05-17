@@ -50,9 +50,14 @@ object JunitXmlReportGenerator {
             buildTestSuite(moduleName, category, categoryIssues, timestamp)
         }
 
+        // Total tests = one testcase per issue + one passing testcase per empty category
+        val passingCategories = allCategories.count { (grouped[it] ?: emptyList()).isEmpty() }
+        val totalTests = issues.size + passingCategories
+        val totalFailures = issues.count { it.severity == Severity.FATAL || it.severity == Severity.ERROR }
+
         return buildString {
             appendLine("""<?xml version="1.0" encoding="UTF-8"?>""")
-            appendLine("""<testsuites name="Gradle Lighthouse-$moduleName" tests="${issues.size + allCategories.size}" failures="${issues.count { it.severity == Severity.FATAL || it.severity == Severity.ERROR }}" errors="0" time="0">""")
+            appendLine("""<testsuites name="Gradle Lighthouse-$moduleName" tests="$totalTests" failures="$totalFailures" errors="0" time="0">""")
             testSuites.forEach { appendLine(it) }
             appendLine("</testsuites>")
         }

@@ -2,80 +2,110 @@
 
 All notable changes to this project will be documented in this file.
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
+## [Unreleased]
+
+### Changed
+- Refreshed the public documentation set (`README.md`, `docs/USER_MANUAL.md`, `docs/ENTERPRISE_ENFORCEMENT.md`) to reflect the current Phase 2 dashboard, Galaxy Graph, enforcement behavior, actual DSL defaults, and GitHub Actions usage.
+
+## [2.2.0] - 2026-05-17
+
+### Added
+- **Interactive Galaxy Graph**: canvas-based module dependency visualisation embedded in the aggregate dashboard. Modules are grouped by architectural layer into orbital rings. Cycle edges are drawn with a red glow. Self-contained — no CDN.
+- **Velocity Analytics**: trend charts for global health score, fatal issue count, and coupling density across the last 30 builds, persisted in `.lighthouse/global-history.json`.
+- **Enforcement gates**: `failOnDependencyCycle`, `failOnLayerViolation`, `minHealthScore` — evaluated by `lighthouseAggregate`. All default to off.
+- **Custom architecture rules**: `lighthouse-rules.yaml` support for isolation rules (`:feature:* !-> :feature:*`) and layering rules (`App -> Feature -> Core`), evaluated without any Gradle scripting.
+- **Sandbox Mode**: click any dependency edge in the Galaxy Graph to remove it from simulation. Cycle count and score update live.
+- **God Module Detection**: modules above coupling thresholds are given a larger visual halo in the graph.
+- **Rank system**: score-based progression from Legacy to Grandmaster Architect, shown in the terminal dashboard and global report.
+
+### Changed
+- **Global dashboard redesign**: dark-mode space theme, real-time module filtering, full-screen graph mode, PNG export.
+- **Report portability**: all graph logic and styles are fully inlined in the HTML output. No external assets.
+
+---
 
 ## [2.1.1] - 2026-05-12
 
 ### Added
-- **Gradle 9.5 Compatibility**: Hardened the plugin against binary breaking changes in Gradle 9.0+ by removing direct bytecode dependencies on internal Gradle classes.
-- **Project Isolation Support**: Added logic to safely scan module graphs in "Isolated Projects" mode, preventing cross-project model leakage.
+- Gradle 9.5 compatibility: removed dependencies on internal Gradle classes that changed between 8.x and 9.x.
+- Isolated Projects support: module graph scanning no longer crosses project boundaries at execution time.
 
 ### Fixed
-- **Configuration Cache Serialization**: Refactored task input providers to eliminate "Error while saving task graph" by ensuring only serializable data is captured.
-- **Lazy Dependency Resolution**: Fixed "Configuration resolved during configuration time" warnings by moving heavy scanning logic into lazy providers.
-- **Aggregator Navigation**: Resolved broken links in the Global Dashboard by isolating module reports into unique, path-sanitized subdirectories.
-- **Collision Prevention**: Modules with the same name in different paths (e.g. `:feature:ui` and `:core:ui`) no longer overwrite each other's reports.
+- Configuration Cache serialisation: eliminated "Error while saving task graph" by ensuring only serialisable data is captured at configuration time.
+- Lazy dependency resolution: "Configuration resolved during configuration time" warnings gone — all heavy scanning moved to lazy `Provider` delegates.
+- Broken navigation links in the global dashboard.
+- Report collision: modules with the same simple name in different paths (`:feature:ui`, `:core:ui`) were overwriting each other's reports. Fixed with path-sanitized subdirectories.
 
 ### Changed
-- **Performance Optimization**: Improved configuration phase speed in large projects by deferring intelligence scanning until task execution.
-- **Maintenance**: Updated GitHub Actions (Checkout, setup-java, github-script, gradle/actions) to latest versions.
-- **Tooling**: Upgraded Gradle Wrapper to 9.5 and JUnit to 6.0.3.
+- Performance: configuration phase is faster in large projects because all intelligence scanning is deferred to task execution.
+- Updated GitHub Actions (Checkout, setup-java, github-script, gradle/actions) to latest stable versions.
+- Gradle Wrapper updated to 9.5. JUnit Platform updated to 6.0.3.
+
+---
 
 ## [2.1.0] - 2026-05-10
+
+### Added
+- Phase 2 scaffolding: aggregate task infrastructure and enforcement engine stubs.
+
+---
 
 ## [2.0.1] - 2026-05-03
 
 ### Fixed
-- Initial stability fixes for Gradle Plugin Portal release.
+- Initial stability fixes following publication to the Gradle Plugin Portal.
+
+---
 
 ## [2.0.0] - 2026-05-03
 
 ### Added
-- **Gradle Plugin Portal Distribution**: Plugin now installable with one line: `id("io.github.dev-vikas-soni.lighthouse") version "2.0.0"`. No JitPack/resolutionStrategy needed.
-- **Colorful Terminal Dashboard**: Screenshot-worthy box-drawing output with ANSI colors, score delta, rank progression, and actionable next steps.
-- **Configuration Cache Readiness Auditor**: Detects allprojects/subprojects blocks, eager task creation, buildSrc usage, non-transitive R class, Project access in task actions.
-- **Module Graph Auditor**: DFS-based circular dependency detection, feature-to-feature coupling violation, high coupling score, DOT graph generation.
-- **Unused Dependency Auditor**: Import-based analysis to detect declared-but-unused dependencies and duplicate declarations.
-- **Test Coverage Auditor**: Dark module detection (zero tests), test-to-source ratio, JaCoCo presence, consumer-rules.pro validation.
-- **Security Auditor**: Hardcoded secrets detection, signing config safety, Gradle wrapper version check, dependency locking, JDK toolchain.
-- **Module Size Auditor**: Lines of code, public API surface, build file complexity with splitting recommendations.
-- **Version Catalog Hygiene Auditor**: Hardcoded version detection, unused TOML entries, bundle opportunity suggestions.
-- **Trend Tracking Auditor**: Historical score persistence to `.lighthouse/`, delta reporting, regression alerts.
-- **BuildConfig Waste Detection**: Flags library modules generating unused BuildConfig.java.
-- **kotlin-android-extensions Detection**: Flags deprecated plugin blocking Kotlin upgrades.
-- **GitHub Action** (`action.yml`): Composite action with SARIF upload, PR comment bot, configurable severity threshold.
-- **CI Workflow** (`.github/workflows/lighthouse-ci.yml`): Build/test/publish pipeline.
+- **Gradle Plugin Portal distribution**: `id("io.github.dev-vikas-soni.lighthouse") version "2.0.0"` — no JitPack, no `resolutionStrategy`.
+- **ANSI terminal dashboard**: color-coded box-drawing output with score delta, rank, and next steps.
+- **ConfigCacheReadinessAuditor**: detects `allprojects`/`subprojects` blocks, eager task creation, `buildSrc` usage, non-transitive R class, `Project` access in task actions.
+- **ModuleGraphAuditor**: DFS cycle detection, feature-to-feature coupling check, coupling density, DOT graph output.
+- **UnusedDependencyAuditor**: import-based source analysis for declared-but-unused dependencies and duplicates.
+- **TestCoverageAuditor**: dark module detection, test-to-source ratio, JaCoCo presence, `consumer-rules.pro` check.
+- **SecurityAuditor**: hardcoded secrets, signing config safety, Gradle wrapper version, dependency locking, JDK toolchain.
+- **ModuleSizeAuditor**: LOC analysis, public API surface measurement, build file complexity.
+- **VersionCatalogHygieneAuditor**: hardcoded versions, unused TOML entries, bundle opportunities.
+- **TrendTrackingAuditor**: score history in `.lighthouse/`, delta display, regression alerts.
+- BuildConfig waste detection in library modules.
+- `kotlin-android-extensions` detection.
+- `action.yml`: composite GitHub Action with SARIF upload, PR comment bot, configurable severity threshold.
 
 ### Changed
-- **Plugin ID**: Changed from `com.gradlelighthouse.plugin` to `io.github.dev-vikas-soni.lighthouse` for Gradle Plugin Portal.
-- **Group ID**: Changed from `com.github.dev-vikas-soni` to `io.github.dev-vikas-soni`.
-- **Gradle Version**: Upgraded wrapper from 7.6.4 to 8.10.2.
-- **Version**: Bumped to 2.0.0 (breaking change: plugin ID).
-- **Extension**: Added 8 new toggle properties (all default true): `enableConfigCacheCheck`, `enableModuleGraphCheck`, `enableUnusedDependencyCheck`, `enableTestCoverageCheck`, `enableVersionCatalogHygiene`, `enableSecurityCheck`, `enableModuleSizeCheck`, `enableTrendTracking`.
-- **JUnit XML**: Now emits all V2.0 categories (BuildPerformance, Security, Quality, etc.).
-- **ConsoleLogger**: Rewritten with ANSI colors and box-drawing dashboard.
-- **Docs**: Complete rewrite of HLD, LLD, and User Manual.
+- **Plugin ID**: `com.gradlelighthouse.plugin` → `io.github.dev-vikas-soni.lighthouse`.
+- **Group ID**: `com.github.dev-vikas-soni` → `io.github.dev-vikas-soni`.
+- Gradle Wrapper upgraded from 7.6.4 to 8.10.2.
+- 8 new extension toggles (all defaulting to `true`): `enableConfigCacheCheck`, `enableModuleGraphCheck`, `enableUnusedDependencyCheck`, `enableTestCoverageCheck`, `enableVersionCatalogHygiene`, `enableSecurityCheck`, `enableModuleSizeCheck`, `enableTrendTracking`.
+- JUnit XML output now covers all categories (BuildPerformance, Security, Quality, etc.).
+- `ConsoleLogger` rewritten with ANSI colors and box-drawing.
 
 ### Removed
-- JitPack `resolutionStrategy` hack from settings.gradle.kts.
-- Old plugin ID `com.gradlelighthouse.plugin` (breaking change — use new ID).
+- JitPack `resolutionStrategy` workaround.
+- Legacy plugin ID `com.gradlelighthouse.plugin` — **breaking change**: update your `plugins {}` block.
+
+---
 
 ## [1.0.0] - 2026-05-02
 
 ### Added
-- **Global Rebranding**: Officially rebranded to `Gradle Lighthouse`.
-- **Enterprise Capabilities**: Added `lighthouseAggregate` task to generate a single 360° dashboard for 100+ module ecosystems.
-- **Reporting Engines**: Added native SARIF v2.1.0 and JUnit XML generators for deep CI/CD integration.
-- **Auditor Extensibility**: Re-architected core engine to support isolated `Auditor` interfaces.
-- **Play Policy Auditor**: New compliance scanner to detect restricted permissions and target SDK mismatches.
-- **Configuration Cache Safety**: Reworked `AuditContext` to strictly serialize inputs, guaranteeing zero cache invalidations in Gradle 8+.
+- Rebranded to Gradle Lighthouse.
+- `lighthouseAggregate` task for multi-module 360° dashboards.
+- Native SARIF v2.1.0 and JUnit XML report generators.
+- `Auditor` interface — isolated, independently testable check implementations.
+- `PlayPolicyAuditor`: restricted permissions and target SDK compliance.
+- Reworked `AuditContext` for strict input serialisation and zero CC cache invalidation.
 
 ### Changed
-- Refactored package from `com.droidunplugged` to `com.gradlelighthouse`.
-- DSL Configuration block renamed to `lighthouse { }`.
-- Audit tasks renamed from `depAudit` to `lighthouseAudit`.
+- Package renamed from `com.droidunplugged` to `com.gradlelighthouse`.
+- DSL block renamed to `lighthouse {}`.
+- Task renamed from `depAudit` to `lighthouseAudit`.
 
 ### Removed
-- Removed legacy tightly-coupled monolithic execution patterns.
-
+- Legacy monolithic execution model.

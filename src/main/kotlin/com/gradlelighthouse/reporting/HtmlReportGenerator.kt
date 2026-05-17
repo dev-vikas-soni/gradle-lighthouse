@@ -222,7 +222,11 @@ object HtmlReportGenerator {
             when (it.severity) { Severity.FATAL -> 100; Severity.ERROR -> 50; Severity.WARNING -> 10; Severity.INFO -> 1 }
         }
         val topResolution = topIssue?.let {
-            "Fix ${it.title} to improve score by approx ${if (it.severity == Severity.FATAL) "35" else "15"}%"
+            // Re-score without the top issue to estimate the impact of fixing it
+            val issuesWithoutTop = issues - it
+            val scoreWithoutTop = HealthScoreEngine.calculateScore(issuesWithoutTop)
+            val gain = (scoreWithoutTop - report.score).coerceAtLeast(1)
+            "Fix '${it.title}' to improve score by approx +${gain}pts"
         } ?: "No critical fixes required."
 
         val issuesJson = issues.joinToString(",\n") { issue ->

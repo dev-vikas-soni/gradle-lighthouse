@@ -14,7 +14,10 @@ object ConsoleLogger {
         val isUnixLike = System.getProperty("os.name")?.lowercase(Locale.ROOT)?.let { osName ->
             osName.contains("mac") || osName.contains("linux") || osName.contains("nix")
         } ?: false
-        val hasCiUtf8 = System.getenv("CI") != null && System.getenv("LANG")?.contains("UTF-8") == true
+        // Check both LANG and LC_ALL — either being UTF-8 is sufficient
+        val hasUtf8Locale = listOf(System.getenv("LANG"), System.getenv("LC_ALL"), System.getenv("LC_CTYPE"))
+            .any { it?.contains("UTF-8", ignoreCase = true) == true || it?.contains("utf8", ignoreCase = true) == true }
+        val hasCiUtf8 = System.getenv("CI") != null && hasUtf8Locale
         isWindowsTerminal || isVsCodeTerminal || isUnixLike || hasCiUtf8
     }
 
@@ -68,7 +71,7 @@ object ConsoleLogger {
      * └─────────────────────────────────────────────────┘
      */
     fun printDashboard(
-        @Suppress("UNUSED_PARAMETER") moduleName: String,
+        moduleName: String,
         score: Int,
         previousScore: Int?,
         rank: HealthScoreEngine.ArchitectRank,
@@ -95,7 +98,7 @@ object ConsoleLogger {
             }
         } else ""
 
-        val nextRank = HealthScoreEngine.ArchitectRank.values()
+        val nextRank = HealthScoreEngine.ArchitectRank.entries
             .filter { it.minScore > score }
             .minByOrNull { it.minScore }
 
@@ -103,8 +106,8 @@ object ConsoleLogger {
 
         println("")
         println("${BOLD}${CYAN}┌${"─".repeat(width)}┐${RESET}")
-        printBoxLine("🏗️  Gradle Lighthouse — Score: ${scoreColor}${BOLD}$score/100${RESET}$deltaStr", width)
-        printBoxLine("Rank: ${BOLD}${rank.displayName}${RESET}$nextRankStr", width)
+        printBoxLine("🏗️  $moduleName", width)
+        printBoxLine("Score: ${scoreColor}${BOLD}$score/100${RESET}$deltaStr  ·  ${rank.emoji} ${rank.displayName}$nextRankStr", width)
         println("${CYAN}├${"─".repeat(width)}┤${RESET}")
 
         // Passed checks (max 3)

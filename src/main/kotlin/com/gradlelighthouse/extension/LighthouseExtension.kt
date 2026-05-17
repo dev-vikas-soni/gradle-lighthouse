@@ -98,6 +98,44 @@ abstract class LighthouseExtension {
     abstract val failOnSeverity: Property<String>
 
     /**
+     * Fail the build if any circular dependency cycles exist in the project module graph.
+     * Default: false
+     *
+     * **Scope:** This gate only executes during the `lighthouseAggregate` task, which
+     * requires a multi-module project where the root project applies Lighthouse.
+     * Single-module projects (or projects that only run `lighthouseAudit`) will not
+     * trigger this gate.  Use [enableModuleGraphCheck] for per-module cycle detection
+     * that appears in the individual module HTML reports.
+     */
+    abstract val failOnDependencyCycle: Property<Boolean>
+
+    /**
+     * Fail the build if any architectural layer violations are detected
+     * (e.g., a `:core:*` module depending on a `:feature:*` module).
+     * Default: false
+     *
+     * **Scope:** This gate only executes during the `lighthouseAggregate` task, which
+     * requires a multi-module project where the root project applies Lighthouse.
+     * Single-module projects (or projects that only run `lighthouseAudit`) will not
+     * trigger this gate.  The layer order enforced is:
+     * `Root → App → Feature → Domain → Data → Core → Shared`
+     * where a higher-level layer (e.g. `Core`) must never depend on a lower-level layer
+     * (e.g. `Feature`).
+     */
+    abstract val failOnLayerViolation: Property<Boolean>
+
+    /**
+     * Fail the build if the overall **global** architectural health score falls below
+     * this threshold.  Valid range: 0–100.  Default: 0 (disabled).
+     *
+     * **Scope:** This gate only executes during the `lighthouseAggregate` task and
+     * evaluates the *average* score across all audited modules.  It is not evaluated
+     * during per-module `lighthouseAudit` runs.  For per-module score gating use
+     * [failOnSeverity] instead.
+     */
+    abstract val minHealthScore: Property<Int>
+
+    /**
      * Enable SARIF report output for GitHub Security / GitLab SAST integration.
      * Default: true
      */
@@ -130,6 +168,9 @@ abstract class LighthouseExtension {
         enableModuleSizeCheck.convention(true)
         enableTrendTracking.convention(true)
         failOnSeverity.convention("NONE")
+        failOnDependencyCycle.convention(false)
+        failOnLayerViolation.convention(false)
+        minHealthScore.convention(0)
         enableSarifReport.convention(true)
         enableJunitXmlReport.convention(true)
     }

@@ -66,4 +66,38 @@ class LighthousePluginTest {
         val reportFile = File(testProjectDir, "build/reports/lighthouse/test-project-index.html")
         assertTrue(reportFile.exists(), "HTML report should be generated at ${reportFile.absolutePath}")
     }
+
+    @Test
+    fun `lighthouseAudit task tracks trends across runs`() {
+        val srcDir = File(testProjectDir, "src/main/kotlin")
+        srcDir.mkdirs()
+        File(srcDir, "Lib.kt").writeText("package com.test\nclass Lib")
+
+        // First run - Establish baseline
+        GradleRunner.create()
+            .withProjectDir(testProjectDir)
+            .withArguments("lighthouseAudit")
+            .withPluginClasspath()
+            .build()
+
+        // Second run - Score might change slightly because "Baseline" INFO issue is gone
+        GradleRunner.create()
+            .withProjectDir(testProjectDir)
+            .withArguments("lighthouseAudit", "--rerun-tasks")
+            .withPluginClasspath()
+            .build()
+
+        // Third run - Score should now be stable
+        val result = GradleRunner.create()
+            .withProjectDir(testProjectDir)
+            .withArguments("lighthouseAudit", "--rerun-tasks")
+            .withPluginClasspath()
+            .build()
+
+        val historyFile = File(testProjectDir, ".lighthouse/test-project-history.json")
+        assertTrue(historyFile.exists(), "History file should be created at ${historyFile.absolutePath}")
+
+        assertTrue(result.output.contains("Score:"), "Output should contain score")
+        assertTrue(result.output.contains("(±0)"), "Output should show zero score delta on stable run")
+    }
 }

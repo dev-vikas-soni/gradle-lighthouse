@@ -43,7 +43,7 @@ object SarifReportGenerator {
             appendLine(results.joinToString(",\n"))
             appendLine("""    ],""")
             appendLine("""    "automationDetails": {""")
-            appendLine("""      "id": "gradlelighthouse/$moduleName"  """)
+            appendLine("""      "id": "gradlelighthouse/$moduleName"""")
             appendLine("""    }""")
             appendLine("""  }]""")
             appendLine("}")
@@ -54,7 +54,7 @@ object SarifReportGenerator {
         val level = sarifLevel(issue.severity)
         return buildString {
             appendLine("          {")
-            appendLine("""            "id": "DU${String.format("%04d", index)}",""")
+            appendLine("""            "id": "LH${String.format("%04d", index)}",""")
             appendLine("""            "name": "${escapeJson(issue.title)}",""")
             appendLine("""            "shortDescription": { "text": "${escapeJson(issue.title)}" },""")
             appendLine("""            "fullDescription": { "text": "${escapeJson(issue.reasoning)}" },""")
@@ -72,7 +72,7 @@ object SarifReportGenerator {
         val level = sarifLevel(issue.severity)
         return buildString {
             appendLine("      {")
-            appendLine("""        "ruleId": "DU${String.format("%04d", ruleIndex)}",""")
+            appendLine("""        "ruleId": "LH${String.format("%04d", ruleIndex)}",""")
             appendLine("""        "ruleIndex": $ruleIndex,""")
             appendLine("""        "level": "$level",""")
             appendLine("""        "message": {""")
@@ -84,7 +84,7 @@ object SarifReportGenerator {
                 appendLine("""          "physicalLocation": {""")
                 appendLine("""            "artifactLocation": {""")
                 appendLine("""              "uri": "${escapeJson(issue.sourceFile)}",""")
-                appendLine("""              "uriBaseId": "%SRCROOT%"  """)
+                appendLine("""              "uriBaseId": "%SRCROOT%"""")
                 appendLine("""            }""")
                 if (issue.sourceLine != null) {
                     appendLine("""            ,"region": { "startLine": ${issue.sourceLine} }""")

@@ -1,30 +1,48 @@
-# Gradle Lighthouse Roadmap 🗺️
+# Roadmap
 
-This document outlines the strategic direction for Gradle Lighthouse. We prioritize features based on **Engineering ROI** and **Architectural Safety**.
-
-## 📍 Phase 1: Foundation (V1.x - V2.x) - [CURRENT]
-- [x] **360° Core Auditors**: 20+ base rules for performance, security, and stability.
-- [x] **Enterprise Aggregation**: Global dashboards for 100+ module projects.
-- [x] **CI/CD Native**: SARIF and JUnit XML reporting for GitHub, GitLab, and Jenkins.
-- [x] **Configuration Cache Ready**: Fully compatible with Gradle 8.x + Isolated Projects.
-
-## 🚀 Phase 2: Intelligence & Visualization (Q3 2026)
-- [ ] **Interactive Module Graph**: Dynamic, browser-based visualization of module coupling and circular dependencies.
-- [ ] **Historical Trend Analytics**: Track "Architecture Health" over months to prevent technical debt creep.
-- [ ] **Build Scan™ Integration**: Deep-linking from Lighthouse reports directly into Gradle Build Scans for granular trace analysis.
-- [ ] **Custom Rule DSL**: A YAML-based DSL for teams to define their own architectural constraints without writing Kotlin.
-
-## 🧠 Phase 3: Autonomous Refactoring (Q4 2026)
-- [ ] **AI-Driven Prescriptions**: Integration with LLMs to provide "One-Click Fix" suggestions for complex Gradle script refactors.
-- [ ] **Automated Migration Bots**: PR-ready scripts to migrate from KAPT to KSP or XML to Compose.
-- [ ] **Predictive Build Speeds**: Estimating build time impact *before* you add a new dependency.
-
-## 🌍 Phase 4: Ecosystem Expansion (2027)
-- [ ] **Lighthouse CLI**: A standalone CLI for non-Gradle environments.
-- [ ] **IDE Plugin**: Real-time architectural feedback directly inside Android Studio / IntelliJ.
-- [ ] **Cloud Dashboard**: Centralized health monitoring for cross-project organizational portfolios.
+Planned work, roughly in priority order. Phases 1 and 2 are shipped.
 
 ---
 
-### 💡 Have an Idea?
-We are an community-driven project. If you have a feature suggestion, please [open an issue](https://github.com/dev-vikas-soni/gradle-lighthouse/issues) or start a discussion!
+## ✅ Phase 1 — Foundation (v1.x–v2.x)
+
+- [x] 19 auditors covering performance, security, quality, compliance, and module architecture
+- [x] `lighthouseAggregate` task for multi-module summary dashboards
+- [x] SARIF v2.1.0 and JUnit XML output for CI/CD integration
+- [x] Configuration Cache compatible (Gradle 8.5+)
+- [x] Isolated Projects compatible (Gradle 9.x)
+
+---
+
+## ✅ Phase 2 — Visualisation & Enforcement (v2.2)
+
+- [x] Interactive Galaxy Graph — canvas-based module dependency visualisation with cycle highlighting
+- [x] Historical trend tracking — health score, coupling density, fatal issue count across 30 builds
+- [x] Enforcement gates — build fails on cycles, layer violations, or score floor breaches
+- [x] Custom YAML rules (`lighthouse-rules.yaml`) for team-specific architectural constraints
+- [x] Sandbox Mode — simulate removing a dependency edge and see the effect on score and cycles before touching code
+- [x] Gamified rank system (Legacy → Grandmaster Architect)
+
+---
+
+## 🔲 Phase 3 — Automation (Q4 2026)
+
+- [ ] **Gradle Build Scan integration**: deep-link from Lighthouse HTML reports into Gradle Build Scans for trace-level analysis
+- [ ] **AI-assisted fix suggestions**: LLM-generated diffs for common refactors (KAPT → KSP, `buildSrc` → `build-logic/`)
+- [ ] **Predictive dependency impact**: estimate build time delta before adding a new dependency, using past CI data
+- [ ] **Migration bots**: CI-ready, commit-ready scripts for high-value but mechanical migrations
+
+---
+
+## 🔲 Phase 4 — Ecosystem (2027)
+
+- [ ] **Lighthouse CLI**: standalone tool for environments without a Gradle wrapper
+- [ ] **IDE plugin**: real-time cycle warnings and health score inside Android Studio and IntelliJ IDEA
+- [ ] **Cloud Dashboard**: cross-repository health monitoring for organisations managing multiple projects
+- [ ] **KMP deep audits**: `expect`/`actual` coverage checks and platform-specific dependency hygiene
+
+---
+
+## Suggestions
+
+Open an [issue](https://github.com/dev-vikas-soni/gradle-lighthouse/issues) or start a [discussion](https://github.com/dev-vikas-soni/gradle-lighthouse/discussions).

@@ -1,0 +1,69 @@
+# 🛡️ Gradle Lighthouse: Custom Architecture Rules
+#
+# This file allows you to define organizational constraints for your module graph.
+# The Lighthouse Enforcement Engine validates these rules during 'lighthouseAggregate'.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# SUPPORTED RULE TYPES
+# ─────────────────────────────────────────────────────────────────────────────
+#
+# 1. Layering  (condition: "A -> B -> C")
+#    Enforces a strict top-down dependency flow between architectural layers.
+#    IMPORTANT: Only layers EXPLICITLY listed in the condition are checked.
+#    Modules in layers not listed are silently excluded from this rule.
+#    → Use the full chain (App -> Feature -> … -> Shared) for project-wide coverage.
+#
+# 2. Isolation  (condition: "A !-> B")
+#    Explicitly forbids any dependency where the source matches pattern A
+#    and the target matches pattern B.
+#    Same-group sub-modules are always exempt (e.g. :feature:search:impl → :feature:search:api).
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# PATTERN SYNTAX (for isolation rules)
+# ─────────────────────────────────────────────────────────────────────────────
+#
+#   *                 → Matches EVERY module in the project (universal wildcard).
+#                       Example: "* !-> :core:internal" forbids all modules from
+#                       depending on :core:internal.
+#
+#   :prefix:*         → Matches any module whose path starts with :prefix:.
+#                       Example: ":feature:* !-> :feature:*" forbids cross-feature deps.
+#
+#   :exact:path       → Exact module path match (no wildcard).
+#                       Example: ":app !-> :core:debug"
+#
+# ─────────────────────────────────────────────────────────────────────────────
+# LEVEL FIELD
+# ─────────────────────────────────────────────────────────────────────────────
+#
+#   fatal   → Fails the build with a 💀 icon. Use for non-negotiable constraints
+#             (e.g. exposing internal implementation modules).
+#
+#   error   → Fails the build with a 🚨 icon. Use for strong architectural rules
+#             that should block PRs. (DEFAULT if level is omitted)
+#
+#   warning → Logs to the console with a ⚠️  icon but does NOT fail the build.
+#             Use for advisory rules or rules being introduced gradually.
+#
+# ─────────────────────────────────────────────────────────────────────────────
+
+rules:
+  - name: "Strict Layering Protocol"
+    condition: "App -> Feature -> Domain -> Data -> Core -> Shared"
+    level: "error"
+    description: "Ensures lower-level layers (like Core) never depend on higher-level layers (like Feature). Covers all standard layers — modules in unrecognised layers are excluded from this rule."
+
+  - name: "Feature Isolation"
+    condition: ":feature:* !-> :feature:*"
+    level: "error"
+    description: "Prevents sibling features from depending on each other directly. Use :core or :domain for shared logic. Sub-modules of the same feature (:feature:search:impl -> :feature:search:api) are exempt."
+
+  - name: "No Direct Data Access from UI"
+    condition: ":feature:*:ui !-> :feature:*:data"
+    level: "warning"
+    description: "Advisory: Encourages using Domain layer (UseCases/Repositories) instead of direct Data layer access in UI modules. Does NOT fail the build — change level to 'error' to enforce."
+
+  - name: "Restricted Design System"
+    condition: "* !-> :core:design-system:internal"
+    level: "fatal"
+    description: "Internal design system implementation details must never be exposed to other modules. The bare * source pattern means every module in the project is forbidden from depending on :core:design-system:internal."

@@ -43,7 +43,8 @@ object HealthScoreEngine : Serializable {
         LEGACY("Legacy", "🔴", 0);
 
         companion object {
-            fun fromScore(score: Int): ArchitectRank = values().first { score >= it.minScore }
+            /** Returns the highest rank whose [minScore] the given [score] satisfies. */
+            fun fromScore(score: Int): ArchitectRank = entries.first { score >= it.minScore }
         }
     }
 

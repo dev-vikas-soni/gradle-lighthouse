@@ -100,18 +100,17 @@ class TrendTrackingAuditor : Auditor {
         val timestamp = java.time.LocalDateTime.now().toString()
         val newEntry = """{"score":$score,"timestamp":"$timestamp"}"""
 
-        val existing = if (historyFile.exists()) {
-            val content = historyFile.readText().trim()
-            if (content.startsWith("[") && content.endsWith("]")) {
-                content.removeSurrounding("[", "]").trim()
-            } else ""
-        } else ""
+        // Parse existing entries, append the new one, then keep only the last 50.
+        // Using parseHistory() instead of raw string splitting avoids off-by-one
+        // errors when timestamp strings happen to contain "},{".
+        val existingEntries = if (historyFile.exists()) {
+            parseHistory(historyFile.readText())
+        } else emptyList()
 
-        val entries = if (existing.isNotEmpty()) "$existing,$newEntry" else newEntry
-        // Keep last 50 entries
-        val allEntries = entries.split("},").map { it.trim().removeSuffix("}") + "}" }
-            .takeLast(50).joinToString(",")
-        historyFile.writeText("[$allEntries]")
+        val trimmed = (existingEntries.takeLast(49) // keep 49 old + 1 new = 50 max
+            .map { """{"score":${it.score},"timestamp":"${it.timestamp}"}""" } + newEntry)
+            .joinToString(",")
+        historyFile.writeText("[$trimmed]")
     }
 
     /**

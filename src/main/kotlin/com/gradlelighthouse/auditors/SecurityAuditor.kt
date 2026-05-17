@@ -92,17 +92,20 @@ class SecurityAuditor : Auditor {
             val wrapperVersion = versionMatch?.groupValues?.get(1) ?: ""
 
             if (wrapperVersion.isNotEmpty()) {
-                val major = wrapperVersion.split(".").firstOrNull()?.toIntOrNull() ?: 0
-                val minor = wrapperVersion.split(".").getOrNull(1)?.toIntOrNull() ?: 0
-                if (major < 8 || (major == 8 && minor < 5)) {
+                val parts  = wrapperVersion.split(".")
+                val major  = parts.getOrNull(0)?.toIntOrNull() ?: 0
+                val minor  = parts.getOrNull(1)?.toIntOrNull() ?: 0
+                // Flag anything below 8.10 — Gradle 8.10+ and all 9.x releases are safe.
+                val isTooOld = major < 8 || (major == 8 && minor < 10)
+                if (isTooOld) {
                     issues.add(AuditIssue(
                         category = "Security",
                         severity = Severity.WARNING,
                         title = "Gradle Wrapper Version Outdated ($wrapperVersion)",
-                        reasoning = "Gradle version $wrapperVersion may have known security vulnerabilities and lacks performance improvements from newer versions. Current recommended: 8.10+.",
-                        impactAnalysis = "Older Gradle versions may have path traversal or dependency confusion vulnerabilities. They also miss important performance features (Configuration Cache stability, faster dependency resolution).",
-                        resolution = "Update via: ./gradlew wrapper --gradle-version=8.10.2 --distribution-type=bin",
-                        roiAfterFix = "Security patches, performance improvements, and access to modern Gradle features.",
+                        reasoning = "Gradle $wrapperVersion may have known security vulnerabilities and lacks performance improvements from newer releases. Current recommended minimum: 8.10+.",
+                        impactAnalysis = "Older Gradle versions may have path traversal or dependency confusion vulnerabilities. They also miss Configuration Cache stability improvements and faster dependency resolution.",
+                        resolution = "Update via: ./gradlew wrapper --gradle-version=9.5 --distribution-type=bin",
+                        roiAfterFix = "Security patches, performance improvements, and access to modern Gradle features (Isolated Projects, type-safe accessors).",
                         sourceFile = wrapperProps.absolutePath
                     ))
                 }

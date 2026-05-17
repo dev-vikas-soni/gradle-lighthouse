@@ -19,7 +19,6 @@ import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.Internal
-import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
 import org.gradle.api.tasks.TaskAction
 import java.io.File
@@ -113,12 +112,15 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
             return
         }
 
-        // 3. Execute auditors with error boundaries
+        // 3a. Run all auditors EXCEPT TrendTracking first so we can compute the health score.
+        //     TrendTracking needs context.currentScore which is only known after scoring, so it
+        //     runs as a second pass against a context copy that carries the computed score.
         val allIssues = mutableListOf<AuditIssue>()
-        activeAuditors.forEach { auditor ->
+        val (trendAuditors, mainAuditors) = activeAuditors.partition { it.name == "TrendTracking" }
+
+        fun runAuditor(auditor: Auditor, ctx: AuditContext) {
             try {
-                val issues = auditor.audit(context)
-                allIssues.addAll(issues)
+                allIssues.addAll(auditor.audit(ctx))
             } catch (e: Exception) {
                 ConsoleLogger.error("Auditor '${auditor.name}' failed: ${e.message}")
                 allIssues.add(AuditIssue(
@@ -133,18 +135,22 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
             }
         }
 
+        mainAuditors.forEach { runAuditor(it, context) }
+
         // 4. Generate reports
         ConsoleLogger.info("🎯", "[DONE]", "[$name] Analysis Complete. Exporting Intelligence...")
         val outputDir = reportOutputDir.get().asFile
         if (!outputDir.exists()) outputDir.mkdirs()
 
-        // Calculate health score
+        // Calculate health score from main auditors first
         val healthReport = com.gradlelighthouse.core.HealthScoreEngine.generateReport(allIssues)
 
-        // Save trend history if TrendTracking is enabled
+        // 3b. Now run TrendTracking with currentScore populated so delta comparison works correctly.
         var previousScore: Int? = null
-        if ("TrendTracking" in enabledAuditorNames.get()) {
+        if (trendAuditors.isNotEmpty()) {
             previousScore = TrendTrackingAuditor().getPreviousScore(File(rootDirPath.get()), name)
+            val contextWithScore = context.copy(currentScore = healthReport.score)
+            trendAuditors.forEach { runAuditor(it, contextWithScore) }
             TrendTrackingAuditor().saveScore(File(rootDirPath.get()), name, healthReport.score)
         }
 

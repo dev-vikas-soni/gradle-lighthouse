@@ -1,5 +1,6 @@
 package com.gradlelighthouse
 
+import com.gradlelighthouse.core.ConsoleLogger
 import com.gradlelighthouse.extension.LighthouseExtension
 import com.gradlelighthouse.task.LighthouseTask
 import com.gradlelighthouse.task.LighthouseAggregateTask
@@ -19,12 +20,12 @@ import java.util.Properties
 class LighthousePlugin : Plugin<Project> {
 
     companion object {
-        const val VERSION = "2.1.1"
+        const val VERSION = "2.2.0"
     }
 
     override fun apply(project: Project) {
         if (project == project.rootProject) {
-            println("[Lighthouse] 🛡️ Hardened Intelligence Engine V$VERSION initialized for ${project.name}")
+            ConsoleLogger.info("🛡️", "[LH]", "Gradle Lighthouse V$VERSION initialized for '${project.name}'")
         }
 
         val extension = project.extensions.create(
@@ -47,6 +48,10 @@ class LighthousePlugin : Plugin<Project> {
                     task.pluginVersion.set(VERSION)
                     task.reportOutputDir.set(project.layout.buildDirectory.dir("reports/lighthouse"))
 
+                    task.failOnDependencyCycle.set(extension.failOnDependencyCycle)
+                    task.failOnLayerViolation.set(extension.failOnLayerViolation)
+                    task.minHealthScore.set(extension.minHealthScore)
+                    task.rootDirPath.set(project.rootDir.absolutePath)
                     project.subprojects.forEach { sub ->
                         sub.plugins.withId("io.github.dev-vikas-soni.lighthouse") {
                             val subAuditTask = sub.tasks.named("lighthouseAudit", LighthouseTask::class.java)
@@ -54,6 +59,7 @@ class LighthousePlugin : Plugin<Project> {
                             task.moduleReportDirs.from(subAuditTask.flatMap { it.reportOutputDir })
                         }
                     }
+                    task.moduleDependencyGraphData.set(project.provider { captureModuleDependencyGraph(project) })
                 }
             })
         }

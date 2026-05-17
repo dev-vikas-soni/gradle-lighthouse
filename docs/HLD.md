@@ -1,28 +1,51 @@
-# High-Level Technical Design Document (HLD)
+# High-Level Design
 
-## 1. Project Overview
+> Gradle Lighthouse — v2.2.0 | Plugin ID: `io.github.dev-vikas-soni.lighthouse`
 
-**Gradle Lighthouse** is an enterprise-grade Gradle diagnostic engine designed for Android and Kotlin Multiplatform (KMP) codebases. Its primary objective is to scale to 1M+ developers by providing instantaneous, architectural intelligence during the build process.
+---
 
-The plugin acts as an automated "Principal Engineer," intercepting the build pipeline to scan for structural flaws, performance bottlenecks, security vulnerabilities, and compliance violations — saving hundreds of engineering hours per year across large organizations.
+## Table of Contents
 
-**Plugin ID**: `io.github.dev-vikas-soni.lighthouse`
-**Distribution**: [Gradle Plugin Portal](https://plugins.gradle.org/plugin/io.github.dev-vikas-soni.lighthouse)
-**Version**: 2.1.1
+1. [What this is](#1-what-this-is)
+2. [System architecture](#2-system-architecture)
+3. [Design decisions](#3-design-decisions)
+4. [Execution flow](#4-execution-flow)
+5. [Component dependencies](#5-component-dependencies)
+6. [Constraints](#6-constraints)
 
-## 2. System Architecture
+---
 
-The plugin runs locally on developer machines and in CI/CD environments seamlessly. It leverages Gradle's Configuration Cache and Isolated Projects model to ensure zero-overhead execution.
+## 1. What this is
+
+Gradle Lighthouse is a Gradle plugin that runs structural audits on Android and Kotlin Multiplatform projects at build time. It hooks into the Gradle task graph, captures project state during configuration, and analyses it during execution.
+
+The plugin produces HTML, SARIF, and JUnit XML reports per module, plus an aggregate dashboard with an interactive module graph visualization. Optionally, it fails the build when specific structural violations are detected.
+
+### Goals
+
+| Goal | How |
+|------|-----|
+| No required configuration | All 19 auditors enabled by convention; plugin works with zero `lighthouse {}` block |
+| Configuration Cache safe | All project data captured as serialized `Provider` inputs before task execution |
+| Isolated Projects compatible | No cross-project `project()` access at execution time |
+| Self-contained reports | HTML fully inlined — no CDN, works in air-gapped environments |
+| Enforcement at aggregation | Cycle, layer, and score gates run on the complete graph, not per-module |
+
+---
+
+## 2. System architecture
+
+Two phases, aligned with Gradle's lifecycle. Configuration phase captures data only. Execution phase does all the work.
 
 ```mermaid
 graph TD
     A[Gradle Configuration Phase] -->|Plugin Applied| B(LighthousePlugin)
-    B -->|Registers Extensions| C[LighthouseExtension]
+    B -->|Registers Extension| C[LighthouseExtension]
     B -->|Registers Tasks| D[LighthouseTask]
     B -->|Captures Graph| E2[Module Dependency Graph]
-    D -.->|Extracts Context| E((AuditContext))
+    D -.->|Serializes Context| E((AuditContext))
 
-    subgraph Execution Phase [Gradle Execution Phase - CC Safe]
+    subgraph Execution Phase [Gradle Execution Phase — CC Safe]
         E --> F[Auditor Engine]
         F --> G1[BuildSpeedAuditor]
         F --> G2[ConfigCacheReadinessAuditor]
@@ -33,80 +56,97 @@ graph TD
         F --> G7[ModuleSizeAuditor]
         F --> G8[VersionCatalogHygieneAuditor]
         F --> G9[TrendTrackingAuditor]
-        F --> G10[... 10 other Auditors]
+        F --> G10[...10 additional Auditors]
     end
 
     G1 --> H{HealthScoreEngine}
     G2 --> H
     G3 --> H
     G5 --> H
+    G9 --> H
     G10 --> H
 
     H --> I[Reporting Layer]
     I --> J1[HTML Dashboard]
     I --> J2[SARIF v2.1.0]
     I --> J3[JUnit XML]
-    I --> J4[Terminal Dashboard Box]
+    I --> J4[Terminal Dashboard]
     I --> J5[JSON for Aggregation]
 
     H --> K[TrendTracker]
     K --> L[.lighthouse/ History]
+
+    J5 --> AGG[LighthouseAggregateTask]
+    AGG --> GATE{Enforcement Engine}
+    GATE -->|Violation| EXIT[❌ Build Failure]
+    GATE -->|Pass| GLOB[✅ Global Dashboard + Galaxy Graph]
 ```
 
-### 2.1 Core Components
+### 2.1 Core components
 
-1. **LighthousePlugin (Entry Point)**: Applies the DSL extension (`lighthouse { }`) and registers tasks. Captures module dependency graph for cycle detection.
-2. **AuditContext (The Snapshot)**: A `Serializable` data class capturing the entire project state (dependencies, manifest, properties, source sets, module graph) during Configuration Phase. Fully decoupled from `org.gradle.api.Project`.
-3. **Auditor Engine**: 19 stateless `Auditor` implementations organized by domain:
-   - **Performance**: BuildSpeed, ConfigCacheReadiness
-   - **Architecture**: ModuleGraph, ModuleSize
-   - **Dependencies**: UnusedDependency, ConflictIntelligence, DependencyHealth, VersionCatalogHygiene, CatalogMigration
-   - **Security**: Security
-   - **Quality**: TestCoverage, ProguardSafety, ManifestAuditor
-   - **Modernization**: Modernization, StartupPerformance, AppSize
-   - **Compliance**: PlayPolicy, KmpStructure
-   - **Observability**: TrendTracking
-4. **Health Score Engine**: Exponential decay algorithm (`score = 100 × 0.98^impact`) with severity weights (FATAL=35, ERROR=15, WARNING=5, INFO=1).
-5. **Reporting Layer**: HTML, SARIF, JUnit XML, colorful terminal dashboard, JSON (for aggregation).
-6. **Trend Tracker**: Persists scores to `.lighthouse/` for historical comparison.
+| Component | Responsibility |
+|-----------|----------------|
+| **LighthousePlugin** | Entry point. Registers the `lighthouse {}` DSL extension, creates `lighthouseAudit` and `lighthouseAggregate` tasks, and captures all project state as serialized `Provider` inputs during configuration. |
+| **AuditContext** | A `Serializable` data class holding a point-in-time snapshot of the project: dependencies, manifests, Gradle properties, source sets, and the module graph. Has no reference to `org.gradle.api.Project`. |
+| **Auditor Engine** | 19 stateless `Auditor` implementations. Each is a pure function `AuditContext → List<AuditIssue>`. Six domains: Performance, Architecture, Dependencies, Security, Quality, Compliance. |
+| **HealthScoreEngine** | Exponential decay: `score = 100 × 0.98^(weighted_impact)`. Weights: FATAL=35, ERROR=15, WARNING=5, INFO=1. Returns score, rank, and per-issue deductions. |
+| **Reporting Layer** | Self-contained HTML (includes the Galaxy Graph canvas), SARIF v2.1.0, JUnit XML (Surefire format), ANSI terminal dashboard, and a JSON file consumed by aggregation. |
+| **TrendTracker** | Appends per-module and global scores, coupling density, and fatal issue counts to `.lighthouse/`. The aggregate dashboard reads these for the velocity charts. |
+| **Enforcement Engine** | Evaluates `failOnDependencyCycle`, `failOnLayerViolation`, `minHealthScore`, and custom YAML rules. Runs only during `lighthouseAggregate`. |
+| **Galaxy Graph Engine** | Canvas-based module graph renderer. Spring-repulsion layout, orbital layer grouping, cycle highlighting, Sandbox Mode edge cutting, PNG export. |
 
-## 3. Design Decisions & Constraints
+---
 
-### 3.1 Configuration Cache Compatibility
-**Problem**: Traditional plugins fail when Configuration Cache is enabled due to accessing `Project` during execution.
-**Solution**: All project data is captured via `Provider` APIs during configuration and passed as `@Input` properties. Zero `Project` access in `@TaskAction`. Verified compatible with Gradle 8.10+.
+## 3. Design decisions
 
-### 3.2 Isolated Projects Compatibility (Gradle 9.x Ready)
-**Problem**: Subprojects will be memory-isolated in Gradle 9.x.
-**Solution**: Each module produces its own JSON report via `LighthouseTask`. The `LighthouseAggregateTask` only reads output directories declared as `@InputFiles`. No cross-project access.
+### 3.1 Configuration Cache compatibility
+Plugins that reference `Project` during task execution break when CC is enabled, because Gradle snapshots the task graph and replays inputs without re-evaluating configuration. Our fix: everything is captured during configuration via `Provider` APIs and stored as `@Input` properties. The `@TaskAction` body has no live Gradle API references. Tested with Gradle 8.5–9.5.
 
-### 3.3 Zero-Dependency Reporting
-**Problem**: Enterprise networks block CDNs.
-**Solution**: HTML reports are self-contained (inline CSS, system fonts, no JS CDN). Single-file portable reports.
+### 3.2 Isolated Projects (Gradle 9.x)
+Gradle 9.x memory-isolates subprojects, disallowing cross-project `project()` lookups at execution time. Each `LighthouseTask` emits a self-contained JSON file. `LighthouseAggregateTask` declares those files as `@InputFiles`, so it never needs to call `project()` on another subproject.
 
-### 3.4 Zero Configuration
-**Problem**: Plugin adoption drops >80% when configuration is required.
-**Solution**: All 19 auditors enabled by default. Plugin works with just `id("io.github.dev-vikas-soni.lighthouse")` — no `lighthouse {}` block needed.
+### 3.3 Self-contained reports
+Enterprise networks often block CDNs (jsDelivr, unpkg, Google Fonts). Reports that reference external resources silently break in those environments. All CSS, JS, and the Galaxy Graph canvas engine are inlined. No `<script src="...">` or `<link href="...">` referencing external hosts.
 
-### 3.5 Gradle Plugin Portal Distribution
-**Problem**: JitPack requires `resolutionStrategy` hacks that block mass adoption.
-**Solution**: Published to Gradle Plugin Portal with `com.gradle.plugin-publish`. Standard one-line `plugins { id(...) }` installation.
+### 3.4 Zero configuration on first run
+Plugin adoption falls off when setup requires a block of DSL before anything works. All 19 auditors default to `convention(true)`. Adding `id("io.github.dev-vikas-soni.lighthouse")` is enough; no `lighthouse {}` block is needed.
 
-## 4. Execution Flow
+### 3.5 Custom architecture rules via YAML
+Different organizations model their module structure differently. Rather than hardcoding `App → Feature → Core`, the plugin supports `lighthouse-rules.yaml` — a plain YAML file where teams express their own isolation and layering rules. The Enforcement Engine evaluates these rules during aggregation without requiring any Gradle build script changes.
 
-1. **Installation**: `plugins { id("io.github.dev-vikas-soni.lighthouse") version "2.1.1" }` in build.gradle.kts.
-2. **Configuration**: Gradle configures the graph. `LighthousePlugin` captures module state into serialized `@Input` properties. Module dependency graph is captured for cycle detection.
-3. **Task Graph Ready**: `lighthouseAudit` placed in execution queue.
-4. **Execution**: `LighthouseTask.execute()` reconstructs `AuditContext` from serialized inputs.
-5. **Analysis**: Context passed to all enabled `Auditor` implementations (with error boundaries).
-6. **Scoring**: `HealthScoreEngine` calculates score + rank + deductions.
-7. **Terminal Dashboard**: Colorful box-drawing summary printed (score, delta, issues, next rank).
-8. **Trend Persistence**: Score saved to `.lighthouse/{module}-history.json`.
-9. **Report Emission**: HTML, SARIF, JUnit XML, JSON written to `build/reports/lighthouse/`.
-10. **CI Gate**: If `failOnSeverity` is set, build fails on threshold violations.
-11. **Aggregation (Optional)**: `lighthouseAggregate` combines all module JSONs into a global dashboard.
+### 3.6 Stateless auditors
+Stateful auditors would complicate testing and create thread-safety concerns if we ever parallelize execution. All 19 auditors have no class-level mutable state. Each call is `AuditContext → List<AuditIssue>`. A `try/catch` in `LighthouseTask` wraps each auditor call — one failing auditor logs a warning and is skipped, the rest continue.
 
-## 5. Module Dependency Graph
+---
+
+## 4. Execution flow
+
+```
+Step 1   Plugin Applied          LighthousePlugin.apply(project) invoked by Gradle
+Step 2   Extension Registered    lighthouse {} DSL block registered on project
+Step 3   Graph Captured          Module dependency graph serialized to pipe-delimited strings
+Step 4   Task Registered         lighthouseAudit + lighthouseAggregate added to task graph
+Step 5   CC Snapshot Frozen      All Provider inputs sealed — Configuration Phase ends
+          ─────────────────── Execution Phase ────────────────────────────────────────
+Step 6   Task Executes           LighthouseTask.execute() called by Gradle
+Step 7   Context Rebuilt         AuditContext reconstructed from serialized @Input properties
+Step 8   Auditors Run            Each enabled Auditor.audit(context) called in sequence
+Step 9   Score Calculated        HealthScoreEngine computes score, rank, and deductions
+Step 10  Terminal Output         ConsoleLogger prints ANSI dashboard (score, delta, next rank)
+Step 11  Trend Persisted         Score saved to .lighthouse/{module}-history.json
+Step 12  Reports Written         HTML, SARIF, JUnit XML, and JSON written to build/reports/lighthouse/
+Step 13  Per-Module Gate         If failOnSeverity set, build fails on threshold breach
+          ─────────────────── Aggregation Phase ──────────────────────────────────────
+Step 14  Aggregation Runs        LighthouseAggregateTask reads all module JSON output files
+Step 15  Global History          Coupling density + global score appended to global-history.json
+Step 16  Enforcement Checked     failOnDependencyCycle, failOnLayerViolation, minHealthScore evaluated
+Step 17  Custom YAML Rules       lighthouse-rules.yaml constraints evaluated against final graph
+Step 18  Global Dashboard        project-dashboard.html with Galaxy Graph + Velocity Analytics emitted
+```
+
+---
+
+## 5. Component dependencies
 
 ```mermaid
 graph LR
@@ -115,17 +155,24 @@ graph LR
     Task --> Context[AuditContext]
     Context --> Auditors[19 Auditors]
     Auditors --> Score[HealthScoreEngine]
-    Score --> Reports[HTML/SARIF/JUnit/Terminal]
-    Score --> Trend[TrendTracker]
+    Score --> Reports[HTML / SARIF / JUnit XML / Terminal]
+    Score --> Trend[TrendTracker → .lighthouse/]
+    Aggregate --> Enforcement[Enforcement Engine]
+    Enforcement --> Dashboard[Global Dashboard + Galaxy Graph]
 ```
 
-## 6. Non-Functional Requirements
+---
 
-| Requirement | Target |
-|-------------|--------|
-| Configuration Cache | ✅ Compatible |
-| Isolated Projects | ✅ Ready |
-| Gradle Version | 8.5+ |
-| JDK | 17+ |
-| Build Overhead | <2s per module |
-| Zero External Deps | ✅ (no runtime dependencies) |
+## 6. Constraints
+
+| Requirement | Target | Notes |
+|-------------|--------|-------|
+| Configuration Cache | Compatible | Verified Gradle 8.5–9.5 |
+| Isolated Projects | Safe | No cross-project access at execution |
+| Minimum Gradle version | 8.5 | |
+| JDK | 17+ | |
+| Build overhead | < 2s per module | All analysis deferred to execution phase |
+| Runtime dependencies | None | Zero transitive classpath additions |
+| Air-gap compatibility | Full | All report assets inlined |
+| Thread safety | Auditors stateless | Safe for future parallel invocation |
+
