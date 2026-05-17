@@ -1,0 +1,14 @@
+rules:
+  forbidden-dependencies:
+    - from: "example"
+      to: "forbidden-module"
+      message: "Monolithic features are not allowed to link directly to forbidden modules."
+  max-dependencies:
+    - module: "example"
+      max: 1
+      message: "Example application project should remain light on module couplings."
+  required-plugins:
+    - module: "example"
+      plugins:
+        - "org.jetbrains.kotlin.jvm"
+      message: "Example must apply standard Kotlin JVM plugin."
