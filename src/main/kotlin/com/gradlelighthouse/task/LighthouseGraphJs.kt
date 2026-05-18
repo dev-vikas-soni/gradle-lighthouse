@@ -42,6 +42,20 @@ object LighthouseGraphJs {
         let activeIsolatedLayer = null;
         let originalLinks = [];
         let cutLinks = [];
+        let originalCycleNodes = new Set();
+
+        const SCORING_DECAY = 0.98;
+        const SCORING_WEIGHTS = { fatal: 35.0, error: 15.0, warning: 5.0, info: 1.0 };
+
+        function calculateDynamicScore(f, e, w, i) {
+            const impact = (f * SCORING_WEIGHTS.fatal) + (e * SCORING_WEIGHTS.error) +
+                         (w * SCORING_WEIGHTS.warning) + (i * SCORING_WEIGHTS.info);
+            if (impact === 0) return 100;
+            const score = Math.floor(100 * Math.pow(SCORING_DECAY, impact));
+            return Math.max(5, Math.min(100, score));
+        }
+
+        const getLinkId = v => (v && typeof v === 'object') ? v.id : v;
 
         function distToSegment(p, v, w) {
             const l2 = Math.hypot(v.x - w.x, v.y - w.y) ** 2;
@@ -55,22 +69,39 @@ object LighthouseGraphJs {
         function calculateXP(nodes) {
             if (perfectModeEnabled) {
                 const xp = nodes.length * 1000;
-                return { xp, perfectModules: nodes.length, level: Math.floor(xp / 1000) + 1 };
+                return { xp, perfectModules: nodes.length, level: Math.floor(xp / 1000) + 1, avgScore: 100 };
             }
-            let xp = 0;
+            let totalScore = 0;
             let perfectModules = 0;
             nodes.forEach(n => {
-                xp += n.score * 10;
+                totalScore += n.score;
                 if(n.score === 100) perfectModules++;
             });
-            return { xp, perfectModules, level: Math.floor(xp / 1000) + 1 };
+            const avgScore = nodes.length > 0 ? Math.round(totalScore / nodes.length) : 0;
+            const xp = totalScore * 10;
+            return { xp, perfectModules, level: Math.floor(xp / 1000) + 1, avgScore };
+        }
+
+        function getRank(score) {
+            if (score >= 95) return { name: "Grandmaster Architect", emoji: "🏆" };
+            if (score >= 85) return { name: "Expert Architect", emoji: "⭐" };
+            if (score >= 70) return { name: "Standard Architect", emoji: "🔧" };
+            if (score >= 50) return { name: "At Risk", emoji: "⚠️" };
+            return { name: "Legacy", emoji: "🔴" };
         }
 
         function initGraphData() {
+            cycleNodes.clear();
+            cycleEdges.clear();
+
             const adj = {};
             if (graphData && graphData.nodes) {
                 graphData.nodes.forEach(n => adj[n.id] = []);
-                graphData.links.forEach(l => { if (adj[l.source]) adj[l.source].push(l.target); });
+                graphData.links.forEach(l => {
+                    const s = getLinkId(l.source);
+                    const t = getLinkId(l.target);
+                    if (adj[s]) adj[s].push(t);
+                });
 
                 const visited = {}, recStack = {};
                 function dfs(curr, path) {
@@ -90,6 +121,21 @@ object LighthouseGraphJs {
                     recStack[curr] = false; path.pop();
                 }
                 Object.keys(adj).forEach(node => { if (!visited[node]) dfs(node, []); });
+
+                // Dynamic Score Recalculation
+                graphData.nodes.forEach(n => {
+                    let f = n.fatalCount;
+                    // If it was originally in a cycle but isn't anymore, simulate removing the fatal issue
+                    if (originalCycleNodes.has(n.id) && !cycleNodes.has(n.id)) {
+                        f = Math.max(0, f - 1);
+                    }
+                    // Vice versa (if cutting a link somehow created a new cycle in simulation)
+                    if (!originalCycleNodes.has(n.id) && cycleNodes.has(n.id)) {
+                        f += 1;
+                    }
+                    n.score = calculateDynamicScore(f, n.errorCount, n.warningCount, n.infoCount);
+                    n.currentFatalCount = f; // Store for radius calculation
+                });
             }
         }
 
@@ -163,14 +209,22 @@ object LighthouseGraphJs {
                 // Normalize link endpoints: after a sandbox cut/reset graphData.links may have
                 // already-resolved node objects instead of plain string IDs — handle both forms.
                 const linkId = v => (v && typeof v === 'object') ? v.id : v;
+
+                // Cache current positions to prevent the graph from "jumping" during simulation
+                const existingPositions = new Map();
+                if (this.nodes) {
+                    this.nodes.forEach(n => existingPositions.set(n.id, { x: n.x, y: n.y, vx: n.vx, vy: n.vy }));
+                }
+
                 this.nodes = graphData.nodes.map(n => {
-                    const degree = graphData.links.filter(l => linkId(l.source) === n.id || linkId(l.target) === n.id).length;
+                    const degree = graphData.links.filter(l => getLinkId(l.source) === n.id || getLinkId(l.target) === n.id).length;
+                    const old = existingPositions.get(n.id);
                     return {
                         ...n, degree,
-                        x: this.width/2 + (Math.random()-0.5)*200,
-                        y: this.height/2 + (Math.random()-0.5)*200,
-                        vx: 0, vy: 0,
-                        radius: Math.max(8 + degree * 1.5, 10 + (n.fatalCount * 3)),
+                        x: old ? old.x : (this.width/2 + (Math.random()-0.5)*200),
+                        y: old ? old.y : (this.height/2 + (Math.random()-0.5)*200),
+                        vx: old ? old.vx : 0, vy: old ? old.vy : 0,
+                        radius: Math.max(8 + degree * 1.5, 10 + ((n.currentFatalCount || n.fatalCount) * 3)),
                         isCycle: cycleNodes.has(n.id),
                         color: getLayerColor(n.layer)
                     };
@@ -208,7 +262,7 @@ object LighthouseGraphJs {
                         this.selectedLink = null;
                         updateNodeDetails(clicked, this.isFullscreen);
                     } else {
-                        const clickedL = this.links.find(l => distToSegment(pos, l.source, l.target) < 6);
+                        const clickedL = this.links.find(l => distToSegment(pos, l.source, l.target) < 15);
                         if (clickedL) {
                             this.selectedLink = clickedL;
                             this.selectedNode = null;
@@ -234,7 +288,7 @@ object LighthouseGraphJs {
                         this.canvas.style.cursor = 'pointer';
                     } else if (!this.draggedNode) {
                         // Check link hover
-                        const hoveredL = this.links.find(l => distToSegment(pos, l.source, l.target) < 6);
+                        const hoveredL = this.links.find(l => distToSegment(pos, l.source, l.target) < 15);
                         if (hoveredL) {
                             this.hoveredLink = hoveredL;
                             this.hoveredNode = null;
@@ -498,15 +552,9 @@ object LighthouseGraphJs {
                     this.ctx.beginPath();
                     this.ctx.moveTo(l.source.x, l.source.y);
 
-                    // Visual Edge Bundling: Curve lines towards the center of gravity
-                    const cx = this.width / 2;
-                    const cy = this.height / 2;
-                    const midX = (l.source.x + l.target.x) / 2;
-                    const midY = (l.source.y + l.target.y) / 2;
-                    const cpX = midX + (cx - midX) * 0.25;
-                    const cpY = midY + (cy - midY) * 0.25;
-
-                    this.ctx.quadraticCurveTo(cpX, cpY, l.target.x, l.target.y);
+                    // To match the distToSegment hit-detection, we draw straight lines.
+                    // Straight lines also make the "Energy Link" metaphor cleaner for simulation.
+                    this.ctx.lineTo(l.target.x, l.target.y);
 
                     if (activeIsolatedLayer && l.source.layer !== activeIsolatedLayer && l.target.layer !== activeIsolatedLayer) {
                         this.ctx.globalAlpha = 0.04; // Extremely dimmed link for isolated layer view
@@ -717,7 +765,21 @@ object LighthouseGraphJs {
                 })() : ''}
                 <div style="margin-bottom:15px;">
                     <div style="font-size:0.75rem; color:rgba(255,255,255,0.4); margin-bottom:4px;">Depends On (${"$"}{outDeps.length})</div>
-                    <div style="display:flex; flex-wrap:wrap; gap:4px;">${"$"}{outDeps.map(d=>`<span style="background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.8); font-size:0.7rem; padding:2px 6px; border-radius:4px;">${"$"}{d}</span>`).join('') || '-'}</div>
+                    <div style="display:flex; flex-direction:column; gap:6px;">
+                        ${"$"}{outDeps.map(d=> {
+                            const isLeak = cycleEdges.has(node.id + '->' + d);
+                            return `
+                            <div style="background:rgba(255,255,255,0.05); border:1px solid ${"$"}{isLeak ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.1)'}; padding:6px 10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; position:relative; overflow:hidden;">
+                                ${"$"}{isLeak ? `<div style="position:absolute; left:0; top:0; bottom:0; width:3px; background:#ef4444;"></div>` : ''}
+                                <div style="display:flex; flex-direction:column;">
+                                    <span style="color:rgba(255,255,255,0.8); font-size:0.7rem; font-family:monospace;">${"$"}{d}</span>
+                                    ${"$"}{isLeak ? `<span style="color:#f87171; font-size:0.55rem; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;">⚠️ Cycle Leak</span>` : ''}
+                                </div>
+                                <button onclick="simulateCutLink('${"$"}{node.id}', '${"$"}{d}')" style="background:rgba(239,68,68,0.2); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:2px 8px; border-radius:4px; font-size:0.6rem; font-weight:bold; cursor:pointer;">✂️ Cut</button>
+                            </div>
+                            `;
+                        }).join('') || '<span style="color:rgba(255,255,255,0.2); font-size:0.7rem;">No outgoing dependencies</span>'}
+                    </div>
                 </div>
                 <div>
                     <div style="font-size:0.75rem; color:rgba(255,255,255,0.4); margin-bottom:4px;">Used By (${"$"}{inDeps.length})</div>
@@ -785,7 +847,7 @@ object LighthouseGraphJs {
 
         function simulateCutLink(sourceId, targetId) {
             cutLinks.push({ source: sourceId, target: targetId });
-            graphData.links = graphData.links.filter(l => !(l.source === sourceId && l.target === targetId));
+            graphData.links = graphData.links.filter(l => !(getLinkId(l.source) === sourceId && getLinkId(l.target) === targetId));
 
             cycleNodes.clear();
             cycleEdges.clear();
@@ -794,11 +856,13 @@ object LighthouseGraphJs {
             if (graphInstance) graphInstance.initNodes();
             if (fsGraphInstance) fsGraphInstance.initNodes();
 
-            if (graphInstance) { graphInstance.selectedNode = null; graphInstance.selectedLink = null; }
-            if (fsGraphInstance) { fsGraphInstance.selectedNode = null; fsGraphInstance.selectedLink = null; }
+            if (graphInstance) { graphInstance.selectedLink = null; }
+            if (fsGraphInstance) { fsGraphInstance.selectedLink = null; }
 
-            updateNodeDetails(null, false);
-            updateNodeDetails(null, true);
+            // Refresh the current details panel to show updated dependency list and score
+            if (graphInstance && graphInstance.selectedNode) updateNodeDetails(graphInstance.selectedNode, false);
+            if (fsGraphInstance && fsGraphInstance.selectedNode) updateNodeDetails(fsGraphInstance.selectedNode, true);
+
             updateXPPanel();
             updateSandboxStatus();
         }
@@ -814,11 +878,13 @@ object LighthouseGraphJs {
             if (graphInstance) graphInstance.initNodes();
             if (fsGraphInstance) fsGraphInstance.initNodes();
 
-            if (graphInstance) { graphInstance.selectedNode = null; graphInstance.selectedLink = null; }
-            if (fsGraphInstance) { fsGraphInstance.selectedNode = null; fsGraphInstance.selectedLink = null; }
+            if (graphInstance) { graphInstance.selectedLink = null; }
+            if (fsGraphInstance) { fsGraphInstance.selectedLink = null; }
 
-            updateNodeDetails(null, false);
-            updateNodeDetails(null, true);
+            // Refresh the current details panel to show updated dependency list and score
+            if (graphInstance && graphInstance.selectedNode) updateNodeDetails(graphInstance.selectedNode, false);
+            if (fsGraphInstance && fsGraphInstance.selectedNode) updateNodeDetails(fsGraphInstance.selectedNode, true);
+
             updateXPPanel();
             updateSandboxStatus();
         }
@@ -1003,24 +1069,26 @@ object LighthouseGraphJs {
         }
         function updateXPPanel() {
             if (graphData && graphData.nodes) {
-                const {xp, perfectModules, level} = calculateXP(graphData.nodes);
+                const {xp, perfectModules, level, avgScore} = calculateXP(graphData.nodes);
+                const rank = getRank(avgScore);
                 const xpPanel = document.getElementById('fs-xp-panel');
                 if(xpPanel) {
                     xpPanel.innerHTML = `
                         <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:12px; text-align:center; box-shadow: inset 0 0 15px rgba(16,185,129,0.1); position:relative;">
-                            <div style="font-size:0.7rem; color:#10b981; font-weight:bold;">ARCHITECT LEVEL ${"$"}{level}</div>
-                            <div style="font-size:1.5rem; color:white; font-weight:900; margin:4px 0; text-shadow: 0 0 10px rgba(255,255,255,0.3);">${"$"}{xp} XP</div>
-                            <div style="font-size:0.65rem; color:rgba(255,255,255,0.7);">${"$"}{perfectModules} Perfect Modules 🎯</div>
+                            <div style="font-size:0.7rem; color:#10b981; font-weight:bold; margin-bottom:4px;">SIMULATED ARCHITECTURE STATE</div>
+                            <div style="font-size:1.1rem; color:white; font-weight:900; margin:2px 0;">${"$"}{rank.emoji} ${"$"}{rank.name}</div>
+                            <div style="font-size:1.8rem; color:#10b981; font-weight:900; margin:4px 0;">${"$"}{avgScore}%</div>
+                            <div style="font-size:0.65rem; color:rgba(255,255,255,0.7);">${"$"}{xp} Total XP &bull; ${"$"}{perfectModules} Perfect Modules 🎯</div>
 
                             <div style="position:absolute; top:5px; right:8px; display:inline-block; z-index:100;">
                                 <div class="xp-info-trigger" style="cursor:pointer; font-size:0.75rem; color:rgba(255,255,255,0.5); padding:4px; transition:color 0.2s;" onmouseenter="showXPTooltip()" onmouseleave="hideXPTooltip()" onclick="toggleXPTooltip(event)">ℹ️</div>
                                 <div id="xp-tooltip-bubble" style="display:none; position:absolute; right:0; top:25px; width:260px; background:#0f172a; border:1px solid #334155; border-radius:8px; padding:12px; box-shadow:0 10px 25px rgba(0,0,0,0.6); z-index:101; text-align:left;">
-                                    <div style="font-size:0.75rem; color:#10b981; font-weight:bold; margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:4px;">🛡️ Gamification Protocol</div>
+                                    <div style="font-size:0.75rem; color:#10b981; font-weight:bold; margin-bottom:8px; border-bottom:1px solid #1e293b; padding-bottom:4px;">🛡️ Sandbox Scoring Logic</div>
                                     <ul style="margin:0; padding-left:14px; font-size:0.7rem; color:rgba(255,255,255,0.85); display:flex; flex-direction:column; gap:6px; line-height:1.4;">
-                                        <li><strong>Module XP:</strong> Health Score &times; 10 (e.g. 95% = 950 XP).</li>
-                                        <li><strong>Total XP:</strong> Combined XP of all modules.</li>
-                                        <li><strong>Architect Level:</strong> Every 1,000 XP increases your Level by +1.</li>
-                                        <li><strong>Perfect Module 🎯:</strong> Any module with a flawless 100% health score.</li>
+                                        <li><strong>Dynamic Score:</strong> Recalculated using the Lighthouse 0.98-decay engine.</li>
+                                        <li><strong>Cycle Impact:</strong> Breaking a cycle removes the -35pt FATAL penalty from all participating modules.</li>
+                                        <li><strong>Total XP:</strong> Combined health of all modules &times; 10.</li>
+                                        <li><strong>Simulated Rank:</strong> Based on the average project health after cuts.</li>
                                     </ul>
                                 </div>
                             </div>
@@ -1340,6 +1408,10 @@ object LighthouseGraphJs {
 
         document.addEventListener('DOMContentLoaded', () => {
             initGraphData();
+            originalCycleNodes = new Set(cycleNodes);
+            // Re-init after setting originalCycleNodes to ensure scores are correct if there are initial cycles
+            initGraphData();
+
             // Deep-copy each link object so sandbox mutations never corrupt the backup.
             originalLinks = graphData.links.map(l => ({ ...l }));
 

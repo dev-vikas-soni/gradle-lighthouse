@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [2.2.2] - 2026-05-18
+
+### Fixed
+- **Sandbox Mode Overhaul**: Rebuilt the simulation engine to use the same exponential decay scoring as the Gradle auditors.
+- **Position Persistence**: Modules no longer jump or randomize when cutting dependencies in simulation.
+- **Surgical UI**: Added "Cycle Leak" highlighting and in-panel "Cut" buttons to make architectural refactoring simulations more intuitive.
+- **Interaction Accuracy**: Increased graph hit-box tolerance by 150% for easier dependency selection.
+
 ## [2.2.1] - 2026-05-17
 
 ### Changed

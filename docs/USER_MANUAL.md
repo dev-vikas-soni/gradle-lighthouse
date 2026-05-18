@@ -1,6 +1,6 @@
 # User Manual
 
-> Gradle Lighthouse v2.2.1 | Plugin ID: `io.github.dev-vikas-soni.lighthouse`
+> Gradle Lighthouse v2.2.2 | Plugin ID: `io.github.dev-vikas-soni.lighthouse`
 
 ---
 
@@ -28,7 +28,7 @@ Apply the plugin in the root project:
 
 ```kotlin
 plugins {
-    id("io.github.dev-vikas-soni.lighthouse") version "2.2.1"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.2.2"
 }
 ```
 
@@ -41,13 +41,13 @@ Apply Lighthouse to the root project for aggregation and to each module you want
 ```kotlin
 // root build.gradle.kts
 plugins {
-    id("io.github.dev-vikas-soni.lighthouse") version "2.2.1"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.2.2"
 }
 
 // feature/login/build.gradle.kts
 plugins {
     id("com.android.library")
-    id("io.github.dev-vikas-soni.lighthouse") version "2.2.1"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.2.2"
 }
 ```
 
@@ -381,7 +381,7 @@ jobs:
           java-version: '17'
 
       - name: Run Gradle Lighthouse
-        uses: dev-vikas-soni/gradle-lighthouse@v2.2.1
+        uses: dev-vikas-soni/gradle-lighthouse@v2.2.2
         with:
           fail-on-severity: 'ERROR'
           upload-sarif: 'true'

@@ -1,6 +1,6 @@
 # Enterprise CI/CD Enforcement
 
-> Gradle Lighthouse v2.2.1+ | Task: `lighthouseAggregate`
+> Gradle Lighthouse v2.2.2+ | Task: `lighthouseAggregate`
 
 This guide covers the aggregate enforcement gates, custom YAML rules, and CI pipeline integration for teams using Gradle Lighthouse as an architectural guardrail.
 
@@ -185,7 +185,7 @@ jobs:
           java-version: '17'
 
       - name: Run Gradle Lighthouse
-        uses: dev-vikas-soni/gradle-lighthouse@v2.2.1
+        uses: dev-vikas-soni/gradle-lighthouse@v2.2.2
         with:
           fail-on-severity: 'ERROR'
           upload-sarif: 'true'

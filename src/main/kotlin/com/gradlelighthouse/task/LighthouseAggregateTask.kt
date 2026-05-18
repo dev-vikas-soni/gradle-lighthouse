@@ -607,7 +607,7 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
                 val safeId   = it.projectPath.replace("\\", "\\\\").replace("'", "\\'")
                 val safeName = it.moduleName.replace("\\", "\\\\").replace("'", "\\'")
                 val safeLayer = it.layer.replace("\\", "\\\\").replace("'", "\\'")
-                "{ id: '$safeId', name: '$safeName', layer: '$safeLayer', score: ${it.score}, degree: 0, fatalCount: ${it.fatalCount} }"
+                "{ id: '$safeId', name: '$safeName', layer: '$safeLayer', score: ${it.score}, fatalCount: ${it.fatalCount}, errorCount: ${it.errorCount}, warningCount: ${it.warningCount}, infoCount: ${it.infoCount} }"
             }}],
             links: [${moduleDependencyGraphData.get().flatMap { line ->
                 val parts = line.split("|", limit = 2)
@@ -633,9 +633,10 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
             val fatalCount = extractJsonInt(json, "fatalCount") ?: 0
             val errorCount = extractJsonInt(json, "errorCount") ?: 0
             val warningCount = extractJsonInt(json, "warningCount") ?: 0
+            val infoCount = extractJsonInt(json, "infoCount") ?: 0
             val topResolution = extractJsonString(json, "topResolution") ?: ""
 
-            ModuleReportData(moduleName, projectPath, score, rank, fatalCount, errorCount, warningCount, topResolution)
+            ModuleReportData(moduleName, projectPath, score, rank, fatalCount, errorCount, warningCount, infoCount, topResolution)
         } catch (e: Exception) {
             ConsoleLogger.error("Failed to parse module report: ${e.message}")
             null
@@ -662,6 +663,7 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
         val fatalCount: Int,
         val errorCount: Int,
         val warningCount: Int,
+        val infoCount: Int,
         val topResolution: String
     ) {
         var relativeReportPath: String = ""

@@ -5,7 +5,7 @@ Architecture intelligence for Android and Kotlin Multiplatform Gradle builds.
 Gradle Lighthouse audits module structure, dependency hygiene, security, build performance, and code health directly from your Gradle project. It generates per-module reports, a global dashboard with the Galaxy Graph and trend analytics, and optional CI enforcement gates for cycles, layer leaks, and score regressions.
 
 [![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/io.github.dev-vikas-soni.lighthouse?label=Gradle%20Plugin%20Portal&color=orange)](https://plugins.gradle.org/plugin/io.github.dev-vikas-soni.lighthouse)
-[![Version: 2.2.1](https://img.shields.io/badge/Version-2.2.1-orange.svg)](https://github.com/dev-vikas-soni/gradle-lighthouse/releases)
+[![Version: 2.2.2](https://img.shields.io/badge/Version-2.2.2-orange.svg)](https://github.com/dev-vikas-soni/gradle-lighthouse/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=flat&logo=kotlin&logoColor=white)
 ![Gradle 8.x-9.x](https://img.shields.io/badge/Gradle-8.x--9.x-green.svg)
@@ -34,7 +34,7 @@ This is especially useful for:
 
 ## What Phase 2 adds
 
-Version `2.2.1` adds the aggregate visualization and enforcement layer on top of the earlier auditing foundation:
+Version `2.2.2` adds the aggregate visualization and enforcement layer on top of the earlier auditing foundation:
 
 - **Interactive Galaxy Graph** for module dependency exploration
 - **Trend & Velocity Analytics** for score, fatals, and coupling density across builds
@@ -54,7 +54,7 @@ Apply it to the root project and to each module you want audited.
 ```kotlin
 // root build.gradle.kts
 plugins {
-    id("io.github.dev-vikas-soni.lighthouse") version "2.2.1"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.2.2"
 }
 ```
 
@@ -62,7 +62,7 @@ plugins {
 // feature/login/build.gradle.kts
 plugins {
     id("com.android.library")
-    id("io.github.dev-vikas-soni.lighthouse") version "2.2.1"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.2.2"
 }
 ```
 
@@ -267,7 +267,7 @@ This repository also publishes a composite GitHub Action:
 
 ```yaml
 - name: Run Gradle Lighthouse
-  uses: dev-vikas-soni/gradle-lighthouse@v2.2.1
+  uses: dev-vikas-soni/gradle-lighthouse@v2.2.2
   with:
     fail-on-severity: 'ERROR'
     upload-sarif: 'true'

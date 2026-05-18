@@ -1,6 +1,6 @@
 # High-Level Design
 
-> Gradle Lighthouse — v2.2.1 | Plugin ID: `io.github.dev-vikas-soni.lighthouse`
+> Gradle Lighthouse — v2.2.2 | Plugin ID: `io.github.dev-vikas-soni.lighthouse`
 
 ---
 
