@@ -45,7 +45,8 @@ class BuildSpeedAuditor : Auditor {
                 reasoning = "Found $migratableCount libraries using legacy KAPT that support modern KSP processing. Detected KAPT dependencies: ${kaptDeps.joinToString { it.notation }}.",
                 impactAnalysis = "KAPT adds substantial overhead (approx. +10s to +40s) to every build cycle due to the requirement for generating Java Stubs. This stalls the CPU and invalidates build caches more frequently than KSP.",
                 resolution = "Migrate annotation processors like Room and Dagger/Hilt to KSP (Kotlin Symbol Processing). Add the 'com.google.devtools.ksp' plugin and replace 'kapt' with 'ksp' in the dependencies block.",
-                roiAfterFix = "Estimated build speed boost of ~${timeSavedPerBuild}s per developer cycle. Combined with caching, this saves approximately ${yearlyHoursSaved} hours of developer waiting time per year."
+                roiAfterFix = "Estimated build speed boost of ~${timeSavedPerBuild}s per developer cycle. Combined with caching, this saves approximately ${yearlyHoursSaved} hours of developer waiting time per year.",
+                remediationUrl = "https://gradle-lighthouse.dev/rules/ksp-migration"
             ))
         }
 
@@ -60,7 +61,10 @@ class BuildSpeedAuditor : Auditor {
                 reasoning = "The property 'org.gradle.caching' is not set to true in gradle.properties.",
                 impactAnalysis = "Disabled caching prevents Gradle from reusing previous task outputs across branch switches or clean builds. This forces every developer to perform a 'Full Compile' from scratch for every build.",
                 resolution = "Set 'org.gradle.caching=true' in your root gradle.properties file.",
-                roiAfterFix = "Up to 90% faster rebuilds when switching between feature branches or pulling latest changes."
+                roiAfterFix = "Up to 90% faster rebuilds when switching between feature branches or pulling latest changes.",
+                remediationUrl = "https://gradle-lighthouse.dev/rules/gradle-caching",
+                isFixable = true,
+                fixId = "enable_build_caching"
             ))
         }
 
@@ -72,7 +76,9 @@ class BuildSpeedAuditor : Auditor {
                 reasoning = "Gradle executes multi-module builds sequentially by default unless 'org.gradle.parallel' is enabled.",
                 impactAnalysis = "Multi-module projects build one module at a time, significantly under-utilizing modern multi-core CPUs and causing much longer overall build times.",
                 resolution = "Set 'org.gradle.parallel=true' to allow Gradle to build independent modules concurrently.",
-                roiAfterFix = "Significantly faster completion of 'assemble' and 'check' tasks across the entire module graph."
+                roiAfterFix = "Significantly faster completion of 'assemble' and 'check' tasks across the entire module graph.",
+                isFixable = true,
+                fixId = "enable_parallel_execution"
             ))
         }
 
@@ -84,7 +90,10 @@ class BuildSpeedAuditor : Auditor {
                 reasoning = "Jetifier is an expensive transformation tool that scans and rewrites every dependency during build-time for AndroidX compatibility.",
                 impactAnalysis = "Jetifier adds massive overhead to Gradle sync and build times, especially for modern projects that already use AndroidX libraries. In large multi-module projects, this can add several minutes to initial syncs.",
                 resolution = "Identify non-AndroidX libraries, update them to modern versions, and set 'android.enableJetifier=false'.",
-                roiAfterFix = "Faster Gradle sync times and significantly reduced disk I/O overhead during every build initiation."
+                roiAfterFix = "Faster Gradle sync times and significantly reduced disk I/O overhead during every build initiation.",
+                remediationUrl = "https://developer.android.com/studio/build/optimize-your-build#disable-jetifier",
+                isFixable = true,
+                fixId = "disable_jetifier"
             ))
         }
 

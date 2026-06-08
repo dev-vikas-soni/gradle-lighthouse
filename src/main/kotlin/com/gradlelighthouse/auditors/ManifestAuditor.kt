@@ -39,6 +39,7 @@ class ManifestAuditor : Auditor {
                 impactAnalysis = "Sensitive user information (tokens, databases) can be extracted from the device without root access.",
                 resolution = "Set 'android:allowBackup=\"false\"' in your <application> tag.",
                 roiAfterFix = "Improved data privacy and protection against physical device access exploits.",
+                remediationUrl = "https://gradle-lighthouse.dev/rules/manifest-allow-backup",
                 sourceFile = file.absolutePath
             ))
         }
@@ -52,6 +53,7 @@ class ManifestAuditor : Auditor {
                 impactAnalysis = "Susceptible to Man-in-the-Middle (MITM) attacks where network traffic can be intercepted and modified.",
                 resolution = "Use HTTPS for all network calls or use a 'Network Security Configuration' to restrict cleartext traffic.",
                 roiAfterFix = "Encrypted communication and protection against eavesdropping.",
+                remediationUrl = "https://gradle-lighthouse.dev/rules/manifest-cleartext",
                 sourceFile = file.absolutePath
             ))
         }

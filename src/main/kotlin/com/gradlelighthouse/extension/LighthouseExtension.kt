@@ -1,5 +1,7 @@
 package com.gradlelighthouse.extension
 
+import java.io.File
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 
 /**
@@ -82,6 +84,12 @@ abstract class LighthouseExtension {
 
     /** Enables historical trend tracking across runs. Default: true */
     abstract val enableTrendTracking: Property<Boolean>
+
+    /**
+     * Path to the baseline file for suppressing existing issues.
+     * Default: "lighthouse-baseline.json" in project root.
+     */
+    abstract val baselineFile: RegularFileProperty
 
     // ==========================
     // CI/CD Integration

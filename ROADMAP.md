@@ -25,21 +25,25 @@ Planned work, roughly in priority order. Phases 1 and 2 are shipped.
 
 ---
 
-## 🔲 Phase 3 — Automation (Q4 2026)
+## ✅ Phase 3 — Automation & Adoption (v2.3)
 
-- [ ] **Gradle Build Scan integration**: deep-link from Lighthouse HTML reports into Gradle Build Scans for trace-level analysis
-- [ ] **AI-assisted fix suggestions**: LLM-generated diffs for common refactors (KAPT → KSP, `buildSrc` → `build-logic/`)
-- [ ] **Predictive dependency impact**: estimate build time delta before adding a new dependency, using past CI data
-- [ ] **Migration bots**: CI-ready, commit-ready scripts for high-value but mechanical migrations
+- [x] **Baseline System**: Record and suppress existing technical debt to focus on new issues
+- [x] **Deterministic Fixes**: `lighthouseFix` task to automatically apply best practices (caching, parallel, etc.)
+- [x] **Remediation Database**: Every issue now links to a deep-dive technical "Recipe" URL
+- [ ] **Privacy-First Telemetry**: Anonymous usage tracking to prioritize auditor improvements (Planned)
+- [ ] **Lighthouse PR Bot**: GitHub App / GitLab Bot to comment on PRs with health score deltas and cycle warnings (Planned)
+- [ ] **Predictive Dependency Intelligence**: Anonymized global data to estimate binary size/startup impact *before* you add an SDK (Planned)
+- [ ] **GenAI Remediation**: `./gradlew lighthouseFix --ai` to generate complex refactoring diffs (KAPT to KSP, buildSrc to build-logic) (Planned)
 
 ---
 
-## 🔲 Phase 4 — Ecosystem (2027)
+## 🔲 Phase 4 — Ecosystem & Governance (2027)
 
 - [ ] **Lighthouse CLI**: standalone tool for environments without a Gradle wrapper
-- [ ] **IDE plugin**: real-time cycle warnings and health score inside Android Studio and IntelliJ IDEA
-- [ ] **Cloud Dashboard**: cross-repository health monitoring for organisations managing multiple projects
-- [ ] **KMP deep audits**: `expect`/`actual` coverage checks and platform-specific dependency hygiene
+- [ ] **IDE Plugin**: Real-time architectural guardrails and health warnings inside Android Studio/IntelliJ
+- [ ] **Bytecode & Resource Audit**: Deep-dive into compiled .dex and .apk for unused code paths and asset redundancy
+- [ ] **Green Build Sustainability**: Measure and report the CO2/Energy impact of your CI/CD pipeline
+- [ ] **Cloud Dashboard**: Cross-repository health monitoring for organisations managing multiple projects
 
 ---
 

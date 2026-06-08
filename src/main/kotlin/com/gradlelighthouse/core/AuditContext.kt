@@ -59,7 +59,10 @@ data class AuditContext(
     val moduleDependencyGraph: Map<String, Set<String>> = emptyMap(),
 
     /** Current health score (set during trend tracking after initial scoring) */
-    val currentScore: Int? = null
+    val currentScore: Int? = null,
+
+    /** List of issue IDs to be suppressed (Baseline system) */
+    val baselineIssueIds: Set<String> = emptySet()
 ) : Serializable {
 
     companion object {

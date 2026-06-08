@@ -48,12 +48,32 @@ data class AuditIssue(
     /** Quantified benefit after applying the fix */
     val roiAfterFix: String,
 
+    /** Optional: technical documentation URL for detailed fix instructions */
+    val remediationUrl: String? = null,
+
+    /** Whether this issue can be automatically fixed by the 'lighthouseFix' task */
+    val isFixable: Boolean = false,
+
+    /** Optional: internal ID for the fix engine to identify which logic to apply */
+    val fixId: String? = null,
+
     /** Optional: the file path where this issue was detected */
     val sourceFile: String? = null,
 
     /** Optional: line number in the source file */
     val sourceLine: Int? = null
 ) : Serializable {
+
+    /** Generates a stable ID for the baseline system. Use relative paths for portability. */
+    fun fingerprint(rootDir: java.io.File? = null): String {
+        val path = if (rootDir != null && sourceFile != null) {
+            sourceFile.replace(rootDir.absolutePath, "").trim('/')
+        } else {
+            sourceFile ?: "global"
+        }
+        return "$category|$title|$path".hashCode().toString()
+    }
+
     companion object {
         private const val serialVersionUID = 1L
     }

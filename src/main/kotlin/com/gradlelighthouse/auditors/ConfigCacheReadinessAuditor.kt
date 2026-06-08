@@ -142,6 +142,9 @@ class ConfigCacheReadinessAuditor : Auditor {
                     impactAnalysis = "Each module's R.java contains ALL transitive resources, causing massive regeneration on any resource change in any dependency. Build times scale quadratically with module count.",
                     resolution = "Add 'android.nonTransitiveRClass=true' to gradle.properties. Fix any R.drawable/R.string references that relied on transitive access.",
                     roiAfterFix = "30-50% faster incremental builds in resource-heavy multi-module projects.",
+                    remediationUrl = "https://developer.android.com/studio/build/optimize-your-build#non-transitive-r-class",
+                    isFixable = true,
+                    fixId = "enable_non_transitive_r",
                     sourceFile = "gradle.properties"
                 ))
             }

@@ -6,6 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [2.3.0] - 2026-05-20
+
+### Added
+- **Baseline System**: Support for suppressing existing technical debt via `lighthouseRecordBaseline` task. New issues are highlighted while legacy issues are recorded in a portable baseline file.
+- **Lighthouse Fix Engine**: New `lighthouseFix` task to automatically apply best practices (enabling build cache, parallel execution, non-transitive R classes, etc.) to `gradle.properties`.
+- **Remediation Database**: Every audit finding now includes a `remediationUrl` linking to deep-dive technical "Recipes" for fixing specific architectural smells.
+- **Relative Path Fingerprinting**: Baselines are now fully portable across developer machines and CI environments (no absolute paths).
+
+### Changed
+- **Roadmap Update**: Accelerated Phase 3 automation goals.
+- **Internal API**: Updated `Auditor` and `AuditIssue` to support fixing engine and remediation metadata.
+
 ## [2.2.2] - 2026-05-18
 
 ### Fixed

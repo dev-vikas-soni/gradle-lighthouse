@@ -18,8 +18,12 @@ import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.SetProperty
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
+import org.gradle.api.tasks.Optional
 import org.gradle.api.tasks.OutputDirectory
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 import java.io.File
 import javax.inject.Inject
@@ -81,6 +85,10 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
     @get:Input abstract val enableSarif: Property<Boolean>
     @get:Input abstract val enableJunitXml: Property<Boolean>
 
+    @get:InputFiles
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val baselineFile: org.gradle.api.file.ConfigurableFileCollection
+
     // =========================================================================
     // Output
     // =========================================================================
@@ -92,7 +100,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
     // =========================================================================
 
     @TaskAction
-    fun execute() {
+    open fun execute() {
         val name = moduleName.get()
         val version = pluginVersion.get()
 
@@ -103,7 +111,19 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
         // 1. Reconstruct AuditContext from serialized inputs
         val context = buildAuditContext()
 
-        // 2. Select active auditors based on extension config
+        // 2. Load baseline if exists
+        val baselineIssueIds = mutableSetOf<String>()
+        val baseline = baselineFile.files.firstOrNull()
+        if (baseline != null && baseline.exists()) {
+            try {
+                // Simplistic baseline parsing (fingerprints per line)
+                baseline.readLines().forEach { line ->
+                    if (line.isNotBlank()) baselineIssueIds.add(line.trim())
+                }
+            } catch (_: Exception) {}
+        }
+
+        // 3. Select active auditors based on extension config
         val enabledSet = enabledAuditorNames.get()
         val activeAuditors = buildAuditorList(enabledSet)
 
@@ -137,8 +157,16 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
 
         mainAuditors.forEach { runAuditor(it, context) }
 
+        // Filter out baselined issues
+        val rootDir = File(rootDirPath.get())
+        val newIssues = allIssues.filter { it.fingerprint(rootDir) !in baselineIssueIds }
+        val suppressedCount = allIssues.size - newIssues.size
+
         // 4. Generate reports
         ConsoleLogger.info("🎯", "[DONE]", "[$name] Analysis Complete. Exporting Intelligence...")
+        if (suppressedCount > 0) {
+            ConsoleLogger.info("🛡️", "[BASE]", "Suppressed $suppressedCount issues found in baseline.")
+        }
         val outputDir = reportOutputDir.get().asFile
         if (!outputDir.exists()) outputDir.mkdirs()
 
@@ -210,7 +238,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
 
         // JUnit XML Report
         if (enableJunitXml.get()) {
-            val junitContent = JunitXmlReportGenerator.generate(name, allIssues)
+            val junitContent = JunitXmlReportGenerator.generate(name, newIssues)
             val junitFile = File(outputDir, "${name}-report.xml")
             junitFile.writeText(junitContent)
             ConsoleLogger.info("🧪", "[JUNIT]", "JUnit XML: ${junitFile.toURI()}")
@@ -223,11 +251,11 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
         if (failSeverity != "NONE") {
             val threshold = try { Severity.valueOf(failSeverity) } catch (_: Exception) { null }
             if (threshold != null) {
-                val blocking = allIssues.filter { it.severity.ordinal >= threshold.ordinal }
+                val blocking = newIssues.filter { it.severity.ordinal >= threshold.ordinal }
                 if (blocking.isNotEmpty()) {
                     throw GradleException(
-                        "Gradle Lighthouse: ${blocking.size} issue(s) at severity $failSeverity or above found in '$name'. " +
-                        "Fix them or adjust 'lighthouseAuditor { failOnSeverity }' to unblock."
+                        "Gradle Lighthouse: ${blocking.size} new issue(s) at severity $failSeverity or above found in '$name'. " +
+                        "Fix them, record them in baseline, or adjust 'lighthouse { failOnSeverity }' to unblock."
                     )
                 }
             }
@@ -238,7 +266,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
     // Private helpers
     // =========================================================================
 
-    private fun buildAuditContext(): AuditContext {
+    protected fun buildAuditContext(): AuditContext {
         val deps = dependencyData.get().map { line ->
             val parts = line.split("|", limit = 4)
             com.gradlelighthouse.core.DependencySnapshot(
@@ -298,7 +326,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
         )
     }
 
-    private fun buildAuditorList(enabled: Set<String>): List<Auditor> {
+    protected fun buildAuditorList(enabled: Set<String>): List<Auditor> {
         val auditors = mutableListOf<Auditor>()
 
         if ("DependencyHealth" in enabled) auditors.add(DependencyAuditor())

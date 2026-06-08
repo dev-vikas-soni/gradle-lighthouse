@@ -2,8 +2,7 @@ package com.gradlelighthouse
 
 import com.gradlelighthouse.core.ConsoleLogger
 import com.gradlelighthouse.extension.LighthouseExtension
-import com.gradlelighthouse.task.LighthouseTask
-import com.gradlelighthouse.task.LighthouseAggregateTask
+import com.gradlelighthouse.task.*
 import org.gradle.api.Action
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -20,7 +19,7 @@ import java.util.Properties
 class LighthousePlugin : Plugin<Project> {
 
     companion object {
-        const val VERSION = "2.2.2"
+        const val VERSION = "2.3.0"
     }
 
     override fun apply(project: Project) {
@@ -35,6 +34,19 @@ class LighthousePlugin : Plugin<Project> {
 
         project.tasks.register("lighthouseAudit", LighthouseTask::class.java, object : Action<LighthouseTask> {
             override fun execute(task: LighthouseTask) {
+                configureLighthouseTask(project, task, extension)
+            }
+        })
+
+        project.tasks.register("lighthouseRecordBaseline", LighthouseRecordBaselineTask::class.java, object : Action<LighthouseRecordBaselineTask> {
+            override fun execute(task: LighthouseRecordBaselineTask) {
+                configureLighthouseTask(project, task, extension)
+                task.outputBaselineFile.set(extension.baselineFile)
+            }
+        })
+
+        project.tasks.register("lighthouseFix", LighthouseFixTask::class.java, object : Action<LighthouseFixTask> {
+            override fun execute(task: LighthouseFixTask) {
                 configureLighthouseTask(project, task, extension)
             }
         })
@@ -141,6 +153,12 @@ class LighthousePlugin : Plugin<Project> {
         task.enableSarif.set(ext.enableSarifReport)
         task.enableJunitXml.set(ext.enableJunitXmlReport)
         task.reportOutputDir.set(project.layout.buildDirectory.dir("reports/lighthouse"))
+
+        // New Features
+        task.baselineFile.from(extension.baselineFile)
+
+        // Ensure baselineFile has a default value if not set
+        extension.baselineFile.convention(project.layout.projectDirectory.file("lighthouse-baseline.txt"))
     }
 
     private fun captureDependencies(project: Project, extension: LighthouseExtension): List<String> {

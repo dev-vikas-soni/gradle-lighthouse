@@ -5,7 +5,7 @@ Architecture intelligence for Android and Kotlin Multiplatform Gradle builds.
 Gradle Lighthouse audits module structure, dependency hygiene, security, build performance, and code health directly from your Gradle project. It generates per-module reports, a global dashboard with the Galaxy Graph and trend analytics, and optional CI enforcement gates for cycles, layer leaks, and score regressions.
 
 [![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/io.github.dev-vikas-soni.lighthouse?label=Gradle%20Plugin%20Portal&color=orange)](https://plugins.gradle.org/plugin/io.github.dev-vikas-soni.lighthouse)
-[![Version: 2.2.2](https://img.shields.io/badge/Version-2.2.2-orange.svg)](https://github.com/dev-vikas-soni/gradle-lighthouse/releases)
+[![Version: 2.3.0](https://img.shields.io/badge/Version-2.3.0-orange.svg)](https://github.com/dev-vikas-soni/gradle-lighthouse/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 ![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=flat&logo=kotlin&logoColor=white)
 ![Gradle 8.x-9.x](https://img.shields.io/badge/Gradle-8.x--9.x-green.svg)
@@ -40,16 +40,15 @@ This is especially useful for:
 
 ---
 
-## What Phase 2 adds
+## What's New in v2.3 (Phase 3)
 
-Version `2.2.2` adds the aggregate visualization and enforcement layer on top of the earlier auditing foundation:
+Version `2.3.0` moves beyond auditing into **Automation and Adoption**:
 
-- **Interactive Galaxy Graph** for module dependency exploration
-- **Trend & Velocity Analytics** for score, fatals, and coupling density across builds
-- **Aggregate enforcement gates** for cycles, layer violations, and minimum health score
-- **Custom YAML architecture rules** via `lighthouse-rules.yaml`
-- **Sandbox Mode** to simulate removing dependency edges in the graph
-- **PNG snapshot export** for docs and pull requests
+- **Baseline System**: Record current architectural debt with `./gradlew lighthouseRecordBaseline`. Focus your team only on *new* regressions.
+- **Lighthouse Fix**: Automatically apply performance and best-practice fixes to your project with `./gradlew lighthouseFix`.
+- **Remediation Recipes**: Every issue now links to a dedicated technical "Recipe" URL for detailed fix instructions.
+- **Interactive Galaxy Graph**: Visual module dependency exploration with cycle highlighting.
+- **Trend & Velocity Analytics**: Track health score, fatals, and coupling density over the last 30 builds.
 
 ---
 
@@ -62,7 +61,7 @@ Apply it to the root project and to each module you want audited.
 ```kotlin
 // root build.gradle.kts
 plugins {
-    id("io.github.dev-vikas-soni.lighthouse") version "2.2.2"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.3.0"
 }
 ```
 
@@ -70,7 +69,7 @@ plugins {
 // feature/login/build.gradle.kts
 plugins {
     id("com.android.library")
-    id("io.github.dev-vikas-soni.lighthouse") version "2.2.2"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.3.0"
 }
 ```
 
@@ -82,7 +81,21 @@ No extra repository configuration is needed. The plugin is published on the Grad
 ./gradlew lighthouseAudit lighthouseAggregate
 ```
 
-### 3. Open the reports
+### 3. Record a Baseline (Optional)
+
+If you are adding Lighthouse to a legacy project, record a baseline to suppress existing issues:
+
+```bash
+./gradlew lighthouseRecordBaseline
+```
+
+### 4. Apply Auto-Fixes
+
+```bash
+./gradlew lighthouseFix
+```
+
+### 5. Open the reports
 
 - per-module reports: `{module}/build/reports/lighthouse/`
 - aggregate dashboard: `build/reports/lighthouse/project-dashboard.html`
@@ -95,6 +108,8 @@ No extra repository configuration is needed. The plugin is published on the Grad
 |------|-------|--------|
 | `lighthouseAudit` | Current module | HTML, SARIF, JUnit XML, module JSON for aggregation |
 | `lighthouseAggregate` | Root multi-module project | Global dashboard, Galaxy Graph, trend charts, enforcement gates |
+| `lighthouseRecordBaseline` | Module/Root | Records existing issues into `lighthouse-baseline.txt` to suppress them |
+| `lighthouseFix` | Module/Root | Automatically applies deterministic fixes (caching, parallel, etc.) |
 
 Recommended flow for multi-module projects:
 
