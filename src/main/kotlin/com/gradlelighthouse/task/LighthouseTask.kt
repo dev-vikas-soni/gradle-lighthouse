@@ -5,6 +5,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 import com.gradlelighthouse.reporting.HtmlReportGenerator
 import com.gradlelighthouse.reporting.SarifReportGenerator
@@ -144,7 +145,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
             } catch (e: Exception) {
                 ConsoleLogger.error("Auditor '${auditor.name}' failed: ${e.message}")
                 allIssues.add(AuditIssue(
-                    category = auditor.name,
+                    category = LighthouseCategory.QUALITY,
                     severity = Severity.WARNING,
                     title = "Auditor '${auditor.name}' encountered an error",
                     reasoning = "The ${auditor.name} auditor threw an exception during analysis: ${e.message}",
@@ -171,6 +172,14 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
         if (!outputDir.exists()) outputDir.mkdirs()
 
         // Calculate health score from main auditors first
+        val rootDirFile = File(rootDirPath.get())
+        val moduleCountForBench = parseModuleDependencyGraph().size.coerceAtLeast(1)
+        val scoringResult = com.gradlelighthouse.core.HealthScoreEngine.calculateModernResultWithBenchmarks(
+            allIssues,
+            moduleCountForBench,
+            pluginIds.get(),
+            rootDirFile
+        )
         val healthReport = com.gradlelighthouse.core.HealthScoreEngine.generateReport(allIssues)
 
         // 3b. Now run TrendTracking with currentScore populated so delta comparison works correctly.
@@ -217,14 +226,20 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
             passedChecks = passedChecks
         )
 
+        // Print Category Health breakdown
+        ConsoleLogger.printCategoryHealth(scoringResult.categoryScores)
+
+        // Print Path to 90
+        ConsoleLogger.printImprovements(scoringResult.improvements, healthReport.score)
+
         // HTML Report
-        val htmlContent = HtmlReportGenerator.generate(name, version, gradleVersionStr.get(), allIssues)
+        val htmlContent = HtmlReportGenerator.generate(name, version, gradleVersionStr.get(), allIssues, scoringResult)
         val htmlFile = File(outputDir, "${name}-index.html")
         htmlFile.writeText(htmlContent)
         ConsoleLogger.info("📊", "[HTML]", "Report: ${htmlFile.toURI()}")
 
         // JSON Report (for aggregation)
-        val jsonContent = HtmlReportGenerator.generateJson(name, modulePath.get(), allIssues)
+        val jsonContent = HtmlReportGenerator.generateJson(name, modulePath.get(), allIssues, scoringResult)
         val jsonFile = File(outputDir, "module-report.json")
         jsonFile.writeText(jsonContent)
 

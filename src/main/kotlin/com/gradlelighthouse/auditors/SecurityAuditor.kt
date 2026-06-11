@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 import java.io.File
 
@@ -52,7 +53,7 @@ class SecurityAuditor : Auditor {
 
             if (secrets.isNotEmpty()) {
                 issues.add(AuditIssue(
-                    category = "Security",
+                    category = LighthouseCategory.SECURITY,
                     severity = Severity.FATAL,
                     title = "Hardcoded Secrets Detected in gradle.properties",
                     reasoning = "Found potential secrets in gradle.properties: ${secrets.joinToString(", ")}. These may be committed to version control, exposing credentials.",
@@ -72,7 +73,7 @@ class SecurityAuditor : Auditor {
 
             if (hasHardcodedPassword) {
                 issues.add(AuditIssue(
-                    category = "Security",
+                    category = LighthouseCategory.SECURITY,
                     severity = Severity.FATAL,
                     title = "Signing Config Contains Plain Text Passwords",
                     reasoning = "The build file contains signing configuration with what appears to be hardcoded passwords rather than environment variable or property references.",
@@ -99,7 +100,7 @@ class SecurityAuditor : Auditor {
                 val isTooOld = major < 8 || (major == 8 && minor < 10)
                 if (isTooOld) {
                     issues.add(AuditIssue(
-                        category = "Security",
+                        category = LighthouseCategory.SECURITY,
                         severity = Severity.WARNING,
                         title = "Gradle Wrapper Version Outdated ($wrapperVersion)",
                         reasoning = "Gradle $wrapperVersion may have known security vulnerabilities and lacks performance improvements from newer releases. Current recommended minimum: 8.10+.",
@@ -116,7 +117,7 @@ class SecurityAuditor : Auditor {
         val hasLocking = buildContent.contains("dependencyLocking") || buildContent.contains("lockAllConfigurations")
         if (!hasLocking) {
             issues.add(AuditIssue(
-                category = "Security",
+                category = LighthouseCategory.SECURITY,
                 severity = Severity.INFO,
                 title = "Dependency Locking Not Configured",
                 reasoning = "No dependency locking is configured. Without locking, builds may resolve different transitive versions over time, leading to non-reproducible builds.",
@@ -131,7 +132,7 @@ class SecurityAuditor : Auditor {
         val hasToolchain = buildContent.contains("jvmToolchain") || buildContent.contains("JavaLanguageVersion")
         if (!hasToolchain) {
             issues.add(AuditIssue(
-                category = "Security",
+                category = LighthouseCategory.SECURITY,
                 severity = Severity.INFO,
                 title = "JDK Toolchain Not Configured",
                 reasoning = "No JDK toolchain is configured. Builds may use different JDK versions across developer machines and CI, leading to inconsistent bytecode and potential compatibility issues.",

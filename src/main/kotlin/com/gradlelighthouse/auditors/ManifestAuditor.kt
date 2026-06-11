@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 import java.io.File
 import java.util.Locale
@@ -32,7 +33,7 @@ class ManifestAuditor : Auditor {
     private fun checkManifestContent(content: String, file: File, issues: MutableList<AuditIssue>) {
         if (content.contains("android:allowBackup=\"true\"")) {
             issues.add(AuditIssue(
-                category = "Security",
+                category = LighthouseCategory.SECURITY,
                 severity = Severity.WARNING,
                 title = "Insecure Data Backup Enabled",
                 reasoning = "The 'allowBackup' flag is set to true. This allows any user with USB debugging enabled to copy your app's private data via 'adb backup'.",
@@ -46,7 +47,7 @@ class ManifestAuditor : Auditor {
 
         if (content.contains("android:usesCleartextTraffic=\"true\"")) {
             issues.add(AuditIssue(
-                category = "Security",
+                category = LighthouseCategory.SECURITY,
                 severity = Severity.ERROR,
                 title = "Cleartext Traffic Allowed",
                 reasoning = "App allows HTTP (unencrypted) traffic. This is a violation of modern security standards.",
@@ -69,7 +70,7 @@ class ManifestAuditor : Auditor {
                     rawType.substring(0, 1).uppercase(java.util.Locale.ROOT) + rawType.substring(1)
                 } else rawType
                 issues.add(AuditIssue(
-                    category = "Security",
+                    category = LighthouseCategory.SECURITY,
                     severity = Severity.ERROR,
                     title = "Publicly Exported $componentType",
                     reasoning = "A component is marked 'android:exported=\"true\"' without any custom permission requirement.",

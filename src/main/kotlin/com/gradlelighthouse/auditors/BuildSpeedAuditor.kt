@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 
 /**
@@ -39,7 +40,7 @@ class BuildSpeedAuditor : Auditor {
             val yearlyHoursSaved = (timeSavedPerBuild * 10 * 250) / 3600 // 10 builds/day, 250 days/year
 
             issues.add(AuditIssue(
-                category = "Performance",
+                category = LighthouseCategory.BUILD_PERFORMANCE,
                 severity = Severity.ERROR,
                 title = "KSP ROI Engine: Save ${yearlyHoursSaved}h/year",
                 reasoning = "Found $migratableCount libraries using legacy KAPT that support modern KSP processing. Detected KAPT dependencies: ${kaptDeps.joinToString { it.notation }}.",
@@ -55,7 +56,7 @@ class BuildSpeedAuditor : Auditor {
 
         if (props["org.gradle.caching"] != "true") {
             issues.add(AuditIssue(
-                category = "Performance",
+                category = LighthouseCategory.BUILD_PERFORMANCE,
                 severity = Severity.FATAL,
                 title = "Build Caching is Disabled",
                 reasoning = "The property 'org.gradle.caching' is not set to true in gradle.properties.",
@@ -70,7 +71,7 @@ class BuildSpeedAuditor : Auditor {
 
         if (props["org.gradle.parallel"] != "true") {
             issues.add(AuditIssue(
-                category = "Performance",
+                category = LighthouseCategory.BUILD_PERFORMANCE,
                 severity = Severity.WARNING,
                 title = "Parallel Execution Disabled",
                 reasoning = "Gradle executes multi-module builds sequentially by default unless 'org.gradle.parallel' is enabled.",
@@ -84,7 +85,7 @@ class BuildSpeedAuditor : Auditor {
 
         if (props["android.enableJetifier"] == "true") {
             issues.add(AuditIssue(
-                category = "Performance",
+                category = LighthouseCategory.BUILD_PERFORMANCE,
                 severity = Severity.ERROR,
                 title = "Jetifier is still Enabled",
                 reasoning = "Jetifier is an expensive transformation tool that scans and rewrites every dependency during build-time for AndroidX compatibility.",
@@ -100,7 +101,7 @@ class BuildSpeedAuditor : Auditor {
         // 3. Configuration on Demand check
         if (props["org.gradle.configureondemand"] == "true") {
             issues.add(AuditIssue(
-                category = "Performance",
+                category = LighthouseCategory.BUILD_PERFORMANCE,
                 severity = Severity.WARNING,
                 title = "Configuration on Demand is Enabled (Deprecated)",
                 reasoning = "The property 'org.gradle.configureondemand' is set to true. This feature is deprecated in Gradle 8.x and may cause incorrect build results.",
@@ -122,7 +123,7 @@ class BuildSpeedAuditor : Auditor {
 
             if (!hasBuildConfigUsage && !disablesBuildConfig && isLibrary) {
                 issues.add(AuditIssue(
-                    category = "Performance",
+                    category = LighthouseCategory.BUILD_PERFORMANCE,
                     severity = Severity.WARNING,
                     title = "Unnecessary BuildConfig Generation",
                     reasoning = "Library module '${context.projectName}' generates BuildConfig.java by default but no source files import it. This creates unnecessary compilation work for every build.",
@@ -138,7 +139,7 @@ class BuildSpeedAuditor : Auditor {
 
         if (context.buildFileContent.contains("kotlin-android-extensions")) {
             issues.add(AuditIssue(
-                category = "Performance",
+                category = LighthouseCategory.BUILD_PERFORMANCE,
                 severity = Severity.ERROR,
                 title = "Deprecated kotlin-android-extensions Plugin Detected",
                 reasoning = "The kotlin-android-extensions plugin is deprecated since Kotlin 1.8 and removed in newer versions. Synthetic view bindings are no longer maintained.",

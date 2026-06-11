@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 
 /**
@@ -36,7 +37,7 @@ class KmpStructureAuditor : Auditor {
         // 1. Check if commonMain exists
         if (commonMain == null) {
             issues.add(AuditIssue(
-                category = "Architecture",
+                category = LighthouseCategory.ARCHITECTURE,
                 severity = Severity.ERROR,
                 title = "Missing commonMain Source Set",
                 reasoning = "A Kotlin Multiplatform project was detected but no 'commonMain' source set was found. All shared business logic should reside in commonMain.",
@@ -61,7 +62,7 @@ class KmpStructureAuditor : Auditor {
 
             if (shareRatio < 30 && totalKt > 10) {
                 issues.add(AuditIssue(
-                    category = "Architecture",
+                    category = LighthouseCategory.ARCHITECTURE,
                     severity = Severity.WARNING,
                     title = "Low Code Sharing: commonMain has only $shareRatio% of Kotlin files",
                     reasoning = "Only $commonKtCount out of $totalKt Kotlin files are in commonMain. The majority of code ($androidKtCount files) is platform-specific in androidMain.",
@@ -83,7 +84,7 @@ class KmpStructureAuditor : Auditor {
 
         if (leakedDeps.isNotEmpty()) {
             issues.add(AuditIssue(
-                category = "Architecture",
+                category = LighthouseCategory.ARCHITECTURE,
                 severity = Severity.ERROR,
                 title = "Android Dependencies Leaked into commonMain (${leakedDeps.size})",
                 reasoning = "The following Android-only dependencies were found in commonMain configurations: ${leakedDeps.joinToString { it.notation }}.",

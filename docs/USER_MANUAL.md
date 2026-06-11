@@ -329,17 +329,19 @@ Use only `warning`, `error`, or `fatal`. Other values are treated like build-fai
 ### Formula
 
 ```text
-score = 100 × 0.98^(total_weighted_impact)
+Category Score = 100 - (6.6 × √RawImpact)
 ```
+
+Overall score aggregated using Weighted Average + Weakest Link protection.
 
 ### Severity weights
 
 | Severity | Weight |
 |----------|--------|
-| `FATAL` | 35 |
-| `ERROR` | 15 |
-| `WARNING` | 5 |
-| `INFO` | 1 |
+| `FATAL` | 32.0 |
+| `ERROR` | 8.0 |
+| `WARNING` | 2.0 |
+| `INFO` | 0.2 |
 
 ### Rank table
 

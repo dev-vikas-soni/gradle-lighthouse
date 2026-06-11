@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 
 /**
@@ -27,7 +28,7 @@ class ConflictIntelligenceAuditor : Auditor {
         context.resolvedDependencies.forEach { resolved ->
             if (isMajorVersionJump(resolved.requestedNotation, resolved.selectedVersion)) {
                 issues.add(AuditIssue(
-                    category = "Stability",
+                    category = LighthouseCategory.QUALITY,
                     severity = Severity.FATAL,
                     title = "Silent Major Version Jump: ${resolved.selectedGroup}:${resolved.selectedName}",
                     reasoning = "Requested version '${resolved.requestedNotation}' was silently forced to '${resolved.selectedVersion}' by the dependency graph (Conflict Resolution).",

@@ -61,8 +61,8 @@ object SarifReportGenerator {
             appendLine("""            "helpUri": "https://github.com/dev-vikas-soni/gradle-lighthouse#readme",""")
             appendLine("""            "defaultConfiguration": { "level": "$level" },""")
             appendLine("""            "properties": {""")
-            appendLine("""              "category": "${escapeJson(issue.category)}",""")
-            appendLine("""              "tags": ["android", "${escapeJson(issue.category.lowercase(Locale.ROOT))}"]""")
+            appendLine("""              "category": "${escapeJson(issue.category.displayName)}",""")
+            appendLine("""              "tags": ["android", "${escapeJson(issue.category.name.lowercase(Locale.ROOT))}"]""")
             appendLine("""            }""")
             append("          }")
         }
@@ -94,7 +94,7 @@ object SarifReportGenerator {
             }
 
             appendLine("""        "properties": {""")
-            appendLine("""          "category": "${escapeJson(issue.category)}",""")
+            appendLine("""          "category": "${escapeJson(issue.category.displayName)}",""")
             appendLine("""          "roiAfterFix": "${escapeJson(issue.roiAfterFix)}" """)
             appendLine("""        }""")
             append("      }")

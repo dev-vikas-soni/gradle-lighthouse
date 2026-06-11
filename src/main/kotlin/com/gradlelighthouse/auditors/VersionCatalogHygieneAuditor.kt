@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 import java.io.File
 
@@ -36,7 +37,7 @@ class VersionCatalogHygieneAuditor : Auditor {
 
         if (hardcodedDeps.isNotEmpty()) {
             issues.add(AuditIssue(
-                category = "DependencyHygiene",
+                category = LighthouseCategory.DEPENDENCY_HYGIENE,
                 severity = Severity.WARNING,
                 title = "Hardcoded Dependencies Found (${hardcodedDeps.size}) — Use Version Catalog",
                 reasoning = "Found ${hardcodedDeps.size} dependencies with hardcoded version strings instead of using libs.versions.toml aliases: ${hardcodedDeps.take(5).joinToString(", ")}${if (hardcodedDeps.size > 5) "..." else ""}",
@@ -67,7 +68,7 @@ class VersionCatalogHygieneAuditor : Auditor {
                     val potentiallyUnused = libraryAliases - usedAliases.toSet()
                     if (potentiallyUnused.size > libraryAliases.size * 0.3 && potentiallyUnused.isNotEmpty()) {
                         issues.add(AuditIssue(
-                            category = "DependencyHygiene",
+                            category = LighthouseCategory.DEPENDENCY_HYGIENE,
                             severity = Severity.INFO,
                             title = "Version Catalog May Have Unused Entries",
                             reasoning = "The version catalog defines ${libraryAliases.size} library entries. Some may not be used across the project. Run a full-project scan to identify dead entries.",
@@ -83,7 +84,7 @@ class VersionCatalogHygieneAuditor : Auditor {
                 val bundleCandidates = detectBundleCandidates(libraryAliases)
                 if (bundleCandidates.isNotEmpty() && context.projectPath == ":") {
                     issues.add(AuditIssue(
-                        category = "DependencyHygiene",
+                        category = LighthouseCategory.DEPENDENCY_HYGIENE,
                         severity = Severity.INFO,
                         title = "Version Catalog Bundle Opportunities (${bundleCandidates.size})",
                         reasoning = "Related dependencies could be grouped into bundles for easier usage: ${bundleCandidates.entries.take(3).joinToString(", ") { "${it.key} (${it.value.size} libs)" }}",

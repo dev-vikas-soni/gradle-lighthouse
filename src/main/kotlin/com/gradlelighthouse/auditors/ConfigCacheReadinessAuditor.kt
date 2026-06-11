@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 
 /**
@@ -29,7 +30,7 @@ class ConfigCacheReadinessAuditor : Auditor {
         // 1. Check if configuration cache is enabled
         if (props["org.gradle.configuration-cache"] != "true" && props["org.gradle.unsafe.configuration-cache"] != "true") {
             issues.add(AuditIssue(
-                category = "BuildPerformance",
+                category = LighthouseCategory.BUILD_PERFORMANCE,
                 severity = Severity.ERROR,
                 title = "Configuration Cache Not Enabled",
                 reasoning = "The Gradle Configuration Cache is not enabled. This feature serializes the task graph after configuration and reuses it in subsequent builds, dramatically reducing configuration time.",
@@ -45,7 +46,7 @@ class ConfigCacheReadinessAuditor : Auditor {
             val isRoot = context.projectPath == ":" || context.projectName == context.rootDir.name
             if (isRoot) {
                 issues.add(AuditIssue(
-                    category = "BuildPerformance",
+                    category = LighthouseCategory.BUILD_PERFORMANCE,
                     severity = Severity.ERROR,
                     title = "allprojects/subprojects Blocks Detected (Configuration Anti-Pattern)",
                     reasoning = "Root build.gradle.kts uses allprojects{} or subprojects{} blocks which force eager configuration of all modules and are incompatible with Configuration Cache and Isolated Projects.",
@@ -66,7 +67,7 @@ class ConfigCacheReadinessAuditor : Auditor {
         for ((pattern, label) in eagerTaskPatterns) {
             if (buildContent.contains(pattern)) {
                 issues.add(AuditIssue(
-                    category = "BuildPerformance",
+                    category = LighthouseCategory.BUILD_PERFORMANCE,
                     severity = Severity.WARNING,
                     title = "Eager Task Creation Detected: $label",
                     reasoning = "Build script uses '$label' which eagerly creates/configures tasks even when they won't be executed. This slows down the configuration phase.",
@@ -89,7 +90,7 @@ class ConfigCacheReadinessAuditor : Auditor {
         val hasCustomTaskWithProjectAccess = executionTimeProjectAccess.any { buildContent.contains(it) }
         if (hasCustomTaskWithProjectAccess && buildContent.contains("@TaskAction")) {
             issues.add(AuditIssue(
-                category = "BuildPerformance",
+                category = LighthouseCategory.BUILD_PERFORMANCE,
                 severity = Severity.ERROR,
                 title = "Project Access in Task Action (Configuration Cache Incompatible)",
                 reasoning = "Custom tasks appear to access the Project object at execution time (inside @TaskAction). This is incompatible with Configuration Cache.",
@@ -103,7 +104,7 @@ class ConfigCacheReadinessAuditor : Auditor {
         // 5. Check for missing configuration cache problems mode
         if (props["org.gradle.configuration-cache"] == "true" && props["org.gradle.configuration-cache.problems"] == null) {
             issues.add(AuditIssue(
-                category = "BuildPerformance",
+                category = LighthouseCategory.BUILD_PERFORMANCE,
                 severity = Severity.INFO,
                 title = "Configuration Cache Problems Mode Not Set",
                 reasoning = "Configuration Cache is enabled but 'org.gradle.configuration-cache.problems' is not configured. Default is 'fail' which may break builds during migration.",
@@ -118,7 +119,7 @@ class ConfigCacheReadinessAuditor : Auditor {
         val buildSrcDir = java.io.File(context.rootDir, "buildSrc")
         if (buildSrcDir.exists() && buildSrcDir.isDirectory) {
             issues.add(AuditIssue(
-                category = "BuildPerformance",
+                category = LighthouseCategory.BUILD_PERFORMANCE,
                 severity = Severity.WARNING,
                 title = "buildSrc Detected — Consider Composite Builds",
                 reasoning = "buildSrc changes invalidate the entire build cache and force full re-configuration of all modules. Composite builds (build-logic/) avoid this.",
@@ -135,7 +136,7 @@ class ConfigCacheReadinessAuditor : Auditor {
             }
             if (hasAndroidPlugin) {
                 issues.add(AuditIssue(
-                    category = "BuildPerformance",
+                    category = LighthouseCategory.BUILD_PERFORMANCE,
                     severity = Severity.WARNING,
                     title = "Non-Transitive R Class Not Enabled",
                     reasoning = "android.nonTransitiveRClass=true reduces R.class size and compilation time by not inheriting resources from dependencies into each module's R class.",

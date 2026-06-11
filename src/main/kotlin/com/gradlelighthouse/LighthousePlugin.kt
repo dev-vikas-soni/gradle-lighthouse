@@ -51,7 +51,28 @@ class LighthousePlugin : Plugin<Project> {
             }
         })
 
+        project.tasks.register("lighthouseBenchmarkStatus", LighthouseBenchmarkStatusTask::class.java, object : Action<LighthouseBenchmarkStatusTask> {
+            override fun execute(task: LighthouseBenchmarkStatusTask) {
+                task.rootDirPath.set(project.rootDir.absolutePath)
+            }
+        })
+
         if (project == project.rootProject) {
+            project.tasks.register("lighthouseExportBenchmark", LighthouseExportBenchmarkTask::class.java, object : Action<LighthouseExportBenchmarkTask> {
+                override fun execute(task: LighthouseExportBenchmarkTask) {
+                    task.projectName.set(project.name)
+                    task.pluginVersion.set(VERSION)
+                    task.outputDir.set(project.layout.buildDirectory.dir("reports/lighthouse"))
+                    project.subprojects.forEach { sub ->
+                        sub.plugins.withId("io.github.dev-vikas-soni.lighthouse") {
+                            val subAuditTask = sub.tasks.named("lighthouseAudit", LighthouseTask::class.java)
+                            task.dependsOn(subAuditTask)
+                            task.moduleReportDirs.from(subAuditTask.flatMap { it.reportOutputDir })
+                        }
+                    }
+                }
+            })
+
             project.tasks.register("lighthouseAggregate", LighthouseAggregateTask::class.java, object : Action<LighthouseAggregateTask> {
                 override fun execute(task: LighthouseAggregateTask) {
                     task.group = "Gradle Lighthouse"

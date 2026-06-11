@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 import java.io.File
 
@@ -29,7 +30,7 @@ class AppSizeAuditor : Auditor {
             if (content.isNotBlank()) {
                 if (!(content.contains("isMinifyEnabled = true") || content.contains("minifyEnabled true"))) {
                     issues.add(AuditIssue(
-                        category = name,
+                        category = LighthouseCategory.APP_SIZE,
                         severity = Severity.ERROR,
                         title = "Code Shrinking (R8) Disabled",
                         reasoning = "The 'isMinifyEnabled' flag is set to false or missing in your build script. This prevents R8 from performing tree-shaking and optimization.",
@@ -42,7 +43,7 @@ class AppSizeAuditor : Auditor {
 
                 if (!(content.contains("isShrinkResources = true") || content.contains("shrinkResources true"))) {
                     issues.add(AuditIssue(
-                        category = name,
+                        category = LighthouseCategory.APP_SIZE,
                         severity = Severity.ERROR,
                         title = "Resource Shrinking (ResGuard) Disabled",
                         reasoning = "Resource shrinking is disabled. R8 can remove dead code, but unused XML layouts, drawables, and raw assets require 'isShrinkResources' to be enabled.",
@@ -84,7 +85,7 @@ class AppSizeAuditor : Auditor {
 
         if (bitmapCount > 5) {
             issues.add(AuditIssue(
-                category = name,
+                category = LighthouseCategory.APP_SIZE,
                 severity = Severity.WARNING,
                 title = "Legacy Drawable Folder Overuse ($bitmapCount files)",
                 reasoning = "Detected $bitmapCount bitmap files in the default 'drawable/' folder instead of density-specific folders (xhdpi, xxhdpi) or Vector format.",
@@ -106,7 +107,7 @@ class AppSizeAuditor : Auditor {
 
         if (largeFiles.isNotEmpty()) {
             issues.add(AuditIssue(
-                category = name,
+                category = LighthouseCategory.APP_SIZE,
                 severity = Severity.WARNING,
                 title = "Unoptimized Assets: ${largeFiles.size} Large Files",
                 reasoning = "The following large files were found in assets/: ${largeFiles.joinToString(", ")}. Large assets significantly contribute to 'App Overweight' issues.",

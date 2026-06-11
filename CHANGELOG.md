@@ -6,17 +6,26 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
-## [2.3.0] - 2026-05-20
+## [2.3.0] - 2026-06-11
 
 ### Added
-- **Baseline System**: Support for suppressing existing technical debt via `lighthouseRecordBaseline` task. New issues are highlighted while legacy issues are recorded in a portable baseline file.
-- **Lighthouse Fix Engine**: New `lighthouseFix` task to automatically apply best practices (enabling build cache, parallel execution, non-transitive R classes, etc.) to `gradle.properties`.
-- **Remediation Database**: Every audit finding now includes a `remediationUrl` linking to deep-dive technical "Recipes" for fixing specific architectural smells.
-- **Relative Path Fingerprinting**: Baselines are now fully portable across developer machines and CI environments (no absolute paths).
+- **Modern Health Score Engine (V2)**: Replaced global exponential decay with a category-based square root model ($100 - K \times \sqrt{RawImpact}$).
+- **Architecture Health Breakdown**: New dashboard section featuring independent scores for 9 domains: Architecture, Security, Performance, Build Performance, Complexity, Quality, Modernization, Dependency Hygiene, and App Size.
+- **Industry Benchmarking**: Dynamic percentile engine that ranks projects against industry giants like *Signal Android* and *Now in Android*.
+- **Benchmark Export Pipeline**: New task `lighthouseExportBenchmark` to automatically generate "Ground Truth" snapshots from real audits.
+- **Project Persona Classification**: Automatic classification into personas (e.g., *Modular Monolith*, *Enterprise Android*) for peer-group comparison.
+- **Baseline System**: Support for suppressing existing technical debt via `lighthouseRecordBaseline`.
+- **Lighthouse Fix Engine**: New `lighthouseFix` task to automatically apply best practices to `gradle.properties`.
+- **Thread-Safe Registry**: `BenchmarkRegistry` now supports parallel multi-module execution and double-checked locking for snapshot caching.
 
 ### Changed
-- **Roadmap Update**: Accelerated Phase 3 automation goals.
-- **Internal API**: Updated `Auditor` and `AuditIssue` to support fixing engine and remediation metadata.
+- **Weakest Link Logic**: Overall score is now calculated as the average of the weighted mean and the poorest category score to prevent masking critical failures.
+- **ANSI Terminal Dashboard**: Updated to include Category Health summary and strongest/weakest domain indicators.
+- **JSON Aggregation Schema**: Intermediate `module-report.json` now includes full category breakdowns and top risks.
+
+### Migration Notes
+*   **Scoring Shift**: Projects will likely see a score movement (typically +/- 5pts) as the engine shifted from "Finding Counter" to "Category Model".
+*   **Version Safety**: Benchmarks generated with V2.2.0 or older will trigger a "Re-audit recommended" warning due to the scoring engine overhaul.
 
 ## [2.2.2] - 2026-05-18
 

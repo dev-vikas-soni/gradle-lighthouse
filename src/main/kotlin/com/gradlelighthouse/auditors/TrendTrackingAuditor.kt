@@ -5,6 +5,7 @@ import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
 import com.gradlelighthouse.core.HealthScoreEngine
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 import java.io.File
 
@@ -28,7 +29,7 @@ class TrendTrackingAuditor : Auditor {
 
         if (!historyFile.exists()) {
             issues.add(AuditIssue(
-                category = "Trends",
+                category = LighthouseCategory.QUALITY,
                 severity = Severity.INFO,
                 title = "First Audit Run — Baseline Established",
                 reasoning = "No previous audit history found for '${context.projectName}'. This run will be saved as the baseline for future comparisons.",
@@ -50,7 +51,7 @@ class TrendTrackingAuditor : Auditor {
                 val delta = currentScore - lastScore.score
                 when {
                     delta < -5 -> issues.add(AuditIssue(
-                        category = "Trends",
+                        category = LighthouseCategory.QUALITY,
                         severity = Severity.ERROR,
                         title = "Health Score Degraded: $currentScore (${delta} points)",
                         reasoning = "Module '${context.projectName}' health score dropped from ${lastScore.score} to $currentScore (${delta} points) since ${lastScore.timestamp}.",
@@ -59,7 +60,7 @@ class TrendTrackingAuditor : Auditor {
                         roiAfterFix = "Prevent architectural drift and maintain code quality standards."
                     ))
                     delta > 5 -> issues.add(AuditIssue(
-                        category = "Trends",
+                        category = LighthouseCategory.QUALITY,
                         severity = Severity.INFO,
                         title = "Health Score Improved: $currentScore (+${delta} points) 🎉",
                         reasoning = "Module '${context.projectName}' health score improved from ${lastScore.score} to $currentScore (+${delta} points) since ${lastScore.timestamp}.",

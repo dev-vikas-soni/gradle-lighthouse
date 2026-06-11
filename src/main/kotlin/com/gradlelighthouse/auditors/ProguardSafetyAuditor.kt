@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 import java.io.File
 
@@ -51,7 +52,7 @@ class ProguardSafetyAuditor : Auditor {
 
         if (proguardFile == null) {
             issues.add(AuditIssue(
-                category = "Stability",
+                category = LighthouseCategory.QUALITY,
                 severity = Severity.FATAL,
                 title = "Critical: Missing ProGuard Rules Configuration",
                 reasoning = "This module uses reflection-heavy libraries (${usedReflectionLibs.keys.joinToString()}) but no 'proguard-rules.pro' or 'consumer-rules.pro' file was found in the module root.",
@@ -69,7 +70,7 @@ class ProguardSafetyAuditor : Auditor {
             val ruleStub = requiredRule.substringBefore("{").trim()
             if (!proguardContent.contains(ruleStub)) {
                 issues.add(AuditIssue(
-                    category = "Stability",
+                    category = LighthouseCategory.QUALITY,
                     severity = Severity.FATAL,
                     title = "Missing R8 '-keep' Rule for $coord",
                     reasoning = "The library $coord is present in your implementation, but its required R8/ProGuard keep rule was not detected in '${proguardFile.name}'.",

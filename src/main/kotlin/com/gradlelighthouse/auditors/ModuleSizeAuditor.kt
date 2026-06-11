@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 import java.io.File
 
@@ -59,7 +60,7 @@ class ModuleSizeAuditor : Auditor {
 
         if (totalLoc > LOC_ERROR_THRESHOLD) {
             issues.add(AuditIssue(
-                category = "Complexity",
+                category = LighthouseCategory.COMPLEXITY,
                 severity = Severity.ERROR,
                 title = "Oversized Module: ${totalLoc} Lines of Code",
                 reasoning = "Module '${context.projectName}' has $totalLoc lines of code (threshold: $LOC_ERROR_THRESHOLD). This indicates the module has accumulated too many responsibilities and should be split.",
@@ -69,7 +70,7 @@ class ModuleSizeAuditor : Auditor {
             ))
         } else if (totalLoc > LOC_WARNING_THRESHOLD) {
             issues.add(AuditIssue(
-                category = "Complexity",
+                category = LighthouseCategory.COMPLEXITY,
                 severity = Severity.WARNING,
                 title = "Large Module: ${totalLoc} Lines of Code",
                 reasoning = "Module '${context.projectName}' has $totalLoc lines of code (warning threshold: $LOC_WARNING_THRESHOLD). Consider splitting before it becomes unmanageable.",
@@ -82,7 +83,7 @@ class ModuleSizeAuditor : Auditor {
         // 2. Public API surface
         if (publicClassCount > PUBLIC_API_THRESHOLD) {
             issues.add(AuditIssue(
-                category = "Complexity",
+                category = LighthouseCategory.COMPLEXITY,
                 severity = Severity.WARNING,
                 title = "Large Public API Surface: $publicClassCount Classes",
                 reasoning = "Module '${context.projectName}' exposes $publicClassCount public classes/interfaces (threshold: $PUBLIC_API_THRESHOLD). This indicates the module may be doing too much or has insufficient access control.",
@@ -96,7 +97,7 @@ class ModuleSizeAuditor : Auditor {
         val buildFileLines = context.buildFileContent.lines().count { it.isNotBlank() }
         if (buildFileLines > BUILD_FILE_COMPLEXITY_THRESHOLD) {
             issues.add(AuditIssue(
-                category = "Complexity",
+                category = LighthouseCategory.COMPLEXITY,
                 severity = Severity.WARNING,
                 title = "Complex Build File: $buildFileLines Lines",
                 reasoning = "The build.gradle.kts for '${context.projectName}' has $buildFileLines non-blank lines (threshold: $BUILD_FILE_COMPLEXITY_THRESHOLD). Complex build scripts are hard to maintain and slow to configure.",

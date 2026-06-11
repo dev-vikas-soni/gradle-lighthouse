@@ -34,7 +34,7 @@ object JunitXmlReportGenerator {
             timeZone = TimeZone.getTimeZone("UTC")
         }.format(Date())
 
-        val grouped = issues.groupBy { it.category }
+        val grouped = issues.groupBy { it.category.displayName }
 
         // Generate categories as test suites — dynamically from actual issues + known defaults
         val defaultCategories = listOf(
@@ -80,7 +80,7 @@ object JunitXmlReportGenerator {
             } else {
                 issues.forEach { issue ->
                     val testName = escapeXml(issue.title)
-                    val className = "com.gradlelighthouse.$moduleName.${issue.category}"
+                    val className = "com.gradlelighthouse.$moduleName.${issue.category.name}"
 
                     appendLine("""    <testcase name="$testName" classname="$className" time="0">""")
 

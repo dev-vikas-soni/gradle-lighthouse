@@ -1,0 +1,20 @@
+{
+  "projectName": "nowinandroid",
+  "generatedAt": "2026-06-11T18:41:48.966997Z",
+  "lighthouseVersion": "2.3.0",
+  "overallScore": 72.83,
+  "projectMaturity": "Standard Architect",
+  "moduleCount": 30,
+  "persona": "MEDIUM_ANDROID_APP",
+  "categoryScores": {
+    "ARCHITECTURE": 61.01,
+    "APP_SIZE": 98.24,
+    "SECURITY": 94.69,
+    "PERFORMANCE": 99.69,
+    "BUILD_PERFORMANCE": 87.19,
+    "QUALITY": 81.51,
+    "DEPENDENCY_HYGIENE": 91.58,
+    "MODERNIZATION": 98.82,
+    "COMPLEXITY": 100.00
+  }
+}

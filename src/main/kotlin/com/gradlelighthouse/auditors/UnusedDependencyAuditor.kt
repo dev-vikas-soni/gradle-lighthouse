@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 import java.io.File
 
@@ -74,7 +75,7 @@ class UnusedDependencyAuditor : Auditor {
 
         if (potentiallyUnused.isNotEmpty()) {
             issues.add(AuditIssue(
-                category = "DependencyHygiene",
+                category = LighthouseCategory.DEPENDENCY_HYGIENE,
                 severity = Severity.WARNING,
                 title = "Potentially Unused Dependencies Detected (${potentiallyUnused.size})",
                 reasoning = "The following dependencies are declared but no matching import was found in source files: ${potentiallyUnused.joinToString(", ")}. These may be dead weight increasing APK size and build time.",
@@ -92,7 +93,7 @@ class UnusedDependencyAuditor : Auditor {
         if (duplicates.isNotEmpty()) {
             val dupList = duplicates.keys.take(5).joinToString(", ")
             issues.add(AuditIssue(
-                category = "DependencyHygiene",
+                category = LighthouseCategory.DEPENDENCY_HYGIENE,
                 severity = Severity.INFO,
                 title = "Duplicate Dependency Declarations (${duplicates.size})",
                 reasoning = "These dependencies are declared in multiple configurations: $dupList. This can indicate confusion about api vs implementation scope.",

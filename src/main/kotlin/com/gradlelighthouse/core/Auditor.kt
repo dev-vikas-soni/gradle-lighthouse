@@ -20,6 +20,31 @@ enum class Severity(
 }
 
 /**
+ * Supported categories for architectural auditing.
+ */
+enum class LighthouseCategory(val displayName: String) {
+    ARCHITECTURE("Architecture"),
+    SECURITY("Security"),
+    PERFORMANCE("Performance"),
+    BUILD_PERFORMANCE("Build Performance"),
+    COMPLEXITY("Complexity"),
+    QUALITY("Quality"),
+    MODERNIZATION("Modernization"),
+    DEPENDENCY_HYGIENE("Dependency Hygiene"),
+    APP_SIZE("App Size");
+
+    companion object {
+        fun fromString(value: String): LighthouseCategory {
+            val normalized = value.replace(" ", "_").replace("-", "_")
+            return entries.find {
+                it.name.equals(normalized, ignoreCase = true) ||
+                it.displayName.equals(value, ignoreCase = true)
+            } ?: ARCHITECTURE
+        }
+    }
+}
+
+/**
  * A structured audit finding with full context for reporting.
  *
  * Every field is designed to be directly renderable in HTML, SARIF, and JUnit XML
@@ -28,7 +53,7 @@ enum class Severity(
  */
 data class AuditIssue(
     /** Top-level category (e.g., "Stability", "Performance", "Modernization") */
-    val category: String,
+    val category: LighthouseCategory,
 
     /** Severity level determining score impact and CI gate behavior */
     val severity: Severity,
@@ -71,7 +96,7 @@ data class AuditIssue(
         } else {
             sourceFile ?: "global"
         }
-        return "$category|$title|$path".hashCode().toString()
+        return "${category.name}|$title|$path".hashCode().toString()
     }
 
     companion object {

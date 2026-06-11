@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 import java.io.File
 
@@ -41,7 +42,7 @@ class CatalogMigrationAuditor : Auditor {
 
         if (foundDeps.isNotEmpty()) {
             issues.add(AuditIssue(
-                category = "Modernization",
+                category = LighthouseCategory.MODERNIZATION,
                 severity = Severity.WARNING,
                 title = "Legacy Hardcoded Dependencies (${foundDeps.size})",
                 reasoning = "Detected ${foundDeps.size} static dependency strings in ${context.buildFile.name}. Hardcoded strings are deprecated in favor of Version Catalogs (libs.versions.toml).",

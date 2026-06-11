@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 import javax.xml.parsers.DocumentBuilderFactory
 import org.w3c.dom.Element
@@ -42,7 +43,7 @@ class PlayPolicyAuditor : Auditor {
                 analyzeManifest(manifestFile, issues)
             } catch (e: Exception) {
                 issues.add(AuditIssue(
-                    category = name,
+                    category = LighthouseCategory.QUALITY,
                     severity = Severity.FATAL,
                     title = "Manifest Parse Error",
                     reasoning = "The AndroidManifest.xml file contains malformed XML syntax at ${manifestFile.path}. Error: ${e.message}",
@@ -73,7 +74,7 @@ class PlayPolicyAuditor : Auditor {
             val permissionName = (permissions.item(i) as Element).getAttribute("android:name")
             if (dangerousPermissions.contains(permissionName)) {
                 issues.add(AuditIssue(
-                    category = name,
+                    category = LighthouseCategory.SECURITY,
                     severity = Severity.ERROR,
                     title = "Dangerous Permission: $permissionName",
                     reasoning = "Google Play has strict policies on $permissionName. These are high-risk permissions that grant deep access to private user data.",
@@ -94,7 +95,7 @@ class PlayPolicyAuditor : Auditor {
                 if (element.getElementsByTagName("intent-filter").length > 0 && !element.hasAttribute("android:exported")) {
                     val compName = element.getAttribute("android:name") ?: "Unknown"
                     issues.add(AuditIssue(
-                        category = name,
+                        category = LighthouseCategory.SECURITY,
                         severity = Severity.FATAL,
                         title = "Missing exported flag on <$tag> $compName",
                         reasoning = "In apps targeting Android 12+, components with intent filters must explicitly specify android:exported='true/false'.",
