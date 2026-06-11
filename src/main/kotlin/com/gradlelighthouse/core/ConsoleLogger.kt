@@ -1,5 +1,7 @@
 package com.gradlelighthouse.core
 
+import com.gradlelighthouse.core.scoring.CategoryScore
+import com.gradlelighthouse.core.scoring.HealthGrade
 import java.util.Locale
 
 /**
@@ -59,16 +61,6 @@ object ConsoleLogger {
 
     /**
      * Prints the screenshot-worthy terminal dashboard box.
-     *
-     * ┌─────────────────────────────────────────────────┐
-     * │  🏗️  Gradle Lighthouse — Score: 72/100 (+8)     │
-     * │  Rank: Standard → Expert 🎯                     │
-     * ├─────────────────────────────────────────────────┤
-     * │  ✅ Build caching enabled                        │
-     * │  ⚠️  3 unused dependencies found                 │
-     * │  ❌ Configuration cache not compatible (2 tasks) │
-     * │  💡 Fix 2 errors to reach Expert rank            │
-     * └─────────────────────────────────────────────────┘
      */
     fun printDashboard(
         moduleName: String,
@@ -83,12 +75,7 @@ object ConsoleLogger {
         passedChecks: List<String>
     ) {
         val width = 58
-        val scoreColor = when {
-            score >= 90 -> GREEN
-            score >= 70 -> YELLOW
-            score >= 50 -> YELLOW
-            else -> RED
-        }
+        val scoreColor = colorForScore(score.toDouble())
         val deltaStr = if (previousScore != null) {
             val d = score - previousScore
             when {
@@ -141,6 +128,90 @@ object ConsoleLogger {
 
         println("${BOLD}${CYAN}└${"─".repeat(width)}┘${RESET}")
         println("")
+    }
+
+    /**
+     * Prints the category health breakdown to the console.
+     */
+    fun printCategoryHealth(categoryScores: List<CategoryScore>) {
+        if (categoryScores.isEmpty()) return
+
+        println("${BOLD}${CYAN}${"═".repeat(60)}${RESET}")
+        println("${BOLD}CATEGORY HEALTH${RESET}")
+        println("${CYAN}${"═".repeat(15)}${RESET}")
+        println("")
+
+        categoryScores.forEach { catScore ->
+            val scoreInt = catScore.score.toInt()
+            val scoreColor = colorForScore(catScore.score)
+            val grade = catScore.grade()
+            val gradeColor = colorForGrade(grade)
+
+            val displayName = catScore.category.displayName.padEnd(18)
+            val scoreStr = "${scoreInt}%".padStart(4)
+            val gradeStr = grade.name.lowercase().replaceFirstChar { it.uppercase() }.padStart(12)
+
+            println("  $displayName $scoreColor${BOLD}$scoreStr${RESET}  $gradeColor$gradeStr${RESET}")
+        }
+
+        println("")
+        val weakest = categoryScores.minByOrNull { it.score }
+        val strongest = categoryScores.maxByOrNull { it.score }
+
+        if (weakest != null) {
+            println("  ${BOLD}Weakest Category:${RESET}")
+            println("  ${weakest.category.displayName} (${weakest.score.toInt()}%)")
+        }
+        if (strongest != null) {
+            println("")
+            println("  ${BOLD}Strongest Category:${RESET}")
+            println("  ${strongest.category.displayName} (${strongest.score.toInt()}%)")
+        }
+
+        println("")
+        println("${BOLD}${CYAN}${"═".repeat(60)}${RESET}")
+        println("")
+    }
+
+    /**
+     * Prints the "Path to 90" (or next rank) improvement roadmap.
+     */
+    fun printImprovements(opportunities: List<com.gradlelighthouse.core.scoring.ImprovementOpportunity>, currentScore: Int) {
+        if (opportunities.isEmpty()) return
+
+        val width = 58
+        section("🎯", "[GOAL]", "Architectural Improvement Roadmap")
+
+        println("${BOLD}Current Score: $currentScore/100${RESET}")
+        println("")
+
+        opportunities.take(5).forEach { opt ->
+            val gain = if (opt.expectedGain >= 1.0) "+${opt.expectedGain.toInt()}" else "+${String.format("%.1f", opt.expectedGain)}"
+            println("  ${GREEN}${BOLD}$gain${RESET}  ${opt.title}")
+        }
+
+        val totalPotential = opportunities.sumOf { it.expectedGain }.toInt()
+        val potentialScore = (currentScore + totalPotential).coerceAtMost(100)
+
+        println("")
+        println("${CYAN}Potential Score:${RESET} ${BOLD}$potentialScore/100${RESET} (if all items are resolved)")
+        println("")
+    }
+
+    private fun colorForScore(score: Double): String = when {
+        score >= 95.0 -> GREEN
+        score >= 80.0 -> GREEN
+        score >= 60.0 -> YELLOW
+        score >= 40.0 -> YELLOW
+        else -> RED
+    }
+
+    private fun colorForGrade(grade: HealthGrade): String = when (grade) {
+        HealthGrade.ELITE -> GREEN
+        HealthGrade.STRONG -> GREEN
+        HealthGrade.MAINTAINED -> YELLOW
+        HealthGrade.AT_RISK -> YELLOW
+        HealthGrade.LEGACY -> RED
     }
 
     private fun printBoxLine(content: String, width: Int) {

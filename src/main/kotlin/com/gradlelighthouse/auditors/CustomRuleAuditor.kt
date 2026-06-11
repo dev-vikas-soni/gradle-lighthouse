@@ -3,6 +3,7 @@ package com.gradlelighthouse.auditors
 import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 import java.io.File
 
@@ -38,7 +39,7 @@ class CustomRuleAuditor : Auditor {
                     deps.forEach { dep ->
                         if (dep.contains(rule.forbiddenPattern)) {
                             issues.add(AuditIssue(
-                                category = "Architecture",
+                                category = LighthouseCategory.ARCHITECTURE,
                                 severity = rule.severity,
                                 title = rule.name,
                                 reasoning = rule.message,

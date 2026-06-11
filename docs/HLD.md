@@ -89,7 +89,7 @@ graph TD
 | **LighthousePlugin** | Entry point. Registers the `lighthouse {}` DSL extension, creates `lighthouseAudit` and `lighthouseAggregate` tasks, and captures all project state as serialized `Provider` inputs during configuration. |
 | **AuditContext** | A `Serializable` data class holding a point-in-time snapshot of the project: dependencies, manifests, Gradle properties, source sets, and the module graph. Has no reference to `org.gradle.api.Project`. |
 | **Auditor Engine** | 19 stateless `Auditor` implementations. Each is a pure function `AuditContext → List<AuditIssue>`. Six domains: Performance, Architecture, Dependencies, Security, Quality, Compliance. |
-| **HealthScoreEngine** | Exponential decay: `score = 100 × 0.98^(weighted_impact)`. Weights: FATAL=35, ERROR=15, WARNING=5, INFO=1. Returns score, rank, and per-issue deductions. |
+| **HealthScoreEngine** | Category-Based Weighted Health Model. Uses Square Root Dampening: `PointsLost = K × √RawImpact` (K=6.6). Severity Weights: FATAL=32, ERROR=8, WARNING=2, INFO=0.2. Includes "Weakest Link" protection and hard-ceiling floors for critical failures. |
 | **Reporting Layer** | Self-contained HTML (includes the Galaxy Graph canvas), SARIF v2.1.0, JUnit XML (Surefire format), ANSI terminal dashboard, and a JSON file consumed by aggregation. |
 | **TrendTracker** | Appends per-module and global scores, coupling density, and fatal issue counts to `.lighthouse/`. The aggregate dashboard reads these for the velocity charts. |
 | **Enforcement Engine** | Evaluates `failOnDependencyCycle`, `failOnLayerViolation`, `minHealthScore`, and custom YAML rules. Runs only during `lighthouseAggregate`. |

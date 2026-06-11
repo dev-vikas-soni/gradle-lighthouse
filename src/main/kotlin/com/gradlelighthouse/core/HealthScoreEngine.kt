@@ -1,5 +1,6 @@
 package com.gradlelighthouse.core
 
+import com.gradlelighthouse.core.scoring.ModernHealthScoreEngine
 import java.io.Serializable
 
 /**
@@ -8,29 +9,28 @@ import java.io.Serializable
  * Centralizes all scoring logic, rank computation, and deduction tracking
  * to eliminate the inconsistency between module-level and aggregate reports.
  *
- * Scoring uses an exponential decay model:
- *   score = 100 × 0.98^(totalWeightedImpact)
- *
- * This ensures diminishing returns — the first few issues hit hard,
- * but the score floors at [MIN_SCORE] to avoid demoralizing teams.
+ * DEPRECATED: The exponential decay model is being replaced by the ModernHealthScoreEngine.
+ * This object now delegates to the modern engine while maintaining API compatibility.
  */
 object HealthScoreEngine : Serializable {
 
     private const val serialVersionUID = 1L
-    private const val DECAY_BASE = 0.98
-    private const val MIN_SCORE = 5
-    private const val MAX_SCORE = 100
+    private val modernEngine = ModernHealthScoreEngine()
 
     /**
-     * Severity weights used for score deduction.
-     * Tuned for Android projects where FATAL = production crash.
+     * Calculates the modern health result containing detailed breakdowns.
      */
-    private val SEVERITY_WEIGHTS = mapOf(
-        Severity.FATAL to 35.0,
-        Severity.ERROR to 15.0,
-        Severity.WARNING to 5.0,
-        Severity.INFO to 1.0
-    )
+    fun calculateModernResult(issues: List<AuditIssue>) = modernEngine.calculate(issues)
+
+    /**
+     * Calculates the modern health result with industry benchmarking.
+     */
+    fun calculateModernResultWithBenchmarks(
+        issues: List<AuditIssue>,
+        moduleCount: Int,
+        pluginIds: Set<String>,
+        rootDir: java.io.File? = null
+    ) = modernEngine.calculate(issues, moduleCount, pluginIds, rootDir)
 
     /**
      * Architectural Maturity Ranks — unified across all reports.
@@ -83,25 +83,23 @@ object HealthScoreEngine : Serializable {
      * Calculates the health score from a list of audit issues.
      */
     fun calculateScore(issues: List<AuditIssue>): Int {
-        if (issues.isEmpty()) return MAX_SCORE
-
-        val totalImpact = issues.sumOf { SEVERITY_WEIGHTS[it.severity] ?: 0.0 }
-        val rawScore = (MAX_SCORE * Math.pow(DECAY_BASE, totalImpact)).toInt()
-        return rawScore.coerceIn(MIN_SCORE, MAX_SCORE)
+        return modernEngine.calculate(issues).overallScore.toInt()
     }
 
     /**
      * Generates category-level deductions sorted by impact (highest first).
      */
     fun calculateDeductions(issues: List<AuditIssue>): List<Deduction> {
-        return issues.groupBy { it.category }.map { (category, categoryIssues) ->
-            val points = categoryIssues.sumOf { (SEVERITY_WEIGHTS[it.severity] ?: 0.0).toInt() }
-            val bottleneck = categoryIssues
-                .sortedByDescending { SEVERITY_WEIGHTS[it.severity] ?: 0.0 }
-                .first()
-                .title
-            Deduction(category, points, bottleneck)
-        }.sortedByDescending { it.points }
+        val result = modernEngine.calculate(issues)
+        return result.categoryScores
+            .filter { it.deductions.isNotEmpty() }
+            .map { catScore ->
+                Deduction(
+                    category = catScore.category.displayName,
+                    points = catScore.deductions.sumOf { it.pointsLost }.toInt(),
+                    primaryBottleneck = catScore.deductions.firstOrNull()?.reason ?: "N/A"
+                )
+            }.sortedByDescending { it.points }
     }
 
     /**

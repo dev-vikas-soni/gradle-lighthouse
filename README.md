@@ -1,8 +1,8 @@
-# gradle-lighthouse
+# Gradle Lighthouse
 
 Architecture intelligence for Android and Kotlin Multiplatform Gradle builds.
 
-Gradle Lighthouse audits module structure, dependency hygiene, security, build performance, and code health directly from your Gradle project. It generates per-module reports, a global dashboard with the Galaxy Graph and trend analytics, and optional CI enforcement gates for cycles, layer leaks, and score regressions.
+Gradle Lighthouse audits module structure, dependency hygiene, security, build performance, and code health directly from your Gradle project. It transforms audit findings into a transparent architectural health model with industry benchmarking.
 
 [![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/io.github.dev-vikas-soni.lighthouse?label=Gradle%20Plugin%20Portal&color=orange)](https://plugins.gradle.org/plugin/io.github.dev-vikas-soni.lighthouse)
 [![Version: 2.3.0](https://img.shields.io/badge/Version-2.3.0-orange.svg)](https://github.com/dev-vikas-soni/gradle-lighthouse/releases)
@@ -12,51 +12,29 @@ Gradle Lighthouse audits module structure, dependency hygiene, security, build p
 
 ---
 
-## Why use it
+## What is Gradle Lighthouse?
 
-`gradle-lighthouse` is built for teams that want more than lint-style findings.
-
-<img width="1512" height="783" alt="phase-2-ss-1" src="https://github.com/user-attachments/assets/bb098ecb-8a88-49bb-a024-3301efaadeac" />
-
-
-<img width="1223" height="792" alt="actual_nia_project_dashbaord" src="https://github.com/user-attachments/assets/4357074f-6070-4d55-b152-395e15e1eb51" />
-
-
-<img width="1223" height="785" alt="actual_nia_module_dashbaord" src="https://github.com/user-attachments/assets/9d708aa9-e34b-4c4e-86c5-fdcd5c994436" />
-
-It helps you:
-- detect circular dependencies and illegal layer crossings in multi-module builds
-- spot risky dependency patterns, unused declarations, catalog hygiene gaps, and version conflicts
-- track architectural health over time with build-to-build trend history
-- explore module coupling visually in the aggregate HTML dashboard
-- fail CI intentionally when the codebase crosses agreed architectural boundaries
-- export results as self-contained HTML, SARIF, and JUnit XML
-
-This is especially useful for:
-- Android multi-module apps
-- Kotlin Multiplatform repos
-- platform / DevEx teams
-- codebases moving toward stronger modular architecture
+`gradle-lighthouse` is an enterprise-grade Gradle diagnostic engine designed for teams that want more than simple lint findings. It measures **Architectural Health** by analyzing your project's structure, dependencies, and build configuration against industry standards and reference benchmarks like *Now in Android* and *Signal*.
 
 ---
 
-## What's New in v2.3 (Phase 3)
+## Key Features
 
-Version `2.3.0` moves beyond auditing into **Automation and Adoption**:
-
-- **Baseline System**: Record current architectural debt with `./gradlew lighthouseRecordBaseline`. Focus your team only on *new* regressions.
-- **Lighthouse Fix**: Automatically apply performance and best-practice fixes to your project with `./gradlew lighthouseFix`.
-- **Remediation Recipes**: Every issue now links to a dedicated technical "Recipe" URL for detailed fix instructions.
-- **Interactive Galaxy Graph**: Visual module dependency exploration with cycle highlighting.
-- **Trend & Velocity Analytics**: Track health score, fatals, and coupling density over the last 30 builds.
+*   **Modern Health Score Engine**: A category-weighted scoring model (v2) that uses square root dampening to provide fair and actionable scores for repositories of any size.
+*   **Architecture Health Breakdown**: Detailed dashboards showing scores for Architecture, Security, Performance, Build Performance, Complexity, and more.
+*   **Industry Benchmarking**: Compare your project against industry giants. See where you rank in the top percentiles of Android projects globally.
+*   **Project Persona Classification**: Automatically identifies if your project is a *Modular Monolith*, *Large Android App*, or *KMP Product* for accurate peer-group comparison.
+*   **Path To 90**: An automated architectural roadmap that estimates the score gain for every fix, helping you prioritize engineering work.
+*   **Galaxy Graph**: An interactive, canvas-based module dependency visualizer with cycle detection and "Sandbox Mode" for refactoring simulations.
+*   **Baseline System**: Record current technical debt and focus your team only on *new* regressions.
+*   **Lighthouse Fix**: Automatically apply performance and best-practice fixes to your project configuration.
+*   **CI/CD Native**: Exports results as self-contained HTML, SARIF (for GitHub Security), and JUnit XML.
 
 ---
 
-## Quick start
+## Installation
 
-### 1. Apply the plugin
-
-Apply it to the root project and to each module you want audited.
+Apply the plugin to your root project and modules:
 
 ```kotlin
 // root build.gradle.kts
@@ -66,305 +44,82 @@ plugins {
 ```
 
 ```kotlin
-// feature/login/build.gradle.kts
+// module build.gradle.kts
 plugins {
-    id("com.android.library")
-    id("io.github.dev-vikas-soni.lighthouse") version "2.3.0"
+    id("io.github.dev-vikas-soni.lighthouse")
 }
 ```
 
-No extra repository configuration is needed. The plugin is published on the Gradle Plugin Portal.
+---
 
-### 2. Run the audit
+## Quick Start
+
+Run a full audit and generate the aggregate dashboard:
 
 ```bash
 ./gradlew lighthouseAudit lighthouseAggregate
 ```
 
-### 3. Record a Baseline (Optional)
+Open the reports:
+-   **Aggregate Dashboard**: `build/reports/lighthouse/project-dashboard.html`
+-   **Module Reports**: `{module}/build/reports/lighthouse/index.html`
 
-If you are adding Lighthouse to a legacy project, record a baseline to suppress existing issues:
+---
+
+## Benchmark Operations
+
+### Export Your Project as a Benchmark
+Contribute your project's architectural health to the industry registry or create internal baselines:
 
 ```bash
-./gradlew lighthouseRecordBaseline
+./gradlew lighthouseExportBenchmark
 ```
+*Output: `build/reports/lighthouse/benchmark.json`*
 
-### 4. Apply Auto-Fixes
+### View Registry Status
+See which industry reference projects (Signal, NiA, etc.) are currently loaded into your engine:
 
 ```bash
-./gradlew lighthouseFix
-```
-
-### 5. Open the reports
-
-- per-module reports: `{module}/build/reports/lighthouse/`
-- aggregate dashboard: `build/reports/lighthouse/project-dashboard.html`
-
----
-
-## Tasks
-
-| Task | Scope | Output |
-|------|-------|--------|
-| `lighthouseAudit` | Current module | HTML, SARIF, JUnit XML, module JSON for aggregation |
-| `lighthouseAggregate` | Root multi-module project | Global dashboard, Galaxy Graph, trend charts, enforcement gates |
-| `lighthouseRecordBaseline` | Module/Root | Records existing issues into `lighthouse-baseline.txt` to suppress them |
-| `lighthouseFix` | Module/Root | Automatically applies deterministic fixes (caching, parallel, etc.) |
-
-Recommended flow for multi-module projects:
-
-```bash
-./gradlew lighthouseAudit lighthouseAggregate
-```
-
-If you want per-module gating only, run a specific module task:
-
-```bash
-./gradlew :app:lighthouseAudit
+./gradlew lighthouseBenchmarkStatus
 ```
 
 ---
 
-## Configuration
+## Scoring Philosophy
 
-The `lighthouse {}` block is optional.
+Lighthouse moves away from "finding counters" toward a **transparent architectural model**:
 
-### Actual defaults
-
-- all auditors are enabled by default
-- SARIF and JUnit XML are enabled by default
-- `failOnSeverity` defaults to `"NONE"`
-- aggregate gates default to off
-- `targetVariant` defaults to `""`, which means Lighthouse inspects the standard available configurations instead of forcing a single variant
-
-### Full DSL example
-
-```kotlin
-lighthouse {
-    // ── Aggregate enforcement gates ─────────────────────────────────────────────
-    failOnDependencyCycle.set(true)
-    failOnLayerViolation.set(true)
-    minHealthScore.set(85)
-
-    // ── Per-module gate ────────────────────────────────────────────────────────
-    failOnSeverity.set("ERROR")   // NONE | INFO | WARNING | ERROR | FATAL
-
-    // ── Dependency/configuration targeting ─────────────────────────────────────
-    targetVariant.set("release")  // default: "" (no single-variant restriction)
-
-    // ── Auditor toggles ────────────────────────────────────────────────────────
-    enableDependencyHealth.set(true)
-    enablePlayPolicy.set(true)
-    enableCatalogMigration.set(true)
-    enableBuildSpeed.set(true)
-    enableAppSize.set(true)
-    enableStabilityCheck.set(true)
-    enableConflictCheck.set(true)
-    enableModernizationCheck.set(true)
-    enableKmpCheck.set(true)
-    enableConfigCacheCheck.set(true)
-    enableModuleGraphCheck.set(true)
-    enableUnusedDependencyCheck.set(true)
-    enableTestCoverageCheck.set(true)
-    enableVersionCatalogHygiene.set(true)
-    enableSecurityCheck.set(true)
-    enableModuleSizeCheck.set(true)
-    enableTrendTracking.set(true)
-
-    // ── Report formats ─────────────────────────────────────────────────────────
-    enableSarifReport.set(true)
-    enableJunitXmlReport.set(true)
-}
-```
+1.  **Category Scoring**: Each finding belongs to a domain (e.g., Security). Scores are calculated per category using a square root deduction curve ($100 - K \times \sqrt{RawImpact}$) to prevent score collapse in large repos.
+2.  **Weakest Link Logic**: Overall score is the average of the weighted mean and the poorest category. Excellent build performance cannot mask critical security failures.
+3.  **Relative Benchmarking**: Your score is context-aware. A 75 in a 200-module enterprise app is often "Stronger" than a 90 in a small monolith.
+4.  **Data-Driven Snapshots**: All industry benchmarks are generated by Lighthouse itself, ensuring comparisons are always "apples-to-apples."
 
 ---
 
-## What it checks
+## FAQ
 
-`gradle-lighthouse` currently ships with 19 auditors across these areas:
+### Why is my score low?
+Check the **Architecture Health Breakdown**. The "Weakest Area" indicator will show you which domain (e.g., Complexity) is dragging down your score.
 
-### Build performance and build hygiene
-- KAPT / KSP migration opportunities
-- Jetifier, parallel build, and build cache flags
-- Configuration Cache blockers
-- startup and app size signals
+### Why does Signal score differently than NIA?
+Each project has a different structural profile. Signal, being a mature communications app, may prioritize Security over NiA's optimized Architecture.
 
-### Module architecture
-- circular dependencies
-- feature-to-feature coupling
-- module size and complexity trends
-- coupling density and graph structure
+### How are benchmarks generated?
+By running `./gradlew lighthouseExportBenchmark` on the target repositories. No manual score editing is allowed.
 
-### Dependency hygiene
-- unused dependencies
-- version drift and conflict intelligence
-- version catalog migration gaps
-- unused catalog aliases and bundle opportunities
-
-### Security and compliance
-- hardcoded secrets in Gradle properties
-- signing config and toolchain safety
-- wrapper/toolchain checks
-- Play policy and target SDK checks
-
-### Quality and modernization
-- test presence and coverage setup
-- manifest / ProGuard / R8 safety
-- deprecated Android / Kotlin patterns
-- KMP structure checks
-- score trend tracking over time
-
----
-
-## Reports
-
-| Report | Path | Notes |
-|--------|------|-------|
-| Module HTML | `{module}/build/reports/lighthouse/{module}-index.html` | Self-contained human-readable report |
-| Module SARIF | `{module}/build/reports/lighthouse/{module}-report.sarif` | For GitHub Security / code scanning |
-| Module JUnit XML | `{module}/build/reports/lighthouse/{module}-report.xml` | For CI test views |
-| Aggregate dashboard | `build/reports/lighthouse/project-dashboard.html` | Galaxy Graph + trend analytics + aggregate health |
-| Global history | `.lighthouse/global-history.json` | Last 30 aggregate runs |
-| Module history | `.lighthouse/{module}-history.json` | Per-module score history |
-
-All HTML is self-contained. No CDN, no external fonts, no network dependency.
-
----
-
-## Enforcement gates
-
-The aggregate gates run only during `lighthouseAggregate` because they need the full module graph.
-
-```kotlin
-lighthouse {
-    failOnDependencyCycle.set(true)
-    failOnLayerViolation.set(true)
-    minHealthScore.set(85)
-}
-```
-
-### Supported aggregate gates
-
-| Gate | Meaning |
-|------|---------|
-| `failOnDependencyCycle` | Fail if any global cycle is found |
-| `failOnLayerViolation` | Fail if a lower-level layer depends on a higher-level layer |
-| `minHealthScore` | Fail if the global average health score falls below the threshold |
-
-For single-module or module-local CI behavior, use `failOnSeverity` instead.
-
----
-
-## Custom architecture rules
-
-Drop `lighthouse-rules.yaml` at the repository root.
-
-```yaml
-rules:
-  - name: "Feature Isolation"
-    condition: ":feature:* !-> :feature:*"
-    level: "error"
-
-  - name: "Standard Layering"
-    condition: "App -> Feature -> Domain -> Data -> Core"
-    level: "error"
-
-  - name: "Core Purity"
-    condition: ":core:* !-> :feature:*"
-    level: "fatal"
-```
-
-### Supported rule levels
-
-- `warning` → logged, does not fail the build
-- `error` → fails the aggregate build
-- `fatal` → fails the aggregate build
-
-See `docs/ENTERPRISE_ENFORCEMENT.md` for the full rule syntax and CI examples.
-
----
-
-## GitHub Actions
-
-This repository also publishes a composite GitHub Action:
-
-```yaml
-- name: Run Gradle Lighthouse
-  uses: dev-vikas-soni/gradle-lighthouse@v2.2.2
-  with:
-    fail-on-severity: 'ERROR'
-    upload-sarif: 'true'
-    comment-on-pr: 'true'
-```
-
-For full workflow examples, see `docs/USER_MANUAL.md` and `docs/ENTERPRISE_ENFORCEMENT.md`.
-
----
-
-## Galaxy Graph
-
-The aggregate dashboard includes a canvas-based dependency explorer.
-
-Features include:
-- inline graph view inside the dashboard
-- fullscreen inspection mode
-- cycle highlighting
-- live dependency cutting in Sandbox Mode
-- layer filtering and search
-- PNG export
-- node details and link details panels
-
-This is meant to help teams answer: _what is tightly coupled right now, and what single edge would reduce the most risk?_
-
----
-
-## Scoring model
-
-```text
-score = 100 × 0.98^(total_weighted_impact)
-```
-
-Severity weights:
-- `FATAL = 35`
-- `ERROR = 15`
-- `WARNING = 5`
-- `INFO = 1`
-
-Rank bands:
-
-| Score | Rank |
-|-------|------|
-| 95–100 | 🏆 Grandmaster Architect |
-| 85–94 | ⭐ Expert Architect |
-| 70–84 | 🔧 Standard Architect |
-| 50–69 | ⚠️ At Risk |
-| 0–49 | 🔴 Legacy |
+### Can I create my own benchmark registry?
+Yes. Drop any generated `benchmark.json` files into a `benchmarks/` directory at your project root, and Lighthouse will automatically include them in your comparisons.
 
 ---
 
 ## Documentation
 
-| Document | What it covers |
-|----------|----------------|
-| [`docs/USER_MANUAL.md`](docs/USER_MANUAL.md) | installation, tasks, DSL reference, reports, CI usage |
-| [`docs/ENTERPRISE_ENFORCEMENT.md`](docs/ENTERPRISE_ENFORCEMENT.md) | aggregate gates, YAML rules, enforcement behavior, pipelines |
-| [`docs/HLD.md`](docs/HLD.md) | system-level design |
-| [`docs/LLD.md`](docs/LLD.md) | implementation details and extension points |
-| [`CHANGELOG.md`](CHANGELOG.md) | release history |
-| [`ROADMAP.md`](ROADMAP.md) | planned work |
-| [`CONTRIBUTING.md`](CONTRIBUTING.md) | contribution workflow |
-
----
-
-## When this is overkill
-
-If your project is a tiny single-module app and you only need dependency updates, `gradle-lighthouse` may be more than you need.
-
-It becomes much more valuable when you have:
-- multiple modules
-- architecture boundaries to protect
-- CI quality gates
-- a need to visualize structural drift over time
+| Document | Content |
+|----------|---------|
+| [Architecture](docs/architecture.md) | System overview and execution flow |
+| [Scoring Model](docs/scoring-model.md) | Weights, grades, and weakest-link logic |
+| [Benchmarking](docs/benchmarking.md) | Percentiles and snapshot generation |
+| [User Manual](docs/USER_MANUAL.md) | Tasks and DSL reference |
 
 ---
 

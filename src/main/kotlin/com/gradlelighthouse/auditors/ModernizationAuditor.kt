@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 import java.io.File
 
@@ -65,7 +66,7 @@ class ModernizationAuditor : Auditor {
         }
 
         issues.add(AuditIssue(
-            category = "Modernization",
+            category = LighthouseCategory.MODERNIZATION,
             severity = severity,
             title = "Modernization Index: $ratio%",
             reasoning = "Your module is $ratio% modern (Compose) and ${100 - ratio}% legacy (XML). Based on current industry benchmarks, modules with <40% Compose adoption are considered 'Legacy Debt'.",
@@ -76,7 +77,7 @@ class ModernizationAuditor : Auditor {
 
         if (xmlCount > 20 && ratio < 10) {
             issues.add(AuditIssue(
-                category = "Modernization",
+                category = LighthouseCategory.MODERNIZATION,
                 severity = Severity.ERROR,
                 title = "High XML Technical Debt",
                 reasoning = "Detected $xmlCount XML layouts in a module with near-zero Compose adoption. This module is an 'XML Monolith'.",

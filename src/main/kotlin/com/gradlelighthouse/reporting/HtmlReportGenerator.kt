@@ -3,28 +3,64 @@ package com.gradlelighthouse.reporting
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.HealthScoreEngine
 import com.gradlelighthouse.core.Severity
+import com.gradlelighthouse.core.scoring.ScoringResult
+import com.gradlelighthouse.core.scoring.CategoryScore
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
 /**
  * Premium HTML Report Generator for Gradle Lighthouse V2.0.
- *
- * Design inspired by: Vercel Dashboard, Linear, Raycast — modern SaaS aesthetics.
- * - Dark/Light mode via `prefers-color-scheme`
- * - XSS-safe: ALL dynamic content HTML-escaped
- * - Responsive: mobile, tablet, desktop
- * - Print-friendly via @media print
- * - Zero external dependencies (system fonts, inline SVG)
- * - Animated score ring, smooth transitions, glass-morphism cards
  */
 object HtmlReportGenerator {
 
-    fun generate(projectName: String, pluginVersion: String, gradleVersion: String, issues: List<AuditIssue>): String {
+    fun generate(
+        projectName: String,
+        pluginVersion: String,
+        gradleVersion: String,
+        issues: List<AuditIssue>,
+        scoringResult: ScoringResult
+    ): String {
         val dateString = SimpleDateFormat("MMM dd, yyyy • HH:mm", Locale.ROOT).format(Date())
         val report = HealthScoreEngine.generateReport(issues)
         val scoreColor = HealthScoreEngine.scoreColor(report.score)
         val scorePercent = report.score.coerceIn(0, 100)
+
+        // Category Breakdown Section
+        val categoryBreakdownHtml = scoringResult.categoryScores.joinToString("") { catScore ->
+            val grade = catScore.grade()
+            val gradeLabel = grade.name.lowercase().replaceFirstChar { it.uppercase() }
+            val color = HealthScoreEngine.scoreColor(catScore.score.toInt())
+            val topFindings = catScore.deductions.take(3).joinToString("") {
+                """<li>${esc(it.reason)}</li>"""
+            }
+
+            """
+            <div class="category-card">
+                <div class="category-header">
+                    <span class="category-name">${esc(catScore.category.displayName)}</span>
+                    <span class="category-score" style="color: $color">${catScore.score.toInt()}%</span>
+                </div>
+                <div class="category-progress-bg">
+                    <div class="category-progress-fg" style="width: ${catScore.score}%; background: $color"></div>
+                </div>
+                <div class="category-meta">
+                    <span class="category-grade grade-${grade.name.lowercase()}">$gradeLabel</span>
+                    <div class="category-counts">
+                        <span class="cat-count fatal">${catScore.fatalCount}F</span>
+                        <span class="cat-count error">${catScore.errorCount}E</span>
+                        <span class="cat-count warn">${catScore.warningCount}W</span>
+                    </div>
+                </div>
+                <div class="category-top-findings">
+                    <div class="findings-label">Top Risks</div>
+                    <ul>
+                        ${if (topFindings.isEmpty()) "<li>No risks detected</li>" else topFindings}
+                    </ul>
+                </div>
+            </div>
+            """.trimIndent()
+        }
 
         val riskMatrixRows = report.deductions.take(5).joinToString("") {
             """<tr><td><span class="risk-cat">${esc(it.category)}</span></td><td class="risk-pts">-${it.points}</td><td class="risk-desc">${esc(it.primaryBottleneck)}</td></tr>"""
@@ -35,7 +71,7 @@ object HtmlReportGenerator {
             "Modernization", "Architecture", "BuildPerformance", "Security", "Quality",
             "Complexity", "DependencyHygiene", "Trends"
         )
-        val groupedIssues = issues.groupBy { it.category }
+        val groupedIssues = issues.groupBy { it.category.displayName }
         val categories = (defaultCategories + groupedIssues.keys).distinct().filter { groupedIssues.containsKey(it) }
 
         val tabsHtml = categories.mapIndexed { index, cat ->
@@ -160,6 +196,60 @@ object HtmlReportGenerator {
             </section>
             """.trimIndent())
 
+            // NEW: Architecture Health Breakdown (Sprint 1)
+            appendLine("""
+            <section class="breakdown-section">
+                <h2 class="section-title">Architecture Health Breakdown</h2>
+                <div class="category-grid">
+                    $categoryBreakdownHtml
+                </div>
+            </section>
+            """.trimIndent())
+
+            // NEW: Industry Benchmarks (Sprint 2)
+            scoringResult.benchmarkResult?.let { bench ->
+                val comparisonHtml = bench.comparisons.joinToString("") { comp ->
+                    val deltaColor = if (comp.overallDelta >= 0) "var(--success)" else "var(--danger)"
+                    val deltaSign = if (comp.overallDelta >= 0) "+" else ""
+                    """
+                    <div class="bench-item">
+                        <span class="bench-name">${esc(comp.benchmarkName)}</span>
+                        <span class="bench-delta" style="color: $deltaColor">$deltaSign${comp.overallDelta.toInt()}</span>
+                    </div>
+                    """.trimIndent()
+                }
+
+                val insightsHtml = bench.insights.joinToString("") { insight ->
+                    """<li>${esc(insight)}</li>"""
+                }
+
+                appendLine("""
+                <section class="benchmark-section">
+                    <h2 class="section-title">Industry Benchmarks</h2>
+                    <div class="benchmark-grid">
+                        <div class="glass-card benchmark-summary">
+                            <div class="bench-persona-badge">${esc(bench.projectPersona.displayName)}</div>
+                            <div class="bench-main-stat">
+                                <div class="bench-val">${bench.overallPercentile}%</div>
+                                <div class="bench-label">Industry Percentile</div>
+                            </div>
+                            <p class="bench-subtext">Your architecture is healthier than ${bench.overallPercentile}% of projects in our registry.</p>
+                            <div class="bench-comparisons">
+                                <div class="findings-label">vs. Industry Giants</div>
+                                $comparisonHtml
+                            </div>
+                        </div>
+                        <div class="glass-card benchmark-insights">
+                            <h2>Automated Insights</h2>
+                            <ul class="insight-list">
+                                $insightsHtml
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+                """.trimIndent())
+            }
+
             // Strategy + Risk Matrix
             appendLine("""
             <section class="insights-grid">
@@ -215,7 +305,7 @@ object HtmlReportGenerator {
     /**
      * Generates the module-report JSON for aggregation.
      */
-    fun generateJson(projectName: String, projectPath: String, issues: List<AuditIssue>): String {
+    fun generateJson(projectName: String, projectPath: String, issues: List<AuditIssue>, scoringResult: ScoringResult): String {
         val report = HealthScoreEngine.generateReport(issues)
 
         val topIssue = issues.maxByOrNull {
@@ -229,11 +319,26 @@ object HtmlReportGenerator {
             "Fix '${it.title}' to improve score by approx +${gain}pts"
         } ?: "No critical fixes required."
 
+        val categoriesJson = scoringResult.categoryScores.joinToString(",\n") { cat ->
+            val topRisksJson = cat.deductions.take(3).joinToString(",") { "\"${escJson(it.reason)}\"" }
+            """    {
+      "name": "${cat.category.name}",
+      "displayName": "${escJson(cat.category.displayName)}",
+      "score": ${cat.score},
+      "grade": "${cat.grade().name}",
+      "fatalCount": ${cat.fatalCount},
+      "errorCount": ${cat.errorCount},
+      "warningCount": ${cat.warningCount},
+      "infoCount": ${cat.infoCount},
+      "topRisks": [$topRisksJson]
+    }"""
+        }
+
         val issuesJson = issues.joinToString(",\n") { issue ->
             """    {
       "title": "${escJson(issue.title)}",
       "severity": "${issue.severity.name}",
-      "category": "${escJson(issue.category)}",
+      "category": "${escJson(issue.category.displayName)}",
       "reasoning": "${escJson(issue.reasoning)}",
       "impact": "${escJson(issue.impactAnalysis)}",
       "resolution": "${escJson(issue.resolution)}",
@@ -252,6 +357,13 @@ object HtmlReportGenerator {
   "infoCount": ${report.infoCount},
   "totalIssues": ${report.totalIssueCount},
   "topResolution": "${escJson(topResolution)}",
+  "categoryScores": [
+$categoriesJson
+  ],
+  "benchmarkResult": ${if (scoringResult.benchmarkResult != null) """{
+    "persona": "${scoringResult.benchmarkResult.projectPersona.name}",
+    "percentile": ${scoringResult.benchmarkResult.overallPercentile}
+  }""" else "null"},
   "issues": [
 $issuesJson
   ]
@@ -262,7 +374,6 @@ $issuesJson
     // CSS — Modern glassmorphism, animated score ring, dark/light
     // =========================================================================
 
-    @Suppress("UNUSED_PARAMETER")
     private fun generateCss(scoreColor: String, scorePercent: Int): String {
         val circumference = (2 * Math.PI * 52).toInt() // r=52
         val dashOffset = circumference - (circumference * scorePercent / 100)
@@ -338,6 +449,49 @@ $issuesJson
         .score-num { font-size: 2.8rem; font-weight: 900; line-height: 1; letter-spacing: -0.04em; }
         .score-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
         .rank-badge { font-size: 0.85rem; font-weight: 700; padding: 6px 16px; border-radius: 100px; border: 2px solid; background: var(--card); }
+
+        /* Breakdown (Sprint 1) */
+        .breakdown-section { margin-bottom: 48px; }
+        .category-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .category-card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; box-shadow: var(--shadow); display: flex; flex-direction: column; }
+        .category-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .category-name { font-weight: 800; font-size: 1rem; color: var(--text); }
+        .category-score { font-weight: 900; font-size: 1.2rem; }
+        .category-progress-bg { height: 6px; background: var(--bg-subtle); border-radius: 100px; overflow: hidden; margin-bottom: 12px; }
+        .category-progress-fg { height: 100%; border-radius: 100px; }
+        .category-meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+        .category-grade { font-size: 0.7rem; font-weight: 800; text-transform: uppercase; padding: 3px 10px; border-radius: 4px; }
+        .grade-elite { background: rgba(16,185,129,0.1); color: var(--success); }
+        .grade-strong { background: rgba(16,185,129,0.1); color: var(--success); }
+        .grade-maintained { background: rgba(245,158,11,0.1); color: var(--warning); }
+        .grade-at_risk { background: rgba(245,158,11,0.1); color: var(--warning); }
+        .grade-legacy { background: rgba(220,38,38,0.1); color: var(--fatal); }
+        .category-counts { display: flex; gap: 8px; }
+        .cat-count { font-size: 0.65rem; font-weight: 800; padding: 2px 6px; border-radius: 4px; }
+        .cat-count.fatal { background: rgba(220,38,38,0.1); color: var(--fatal); }
+        .cat-count.error { background: rgba(239,68,68,0.1); color: var(--danger); }
+        .cat-count.warn { background: rgba(245,158,11,0.1); color: var(--warning); }
+        .category-top-findings { border-top: 1px solid var(--border-subtle); padding-top: 12px; }
+        .findings-label { font-size: 0.65rem; font-weight: 800; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+        .category-top-findings ul { list-style: none; }
+        .category-top-findings li { font-size: 0.78rem; color: var(--text-dim); margin-bottom: 4px; padding-left: 12px; position: relative; }
+        .category-top-findings li::before { content: "•"; position: absolute; left: 0; color: var(--accent); }
+
+        /* Benchmark (Sprint 2) */
+        .benchmark-section { margin-bottom: 48px; }
+        .benchmark-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 24px; }
+        .benchmark-summary { text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        .bench-persona-badge { background: var(--accent-soft); color: var(--accent); font-size: 0.75rem; font-weight: 800; padding: 4px 12px; border-radius: 100px; margin-bottom: 20px; text-transform: uppercase; }
+        .bench-main-stat { margin-bottom: 20px; }
+        .bench-val { font-size: 3.5rem; font-weight: 900; line-height: 1; color: var(--text); }
+        .bench-label { font-size: 0.8rem; font-weight: 800; text-transform: uppercase; color: var(--text-dim); }
+        .bench-subtext { font-size: 0.9rem; color: var(--text-dim); margin-bottom: 24px; }
+        .bench-comparisons { width: 100%; border-top: 1px solid var(--border); padding-top: 20px; }
+        .bench-item { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 0.85rem; font-weight: 600; }
+        .bench-name { color: var(--text); }
+        .bench-delta { font-weight: 800; }
+        .insight-list { list-style: none; }
+        .insight-list li { margin-bottom: 12px; padding: 12px; border-radius: var(--radius-sm); background: var(--bg-subtle); border-left: 4px solid var(--accent); font-size: 0.9rem; font-weight: 500; }
 
         /* Insights Grid */
         .insights-grid { display: grid; grid-template-columns: 1fr 1.5fr; gap: 24px; margin-bottom: 48px; }

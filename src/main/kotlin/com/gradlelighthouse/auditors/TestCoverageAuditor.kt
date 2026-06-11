@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 import java.io.File
 
@@ -37,7 +38,7 @@ class TestCoverageAuditor : Auditor {
 
         if (!hasTestSources) {
             issues.add(AuditIssue(
-                category = "Quality",
+                category = LighthouseCategory.QUALITY,
                 severity = Severity.ERROR,
                 title = "No Test Sources Found (Dark Module)",
                 reasoning = "Module '${context.projectName}' has no test files in src/test, src/androidTest, or src/commonTest. This module is completely untested.",
@@ -58,7 +59,7 @@ class TestCoverageAuditor : Auditor {
 
             if (srcFileCount > 0 && testFileCount.toFloat() / srcFileCount < 0.3f) {
                 issues.add(AuditIssue(
-                    category = "Quality",
+                    category = LighthouseCategory.QUALITY,
                     severity = Severity.WARNING,
                     title = "Low Test-to-Source Ratio: ${testFileCount}/${srcFileCount} files",
                     reasoning = "Module '${context.projectName}' has only $testFileCount test files for $srcFileCount source files (ratio: ${String.format("%.0f", testFileCount.toFloat() / srcFileCount * 100)}%). Recommended minimum is 30%.",
@@ -75,7 +76,7 @@ class TestCoverageAuditor : Auditor {
 
         if (hasTestSources && !hasJacoco) {
             issues.add(AuditIssue(
-                category = "Quality",
+                category = LighthouseCategory.QUALITY,
                 severity = Severity.INFO,
                 title = "JaCoCo Coverage Not Configured",
                 reasoning = "Module has tests but no JaCoCo coverage reporting configured. Without coverage metrics, you can't enforce quality gates or track coverage trends.",
@@ -93,7 +94,7 @@ class TestCoverageAuditor : Auditor {
 
             if (!consumerRules.exists() && !hasConsumerRulesRef) {
                 issues.add(AuditIssue(
-                    category = "Quality",
+                    category = LighthouseCategory.QUALITY,
                     severity = Severity.WARNING,
                     title = "Library Module Missing consumer-rules.pro",
                     reasoning = "Library module '${context.projectName}' has no consumer-rules.pro. If this library exposes public APIs used via reflection (e.g., serialization models), consuming apps may crash with R8 enabled.",

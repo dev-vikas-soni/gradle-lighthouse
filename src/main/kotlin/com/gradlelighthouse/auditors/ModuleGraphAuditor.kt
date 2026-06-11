@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 import java.io.File
 
@@ -41,7 +42,7 @@ class ModuleGraphAuditor : Auditor {
         if (cycles.isNotEmpty()) {
             val cycleDesc = cycles.joinToString("; ") { cycle -> cycle.joinToString(" → ") }
             issues.add(AuditIssue(
-                category = "Architecture",
+                category = LighthouseCategory.ARCHITECTURE,
                 severity = Severity.FATAL,
                 title = "Circular Dependency Detected",
                 reasoning = "Module '$currentModule' participates in circular dependency chain(s): $cycleDesc. Circular deps prevent independent compilation and break incremental builds.",
@@ -59,7 +60,7 @@ class ModuleGraphAuditor : Auditor {
             val featureDeps = directDeps.filter { it.contains(FEATURE_MODULE_PREFIX, ignoreCase = true) }
             if (featureDeps.isNotEmpty()) {
                 issues.add(AuditIssue(
-                    category = "Architecture",
+                    category = LighthouseCategory.ARCHITECTURE,
                     severity = Severity.ERROR,
                     title = "Feature Module Depends on Other Feature Modules",
                     reasoning = "Feature module '$currentModule' depends on other feature modules: ${featureDeps.joinToString()}. This violates clean architecture — feature modules should only depend on domain/core/shared modules.",
@@ -74,7 +75,7 @@ class ModuleGraphAuditor : Auditor {
         // 3. High coupling detection
         if (directDeps.size > HIGH_COUPLING_THRESHOLD) {
             issues.add(AuditIssue(
-                category = "Architecture",
+                category = LighthouseCategory.ARCHITECTURE,
                 severity = Severity.WARNING,
                 title = "High Module Coupling: ${directDeps.size} Direct Dependencies",
                 reasoning = "Module '$currentModule' depends on ${directDeps.size} other modules (threshold: $HIGH_COUPLING_THRESHOLD). High fan-out indicates the module has too many responsibilities.",

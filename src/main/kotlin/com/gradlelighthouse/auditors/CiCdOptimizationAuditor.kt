@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 import java.io.File
 
@@ -36,7 +37,7 @@ class CiCdOptimizationAuditor : Auditor {
             
             if (!hasRemoteCache) {
                 issues.add(AuditIssue(
-                    category = name,
+                    category = LighthouseCategory.BUILD_PERFORMANCE,
                     severity = Severity.WARNING,
                     title = "Remote Build Cache Not Configured",
                     reasoning = "Local caching (org.gradle.caching=true) is enabled, but no remote cache is configured in settings.gradle(.kts).",

@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 
 /**
@@ -25,7 +26,7 @@ class DependencyAuditor : Auditor {
         context.dependencies.forEach { dep ->
             if (dep.group.contains("com.google.guava") || dep.name.contains("commons-lang")) {
                 issues.add(AuditIssue(
-                    category = name,
+                    category = LighthouseCategory.DEPENDENCY_HYGIENE,
                     severity = Severity.WARNING,
                     title = "Heavy Legacy Library: ${dep.name}",
                     reasoning = "Guava and Apache Commons-Lang are pre-modern Java utility libraries that are largely redundant in Kotlin-first projects.",
@@ -39,7 +40,7 @@ class DependencyAuditor : Auditor {
             val version = dep.version ?: ""
             if (version.contains("+") || version.contains("latest.release") || version.contains("latest.integration")) {
                 issues.add(AuditIssue(
-                    category = name,
+                    category = LighthouseCategory.DEPENDENCY_HYGIENE,
                     severity = Severity.ERROR,
                     title = "Dynamic Version Detected: ${dep.coordinate}",
                     reasoning = "Using '+' or 'latest.release' in dependency versions prevents deterministic builds. This is a critical architectural risk.",
@@ -57,7 +58,7 @@ class DependencyAuditor : Auditor {
         }
         if (usesJCenter) {
             issues.add(AuditIssue(
-                category = name,
+                category = LighthouseCategory.DEPENDENCY_HYGIENE,
                 severity = Severity.FATAL,
                 title = "Sunset Repository: JCenter",
                 reasoning = "JCenter is officially sunset by JFrog and its performance and reliability are severely degraded.",

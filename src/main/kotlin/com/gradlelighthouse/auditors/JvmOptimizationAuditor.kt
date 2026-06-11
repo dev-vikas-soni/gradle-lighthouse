@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 
 class JvmOptimizationAuditor : Auditor {
@@ -11,19 +12,19 @@ class JvmOptimizationAuditor : Auditor {
 
     override fun audit(context: AuditContext): List<AuditIssue> {
         val issues = mutableListOf<AuditIssue>()
-        
+
         // Only run this at the root project level to avoid duplicate spam per module
         if (context.projectPath != ":") {
             return issues
         }
-        
+
         ConsoleLogger.auditorStart(name, "🚀", "[SCAN]", "Analyzing JVM arguments for ${context.projectName}")
 
         val jvmArgs = context.gradleProperties["org.gradle.jvmargs"]
 
         if (jvmArgs == null) {
             issues.add(AuditIssue(
-                category = name,
+                category = LighthouseCategory.BUILD_PERFORMANCE,
                 severity = Severity.ERROR,
                 title = "Missing JVM Memory & GC Tuning",
                 reasoning = "The project does not define 'org.gradle.jvmargs'. Gradle will use default memory settings (usually 512MB), causing massive Garbage Collection (GC) thrashing on large projects.",
@@ -37,7 +38,7 @@ class JvmOptimizationAuditor : Auditor {
         // Check Heap Size
         if (!jvmArgs.contains("-Xmx")) {
             issues.add(AuditIssue(
-                category = name,
+                category = LighthouseCategory.BUILD_PERFORMANCE,
                 severity = Severity.ERROR,
                 title = "Missing Max Heap Size (-Xmx)",
                 reasoning = "JVM arguments are defined, but max heap size (-Xmx) is missing.",
@@ -51,11 +52,11 @@ class JvmOptimizationAuditor : Auditor {
             if (xmxMatch != null) {
                 val value = xmxMatch.groupValues[1].toIntOrNull() ?: 0
                 val unit = xmxMatch.groupValues[2].lowercase()
-                
+
                 val memoryInMb = if (unit == "g") value * 1024 else value
                 if (memoryInMb < 4096) {
                     issues.add(AuditIssue(
-                        category = name,
+                        category = LighthouseCategory.BUILD_PERFORMANCE,
                         severity = Severity.WARNING,
                         title = "Low Max Heap Size Detected (${value}${unit.uppercase()})",
                         reasoning = "The configured heap size is less than 4GB, which is considered too low for modern Android/KMP builds.",
@@ -70,7 +71,7 @@ class JvmOptimizationAuditor : Auditor {
         // Check Garbage Collector
         if (!jvmArgs.contains("-XX:+UseParallelGC") && !jvmArgs.contains("-XX:+UseG1GC")) {
             issues.add(AuditIssue(
-                category = name,
+                category = LighthouseCategory.BUILD_PERFORMANCE,
                 severity = Severity.INFO,
                 title = "Suboptimal Garbage Collector",
                 reasoning = "No modern Garbage Collector flag (-XX:+UseParallelGC or -XX:+UseG1GC) was found in jvmargs.",

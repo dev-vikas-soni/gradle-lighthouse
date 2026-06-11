@@ -4,6 +4,7 @@ import com.gradlelighthouse.core.AuditContext
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
+import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
 
 /**
@@ -40,7 +41,7 @@ class StartupPerformanceAuditor : Auditor {
 
         if (foundHeavySDKs.isNotEmpty()) {
             issues.add(AuditIssue(
-                category = "Performance",
+                category = LighthouseCategory.PERFORMANCE,
                 severity = Severity.WARNING,
                 title = "Heavy Startup SDKs: ${foundHeavySDKs.size} Detected",
                 reasoning = "The following libraries were detected: ${foundHeavySDKs.joinToString(", ")}. These SDKs are known to perform synchronous I/O or network calls during ContentProvider initialization sequence.",
@@ -58,7 +59,7 @@ class StartupPerformanceAuditor : Auditor {
                     val content = manifestFile.readText()
                     if (content.contains("<provider") && content.contains("init", ignoreCase = true)) {
                         issues.add(AuditIssue(
-                            category = "Performance",
+                            category = LighthouseCategory.PERFORMANCE,
                             severity = Severity.INFO,
                             title = "ContentProvider-based Auto-Init Detected",
                             reasoning = "AndroidManifest.xml contains providers typically used by modern libraries for 'magic' zero-config initialization.",
