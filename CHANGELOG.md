@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [2.3.1] - 2026-06-11
+
+### Fixed
+- Internal reliability improvements and baseline portability enhancements.
+
 ## [2.3.0] - 2026-06-11
 
 ### Added
