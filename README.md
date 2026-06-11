@@ -1,52 +1,124 @@
 # Gradle Lighthouse
 
-Architecture intelligence for Android and Kotlin Multiplatform Gradle builds.
+**Architecture Intelligence for Android & Kotlin Multiplatform**
 
-Gradle Lighthouse audits module structure, dependency hygiene, security, build performance, and code health directly from your Gradle project. It transforms audit findings into a transparent architectural health model with industry benchmarking.
+Gradle Lighthouse analyzes your Gradle project, detects architectural risks, evaluates build health, and generates actionable recommendations to improve maintainability, scalability, and developer productivity.
 
-[![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/io.github.dev-vikas-soni.lighthouse?label=Gradle%20Plugin%20Portal&color=orange)](https://plugins.gradle.org/plugin/io.github.dev-vikas-soni.lighthouse)
+[![Gradle Plugin Portal](https://img.shields.io/gradle-plugin-portal/v/io.github.dev-vikas-soni.lighthouse?label=Gradle%20Plugin%20Portal\&color=orange)](https://plugins.gradle.org/plugin/io.github.dev-vikas-soni.lighthouse)
 [![Version: 2.3.1](https://img.shields.io/badge/Version-2.3.1-orange.svg)](https://github.com/dev-vikas-soni/gradle-lighthouse/releases)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=flat&logo=kotlin&logoColor=white)
+![Kotlin](https://img.shields.io/badge/kotlin-%237F52FF.svg?style=flat\&logo=kotlin\&logoColor=white)
 ![Gradle 8.x-9.x](https://img.shields.io/badge/Gradle-8.x--9.x-green.svg)
 
----
 
-## What is Gradle Lighthouse?
-
-`gradle-lighthouse` is an enterprise-grade Gradle diagnostic engine designed for teams that want more than simple lint findings. It measures **Architectural Health** by analyzing your project's structure, dependencies, and build configuration against industry standards and reference benchmarks like *Now in Android* and *Signal*.
+<img width="1480" height="785" alt="lighthouse-hero-image" src="https://github.com/user-attachments/assets/50686363-ea41-4f29-a490-35facc64e09a" />
 
 ---
 
-## Key Features
+## Why Gradle Lighthouse?
 
-*   **Modern Health Score Engine**: A category-weighted scoring model (v2) that uses square root dampening to provide fair and actionable scores for repositories of any size.
-*   **Architecture Health Breakdown**: Detailed dashboards showing scores for Architecture, Security, Performance, Build Performance, Complexity, and more.
-*   **Industry Benchmarking**: Compare your project against industry giants. See where you rank in the top percentiles of Android projects globally.
-*   **Project Persona Classification**: Automatically identifies if your project is a *Modular Monolith*, *Large Android App*, or *KMP Product* for accurate peer-group comparison.
-*   **Path To 90**: An automated architectural roadmap that estimates the score gain for every fix, helping you prioritize engineering work.
-*   **Galaxy Graph**: An interactive, canvas-based module dependency visualizer with cycle detection and "Sandbox Mode" for refactoring simulations.
-*   **Baseline System**: Record current technical debt and focus your team only on *new* regressions.
-*   **Lighthouse Fix**: Automatically apply performance and best-practice fixes to your project configuration.
-*   **CI/CD Native**: Exports results as self-contained HTML, SARIF (for GitHub Security), and JUnit XML.
+Most teams know they have technical debt.
+
+What they don't know is:
+
+* Which modules are slowing development
+* Where architectural boundaries are leaking
+* Why builds are becoming slower
+* Which issues deserve attention first
+* How their architecture evolves over time
+
+Gradle Lighthouse answers those questions with a single audit.
+
+```bash
+./gradlew lighthouseAudit lighthouseAggregate
+```
+
+---
+
+## What You Get
+
+### Architectural Health Score
+
+A transparent health model that evaluates:
+
+* Architecture
+* Security
+* Build Performance
+* Dependency Hygiene
+* Complexity
+* Modernization
+* Quality
+* Application Size
+
+Instead of showing hundreds of findings, Lighthouse highlights the areas that have the greatest architectural impact.
+
+### Path to 90
+
+Lighthouse generates an improvement roadmap showing which fixes produce the largest score gains.
+
+Example:
+
+```text
+Current Score: 72
+
+Top Opportunities
+──────────────────────────────────────
++7  Migrate KAPT processors to KSP
++5  Remove dependency cycles
++4  Enable configuration cache
++3  Reduce oversized modules
+```
+
+### Architecture Health Breakdown
+
+See exactly why a project scored the way it did.
+
+```text
+Architecture         85
+Security            100
+Build Performance    63
+Complexity           58
+Modernization        76
+```
+
+<img width="825" height="778" alt="arch_health_breakdown" src="https://github.com/user-attachments/assets/8c8cc6df-f27a-494c-b016-78e7656f356a" />
+
+### Industry Benchmarking
+
+Compare your project against architectural reference snapshots generated by Lighthouse.
+
+Benchmarking provides context for your score and helps teams understand where they stand relative to similar projects.
+
+### Galaxy Graph
+
+Interactive module dependency visualization with:
+
+* Cycle detection
+* Dependency exploration
+* Refactoring sandbox mode
+* Impact analysis
+
+<img width="1507" height="786" alt="lighthouse_galaxy_view" src="https://github.com/user-attachments/assets/224e0e5a-e63a-4273-a223-158daee2abdd" />
+
+### CI/CD Integration
+
+Export findings as:
+
+* HTML Reports
+* SARIF
+* JUnit XML
+
+Integrates naturally with GitHub Actions and modern CI pipelines.
 
 ---
 
 ## Installation
 
-Apply the plugin to your root project and modules:
+Apply the plugin to your root project:
 
 ```kotlin
-// root build.gradle.kts
 plugins {
     id("io.github.dev-vikas-soni.lighthouse") version "2.3.1"
-}
-```
-
-```kotlin
-// module build.gradle.kts
-plugins {
-    id("io.github.dev-vikas-soni.lighthouse")
 }
 ```
 
@@ -54,30 +126,56 @@ plugins {
 
 ## Quick Start
 
-Run a full audit and generate the aggregate dashboard:
+Run a complete audit:
 
 ```bash
 ./gradlew lighthouseAudit lighthouseAggregate
 ```
 
-Open the reports:
--   **Aggregate Dashboard**: `build/reports/lighthouse/project-dashboard.html`
--   **Module Reports**: `{module}/build/reports/lighthouse/index.html`
+Reports:
+
+```text
+build/reports/lighthouse/project-dashboard.html
+```
+
+Per-module reports:
+
+```text
+<module>/build/reports/lighthouse/index.html
+```
+
+---
+
+## Key Features
+
+| Feature                | Description                                            |
+| ---------------------- | ------------------------------------------------------ |
+| Health Score Engine    | Category-based architecture scoring                    |
+| Architecture Breakdown | Visibility into architectural strengths and weaknesses |
+| Path to 90             | Prioritized improvement roadmap                        |
+| Galaxy Graph           | Interactive dependency visualization                   |
+| Benchmark Engine       | Relative comparison against architectural baselines    |
+| Baseline Support       | Ignore historical debt and focus on new issues         |
+| Lighthouse Fix         | Automated configuration improvements                   |
+| CI/CD Support          | SARIF, HTML and JUnit exports                          |
 
 ---
 
 ## Benchmark Operations
 
-### Export Your Project as a Benchmark
-Contribute your project's architectural health to the industry registry or create internal baselines:
+### Export a Benchmark Snapshot
 
 ```bash
 ./gradlew lighthouseExportBenchmark
 ```
-*Output: `build/reports/lighthouse/benchmark.json`*
 
-### View Registry Status
-See which industry reference projects (Signal, NiA, etc.) are currently loaded into your engine:
+Output:
+
+```text
+build/reports/lighthouse/benchmark.json
+```
+
+### View Loaded Benchmarks
 
 ```bash
 ./gradlew lighthouseBenchmarkStatus
@@ -87,42 +185,37 @@ See which industry reference projects (Signal, NiA, etc.) are currently loaded i
 
 ## Scoring Philosophy
 
-Lighthouse moves away from "finding counters" toward a **transparent architectural model**:
+Gradle Lighthouse focuses on architectural health rather than issue counts.
 
-1.  **Category Scoring**: Each finding belongs to a domain (e.g., Security). Scores are calculated per category using a square root deduction curve ($100 - K \times \sqrt{RawImpact}$) to prevent score collapse in large repos.
-2.  **Weakest Link Logic**: Overall score is the average of the weighted mean and the poorest category. Excellent build performance cannot mask critical security failures.
-3.  **Relative Benchmarking**: Your score is context-aware. A 75 in a 200-module enterprise app is often "Stronger" than a 90 in a small monolith.
-4.  **Data-Driven Snapshots**: All industry benchmarks are generated by Lighthouse itself, ensuring comparisons are always "apples-to-apples."
+### Category-Based Scoring
 
----
+Each finding contributes to a specific architectural domain.
 
-## FAQ
+### Weakest-Link Principle
 
-### Why is my score low?
-Check the **Architecture Health Breakdown**. The "Weakest Area" indicator will show you which domain (e.g., Complexity) is dragging down your score.
+A project cannot be considered healthy if a critical category is failing.
 
-### Why does Signal score differently than NIA?
-Each project has a different structural profile. Signal, being a mature communications app, may prioritize Security over NiA's optimized Architecture.
+### Actionable Feedback
 
-### How are benchmarks generated?
-By running `./gradlew lighthouseExportBenchmark` on the target repositories. No manual score editing is allowed.
+Every deduction is traceable to findings and improvement opportunities.
 
-### Can I create my own benchmark registry?
-Yes. Drop any generated `benchmark.json` files into a `benchmarks/` directory at your project root, and Lighthouse will automatically include them in your comparisons.
+### Benchmark-Aware Context
+
+Scores are evaluated relative to project structure and benchmark baselines.
 
 ---
 
 ## Documentation
 
-| Document | Content |
-|----------|---------|
-| [Architecture](docs/architecture.md) | System overview and execution flow |
-| [Scoring Model](docs/scoring-model.md) | Weights, grades, and weakest-link logic |
-| [Benchmarking](docs/benchmarking.md) | Percentiles and snapshot generation |
-| [User Manual](docs/USER_MANUAL.md) | Tasks and DSL reference |
+| Document              | Description                                  |
+| --------------------- | -------------------------------------------- |
+| docs/architecture.md  | System architecture and execution flow       |
+| docs/scoring-model.md | Health score model and weighting             |
+| docs/benchmarking.md  | Benchmark engine and percentile calculations |
+| docs/USER_MANUAL.md   | Tasks, DSL and configuration                 |
 
 ---
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+MIT License.
