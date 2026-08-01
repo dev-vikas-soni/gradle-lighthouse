@@ -1,6 +1,7 @@
 package com.gradlelighthouse.extension
 
 import java.io.File
+import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.provider.Property
 
@@ -82,12 +83,42 @@ abstract class LighthouseExtension {
     /** Enables module size and complexity metrics. Default: true */
     abstract val enableModuleSizeCheck: Property<Boolean>
 
+    /** Enables predictive dependency intelligence. Default: true */
+    abstract val enablePredictiveIntelligence: Property<Boolean>
+
     /** Enables historical trend tracking across runs. Default: true */
     abstract val enableTrendTracking: Property<Boolean>
 
     /**
+     * Path to the base report directory for delta calculation in CI/CD.
+     * This directory should contain the `module-report.json` files from a previous audit.
+     */
+    abstract val baseReportDir: DirectoryProperty
+
+    /**
+     * Enables AI-based remediation for complex architectural issues.
+     * When enabled, `lighthouseFix` will use a LLM-based engine to generate
+     * surgical diffs for migrations (e.g., KAPT to KSP).
+     * Default: false
+     */
+    abstract val useAi: Property<Boolean>
+
+    /**
+     * Enables anonymized telemetry to provide predictive intelligence for dependencies.
+     * When enabled, Lighthouse collects dependency coordinates and build performance
+     * metrics to help the community estimate SDK impact.
+     * Default: false
+     */
+    abstract val enableTelemetry: Property<Boolean>
+
+    /**
+     * Optional: Custom telemetry endpoint for enterprise users.
+     */
+    abstract val telemetryEndpoint: Property<String>
+
+    /**
      * Path to the baseline file for suppressing existing issues.
-     * Default: "lighthouse-baseline.json" in project root.
+     * Default: "lighthouse-baseline.txt" in project root.
      */
     abstract val baselineFile: RegularFileProperty
 
@@ -174,7 +205,11 @@ abstract class LighthouseExtension {
         enableVersionCatalogHygiene.convention(true)
         enableSecurityCheck.convention(true)
         enableModuleSizeCheck.convention(true)
+        enablePredictiveIntelligence.convention(true)
         enableTrendTracking.convention(true)
+        useAi.convention(false)
+        enableTelemetry.convention(false)
+        telemetryEndpoint.convention("https://telemetry.gradle-lighthouse.dev/v1/metrics")
         failOnSeverity.convention("NONE")
         failOnDependencyCycle.convention(false)
         failOnLayerViolation.convention(false)

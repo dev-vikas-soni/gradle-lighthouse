@@ -4,13 +4,13 @@ import java.io.File
 import java.io.Serializable
 
 /**
- * A fully serializable, Configuration-Cache-safe snapshot of the project state.
+ * A serializable, point-in-time snapshot of a Gradle project's state.
  *
- * This replaces direct [org.gradle.api.Project] access inside task actions and auditors,
- * ensuring compatibility with Gradle Configuration Cache (8.x+) and Isolated Projects (9.x+).
- *
- * All data is captured during the Gradle **configuration phase** and passed as `@Input`
- * properties to the task, which then constructs this context for each auditor.
+ * AuditContext is the "World State" for all auditors. It replaces direct
+ * [org.gradle.api.Project] access inside task actions and auditors, enabling:
+ * 1. **Configuration Cache**: 100% compatibility with Gradle 8.x and 9.x.
+ * 2. **Parallel Execution**: Multiple auditors can safely inspect the same immutable context.
+ * 3. **Isolated Projects**: Auditors can run without crossing project boundaries.
  */
 data class AuditContext(
     /** Module display name (e.g., "app", "feature:cart") */

@@ -30,10 +30,10 @@ Planned work, roughly in priority order. Phases 1 and 2 are shipped.
 - [x] **Baseline System**: Record and suppress existing technical debt to focus on new issues
 - [x] **Deterministic Fixes**: `lighthouseFix` task to automatically apply best practices (caching, parallel, etc.)
 - [x] **Remediation Database**: Every issue now links to a deep-dive technical "Recipe" URL
-- [ ] **Privacy-First Telemetry**: Anonymous usage tracking to prioritize auditor improvements (Planned)
-- [ ] **Lighthouse PR Bot**: GitHub App / GitLab Bot to comment on PRs with health score deltas and cycle warnings (Planned)
-- [ ] **Predictive Dependency Intelligence**: Anonymized global data to estimate binary size/startup impact *before* you add an SDK (Planned)
-- [ ] **GenAI Remediation**: `./gradlew lighthouseFix --ai` to generate complex refactoring diffs (KAPT to KSP, buildSrc to build-logic) (Planned)
+- [x] **Privacy-First Telemetry**: Anonymous usage tracking to prioritize auditor improvements
+- [x] **Lighthouse PR Bot**: GitHub Action to comment on PRs with health score deltas and cycle warnings
+- [x] **Predictive Dependency Intelligence**: Global data to estimate binary size/startup impact *before* you add an SDK
+- [x] **GenAI Remediation**: `./gradlew lighthouseFix --ai` to generate complex refactoring diffs (KAPT to KSP, Version Catalog migration)
 
 ---
 

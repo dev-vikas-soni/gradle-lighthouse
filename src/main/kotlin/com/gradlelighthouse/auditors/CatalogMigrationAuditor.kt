@@ -49,7 +49,9 @@ class CatalogMigrationAuditor : Auditor {
                 impactAnalysis = "This practice makes dependency versioning inconsistent across multi-module projects. It hides version conflicts and significantly increases build-script maintenance time. It also prevents Gradle from performing 'Version Alignment' logic efficiently.",
                 resolution = "Create a 'gradle/libs.versions.toml' file and migrate all dependency declarations to use the type-safe accessor syntax (e.g., libs.androidx.core.ktx).",
                 roiAfterFix = "Centralized version management, 100% type-safe dependency access, and faster IDE sync times due to unified versioning.",
-                sourceFile = context.buildFile.absolutePath
+                sourceFile = context.buildFile.absolutePath,
+                isFixable = true,
+                fixId = "migrate_to_version_catalog"
             ))
         }
 

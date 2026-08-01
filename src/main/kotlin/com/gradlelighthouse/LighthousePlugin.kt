@@ -19,7 +19,7 @@ import java.util.Properties
 class LighthousePlugin : Plugin<Project> {
 
     companion object {
-        const val VERSION = "2.3.1"
+        const val VERSION = "2.3.2"
     }
 
     override fun apply(project: Project) {
@@ -85,6 +85,21 @@ class LighthousePlugin : Plugin<Project> {
                     task.failOnLayerViolation.set(extension.failOnLayerViolation)
                     task.minHealthScore.set(extension.minHealthScore)
                     task.rootDirPath.set(project.rootDir.absolutePath)
+
+                    val baseDirProp = project.findProperty("lighthouse.baseReportDir") as? String
+                    if (baseDirProp != null) {
+                        task.baseReportDir.set(project.file(baseDirProp))
+                    } else {
+                        task.baseReportDir.set(extension.baseReportDir)
+                    }
+
+                    // Include root project if plugin is applied
+                    project.plugins.withId("io.github.dev-vikas-soni.lighthouse") {
+                        val rootAuditTask = project.tasks.named("lighthouseAudit", LighthouseTask::class.java)
+                        task.dependsOn(rootAuditTask)
+                        task.moduleReportDirs.from(rootAuditTask.flatMap { it.reportOutputDir })
+                    }
+
                     project.subprojects.forEach { sub ->
                         sub.plugins.withId("io.github.dev-vikas-soni.lighthouse") {
                             val subAuditTask = sub.tasks.named("lighthouseAudit", LighthouseTask::class.java)
@@ -166,6 +181,7 @@ class LighthousePlugin : Plugin<Project> {
             if (ext.enableVersionCatalogHygiene.get()) enabled.add("VersionCatalogHygiene")
             if (ext.enableSecurityCheck.get()) enabled.add("Security")
             if (ext.enableModuleSizeCheck.get()) enabled.add("ModuleSize")
+            if (ext.enablePredictiveIntelligence.get()) enabled.add("PredictiveDependencyIntelligence")
             if (ext.enableTrendTracking.get()) enabled.add("TrendTracking")
             enabled
         })
@@ -173,6 +189,9 @@ class LighthousePlugin : Plugin<Project> {
         task.failOnSeverityStr.set(ext.failOnSeverity)
         task.enableSarif.set(ext.enableSarifReport)
         task.enableJunitXml.set(ext.enableJunitXmlReport)
+        task.useAi.set(ext.useAi)
+        task.enableTelemetry.set(ext.enableTelemetry)
+        task.telemetryEndpoint.set(ext.telemetryEndpoint)
         task.reportOutputDir.set(project.layout.buildDirectory.dir("reports/lighthouse"))
 
         // New Features

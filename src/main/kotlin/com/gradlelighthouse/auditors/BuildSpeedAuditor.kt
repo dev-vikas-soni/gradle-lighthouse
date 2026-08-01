@@ -47,7 +47,9 @@ class BuildSpeedAuditor : Auditor {
                 impactAnalysis = "KAPT adds substantial overhead (approx. +10s to +40s) to every build cycle due to the requirement for generating Java Stubs. This stalls the CPU and invalidates build caches more frequently than KSP.",
                 resolution = "Migrate annotation processors like Room and Dagger/Hilt to KSP (Kotlin Symbol Processing). Add the 'com.google.devtools.ksp' plugin and replace 'kapt' with 'ksp' in the dependencies block.",
                 roiAfterFix = "Estimated build speed boost of ~${timeSavedPerBuild}s per developer cycle. Combined with caching, this saves approximately ${yearlyHoursSaved} hours of developer waiting time per year.",
-                remediationUrl = "https://gradle-lighthouse.dev/rules/ksp-migration"
+                remediationUrl = "https://gradle-lighthouse.dev/rules/ksp-migration",
+                isFixable = true,
+                fixId = "migrate_kapt_to_ksp"
             ))
         }
 

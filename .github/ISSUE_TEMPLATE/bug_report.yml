@@ -1,0 +1,47 @@
+name: Bug Report
+description: Report a bug to help us improve Gradle Lighthouse
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out this bug report!
+  - type: textarea
+    id: bug-description
+    attributes:
+      label: Describe the bug
+      description: A clear and concise description of what the bug is.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: |
+        Please provide a minimal set of steps to reproduce the issue.
+        Include a link to a sample project if possible.
+      placeholder: |
+        1. Apply plugin v2.3.2
+        2. Run task './gradlew lighthouseAudit'
+        3. See error...
+    validations:
+      required: true
+  - type: textarea
+    id: expected-behavior
+    attributes:
+      label: Expected behavior
+      description: A clear and concise description of what you expected to happen.
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: Gradle version, AGP version, Kotlin version, OS.
+      placeholder: e.g. Gradle 8.10, AGP 8.5.1, Kotlin 2.0.0, macOS 14.5
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs or screenshots
+      description: Please paste relevant Gradle output or attach screenshots.
+      render: shell

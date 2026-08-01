@@ -1,0 +1,23 @@
+name: Documentation Issue
+description: Improvements or errors in the documentation
+labels: ["documentation"]
+body:
+  - type: textarea
+    id: documentation-issue
+    attributes:
+      label: Documentation Issue
+      description: What is wrong or missing in the documentation?
+    validations:
+      required: true
+  - type: input
+    id: affected-page
+    attributes:
+      label: Affected Page
+      description: URL or path to the document.
+    validations:
+      required: true
+  - type: textarea
+    id: suggested-fix
+    attributes:
+      label: Suggested Fix
+      description: How can we improve it?

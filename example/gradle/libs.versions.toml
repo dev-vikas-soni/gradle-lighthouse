@@ -1,0 +1,9 @@
+            [versions]
+
+            [libraries]
+            com-google-guava-guava = { group = "com.google.guava", name = "guava", version = "31.1-jre" }
+org-apache-commons-commons-lang3 = { group = "org.apache.commons", name = "commons-lang3", version = "3.12.0" }
+com-squareup-okhttp3-okhttp = { group = "com.squareup.okhttp3", name = "okhttp", version = "4.+" }
+androidx-room-room-compiler = { group = "androidx.room", name = "room-compiler", version = "2.6.1" }
+
+            [plugins]
