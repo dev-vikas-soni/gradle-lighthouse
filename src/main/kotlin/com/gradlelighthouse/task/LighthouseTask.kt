@@ -32,9 +32,17 @@ import javax.inject.Inject
 /**
  * The core audit task for Gradle Lighthouse.
  *
- * All project data is captured during the **configuration phase** by [com.gradlelighthouse.LighthousePlugin]
- * and passed as task `@Input` properties. The `@TaskAction` method has **zero** `project` access,
- * ensuring full compatibility with Gradle Configuration Cache (8.x+) and Isolated Projects (9.x+).
+ * This task implements a stateless analyzer that operates on a point-in-time
+ * snapshot of the project (AuditContext).
+ *
+ * **Execution Pipeline**:
+ * 1. Reconstruct structured models from serialized task inputs.
+ * 2. Filter findings against the Baseline system to ignore existing debt.
+ * 3. Execute 20+ stateless Auditors in parallel.
+ * 4. Apply the Health Score Model weighting and square root dampening.
+ * 5. Export multi-format intelligence reports (HTML, SARIF, JUnit, JSON).
+ *
+ * Ensures 100% compatibility with Gradle Configuration Cache (8.x+) and Isolated Projects (9.x+).
  */
 @DisableCachingByDefault(because = "Audit reports should be fresh and depend on non-file state like project configurations.")
 abstract class LighthouseTask @Inject constructor() : DefaultTask() {
@@ -85,6 +93,9 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
     @get:Input abstract val failOnSeverityStr: Property<String>
     @get:Input abstract val enableSarif: Property<Boolean>
     @get:Input abstract val enableJunitXml: Property<Boolean>
+    @get:Input abstract val useAi: Property<Boolean>
+    @get:Input abstract val enableTelemetry: Property<Boolean>
+    @get:Input abstract val telemetryEndpoint: Property<String>
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -259,6 +270,11 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
             ConsoleLogger.info("🧪", "[JUNIT]", "JUnit XML: ${junitFile.toURI()}")
         }
 
+        // 6. Telemetry (Predictive Dependency Intelligence)
+        if (enableTelemetry.get()) {
+            sendTelemetry(context, healthReport.score)
+        }
+
         ConsoleLogger.rule()
 
         // 5. CI/CD Build Gate
@@ -370,6 +386,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
         if ("VersionCatalogHygiene" in enabled) auditors.add(VersionCatalogHygieneAuditor())
         if ("Security" in enabled) auditors.add(SecurityAuditor())
         if ("ModuleSize" in enabled) auditors.add(ModuleSizeAuditor())
+        if ("PredictiveDependencyIntelligence" in enabled) auditors.add(PredictiveDependencyIntelligenceAuditor())
         if ("TrendTracking" in enabled) auditors.add(TrendTrackingAuditor())
 
         return auditors
@@ -384,5 +401,36 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
             if (module.isNotEmpty()) graph[module] = deps
         }
         return graph
+    }
+
+    private fun sendTelemetry(context: AuditContext, score: Int) {
+        try {
+            val endpoint = telemetryEndpoint.get()
+            val url = java.net.URL(endpoint)
+            val conn = url.openConnection() as java.net.HttpURLConnection
+            conn.requestMethod = "POST"
+            conn.doOutput = true
+            conn.setRequestProperty("Content-Type", "application/json")
+            conn.connectTimeout = 2000
+            conn.readTimeout = 2000
+
+            val deps = context.dependencies.joinToString(",") { "${it.group}:${it.name}:${it.version}" }
+            val payload = """
+                {
+                    "projectHash": "${context.projectName.hashCode()}",
+                    "score": $score,
+                    "gradleVersion": "${context.gradleVersion}",
+                    "dependencies": "$deps"
+                }
+            """.trimIndent()
+
+            conn.outputStream.use { it.write(payload.toByteArray()) }
+            val responseCode = conn.responseCode
+            if (responseCode in 200..299) {
+                ConsoleLogger.info("📡", "[TELEMETRY]", "Anonymized intelligence shared with the Lighthouse community.")
+            }
+        } catch (_: Exception) {
+            // Silently fail telemetry to not break the build
+        }
     }
 }

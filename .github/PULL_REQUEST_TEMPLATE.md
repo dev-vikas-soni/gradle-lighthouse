@@ -1,23 +1,24 @@
 ## Description
+<!-- Provide a clear and concise description of the changes in this PR. -->
 
-Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context.
+## Linked Issues
+<!-- Link any relevant issues here using 'Fixes #123' or 'Relates to #456'. -->
 
-Fixes # (issue number)
+## Type of Change
+- [ ] 🐛 Bug fix (non-breaking change which fixes an issue)
+- [ ] ✨ New feature (non-breaking change which adds functionality)
+- [ ] 📝 Documentation update
+- [ ] 🧹 Refactoring
+- [ ] 🚀 Performance optimization
 
-## Type of change
-
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] Documentation update
-
-## Checklist:
-
-- [ ] My code follows the style guidelines of this project (Detekt passes).
-- [ ] I have performed a self-review of my own code.
-- [ ] I have commented my code, particularly in hard-to-understand areas.
-- [ ] I have made corresponding changes to the documentation (`docs/`).
-- [ ] My changes generate no new warnings.
+## Checklist
+- [ ] I have read the [CONTRIBUTING](../CONTRIBUTING.md) guide.
+- [ ] My code follows the project's coding conventions.
+- [ ] I have added KDoc for new public APIs.
 - [ ] I have added tests that prove my fix is effective or that my feature works.
-- [ ] New and existing unit tests pass locally with my changes (`./gradlew test`).
-- [ ] I have verified Configuration-Cache compatibility.
+- [ ] I have verified the changes using the `example/` project.
+- [ ] I have updated the documentation (if applicable).
+- [ ] All new and existing tests passed.
+
+## Screenshots / Evidence (if applicable)
+<!-- Attach screenshots, terminal output, or GIFs if your change affects the UI or reports. -->

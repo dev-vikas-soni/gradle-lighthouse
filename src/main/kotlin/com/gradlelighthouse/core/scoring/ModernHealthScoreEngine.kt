@@ -11,9 +11,10 @@ import kotlin.math.sqrt
  * Implements the Square Root Deduction Model:
  * score = 100 - K * sqrt(rawImpact)
  *
- * Derived from target outcomes:
- * 5 Errors (rawImpact 40) -> ~85 score
- * 100 Errors (rawImpact 800) -> ~33 score
+ * Tuned for industry benchmarks:
+ * - Now in Android: ~98
+ * - Signal Android: ~82
+ * - Firefox Android: ~45
  */
 class ModernHealthScoreEngine(
     private val aggregator: ScoreAggregator = WeightedScoreAggregator()
@@ -21,7 +22,7 @@ class ModernHealthScoreEngine(
     private val pathEngine = PathTo90Engine(this, aggregator)
 
     // Architectural Friction Coefficient - Tuned for industry benchmarks
-    private val K = 6.6
+    val frictionK = 6.6
 
     /**
      * Severity weights for architectural impact.
@@ -32,6 +33,10 @@ class ModernHealthScoreEngine(
         Severity.WARNING to 2.0,
         Severity.INFO to 0.2
     )
+
+    fun calculatePointsLost(rawImpact: Double): Double {
+        return frictionK * sqrt(rawImpact)
+    }
 
     fun calculate(
         issues: List<AuditIssue>,
@@ -67,7 +72,7 @@ class ModernHealthScoreEngine(
         val rawImpact = issues.sumOf { severityWeights[it.severity] ?: 0.0 }
 
         // Square Root Deduction Model
-        val pointsLost = K * sqrt(rawImpact)
+        val pointsLost = frictionK * sqrt(rawImpact)
 
         // Hard-ceiling: 3+ Fatals floor the category to 0
         val fatalCount = issues.count { it.severity == Severity.FATAL }

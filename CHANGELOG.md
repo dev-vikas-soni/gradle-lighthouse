@@ -6,10 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
-## [2.3.1] - 2026-06-11
+## [2.3.2] - 2026-08-02
+
+### Changed
+- Refined root project aggregation logic for single-module projects.
+- Hardened task configuration validation for `baseReportDir`.
+- Comprehensive documentation overhaul and Navigator established.
+- Standardized terminology across the intelligence suite.
+
+## [2.3.1] - 2026-08-01
+
+### Added
+- **GenAI Remediation (`lighthouseFix --ai`)**: Introduced AI-assisted surgical refactoring.
+    - Automated **KAPT to KSP** migration (plugin swap + dependency conversion).
+    - Automated **Version Catalog** bootstrapping (hardcoded string to TOML mapping).
+- **Lighthouse PR Bot & Delta Analysis**: Intelligent CI/CD integration for Pull Requests.
+    - Automatic score delta calculation against the base branch.
+    - Specialized flagging of **New** vs. existing dependency cycles.
+    - Automated PR summaries in GitHub via `action.yml`.
+- **Predictive Dependency Intelligence**: Proactive SDK impact estimation.
+    - Warns about binary size, method count, and startup overhead *before* merging SDKs.
+    - Curated knowledge base for popular SDKs (Facebook, Google Ads, Instabug, etc.).
+- **Anonymized Telemetry**: Privacy-first opt-in layer to crowdsource SDK performance data and improve community predictions.
 
 ### Fixed
 - Internal reliability improvements and baseline portability enhancements.
+- Improved dependency regex for more accurate Version Catalog migrations.
 
 ## [2.3.0] - 2026-06-11
 

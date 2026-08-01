@@ -13,6 +13,16 @@ import javax.inject.Inject
 
 /**
  * Aggregates health reports from all sub-modules into a single Global Dashboard.
+ *
+ * This task performs the final architectural synthesis for the entire project:
+ * 1. **Cycle Detection**: Uses an iterative DFS algorithm with color marking to safely
+ *    identify circular dependencies in massive graphs without stack overflow.
+ * 2. **Rule Enforcement**: Validates custom YAML-based isolation and layering rules.
+ * 3. **Delta Analysis**: If a base report is provided, calculates score movements
+ *    and regressions for the PR Bot.
+ * 4. **Visualization**: Generates the interactive Galaxy Graph and global trend charts.
+ *
+ * Compatible with Gradle Isolated Projects and Configuration Cache.
  */
 @DisableCachingByDefault(because = "Aggregation should always reflect the latest state of all modules.")
 abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
@@ -43,6 +53,11 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
 
     @get:Input
     abstract val minHealthScore: Property<Int>
+
+    @get:InputDirectory
+    @get:Optional
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    abstract val baseReportDir: DirectoryProperty
 
     @get:Input
     abstract val rootDirPath: Property<String>
@@ -88,21 +103,6 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
             return
         }
 
-        generateGlobalReport(moduleReports)
-    }
-
-    private fun generateGlobalReport(reports: List<ModuleReportData>) {
-        val outputDir = reportOutputDir.get().asFile
-        if (!outputDir.exists()) outputDir.mkdirs()
-
-        val dashboardFile = File(outputDir, "project-dashboard.html")
-        val avgScore = reports.map { it.score }.average().toInt().coerceAtLeast(0)
-        val totalFatal = reports.sumOf { it.fatalCount }
-        val totalErrors = reports.sumOf { it.errorCount }
-        val auditedCount = reports.size
-        val globalRank = HealthScoreEngine.ArchitectRank.fromScore(avgScore)
-        val scoreColor = HealthScoreEngine.scoreColor(avgScore)
-
         // Parse the module dependency graph once — reused for coupling density,
         // enforcement gates, and the galaxy graph JSON below.
         val moduleGraph = mutableMapOf<String, List<String>>()
@@ -114,6 +114,151 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
                 moduleGraph[module] = deps
             }
         }
+
+        generateGlobalReport(moduleReports, moduleGraph)
+
+        // Generate PR Summary for Bot (Sprint 3)
+        if (baseReportDir.isPresent) {
+            generatePrSummary(moduleReports, moduleGraph)
+        }
+    }
+
+    private fun generatePrSummary(currentReports: List<ModuleReportData>, currentGraph: Map<String, List<String>>) {
+        val baseDir = baseReportDir.get().asFile
+        val baseReports = mutableListOf<ModuleReportData>()
+
+        // Load base reports
+        baseDir.walkTopDown().filter { it.name == "module-report.json" }.forEach { file ->
+            parseReportJson(file.readText())?.let { baseReports.add(it) }
+        }
+
+        val baseSummary = baseReports.associateBy { it.projectPath }
+
+        val avgCurrentScore = if (currentReports.isNotEmpty()) currentReports.map { it.score }.average().toInt() else 0
+        val avgBaseScore = if (baseReports.isNotEmpty()) baseReports.map { it.score }.average().toInt() else avgCurrentScore
+        val scoreDelta = avgCurrentScore - avgBaseScore
+
+        val summaryMarkdown = buildString {
+            appendLine("## 🏗️ Gradle Lighthouse Architectural Intelligence")
+            appendLine()
+            appendLine("| Metric | Value | Delta |")
+            appendLine("|--------|-------|-------|")
+            appendLine("| **Health Score** | $avgCurrentScore/100 | ${formatDelta(scoreDelta)} |")
+            appendLine("| **Modules** | ${currentReports.size} | ${formatDelta(currentReports.size - baseReports.size)} |")
+            appendLine()
+
+            // Cycle Changes
+            val currentCycles = detectCycles(currentGraph)
+            if (currentCycles.isNotEmpty()) {
+                appendLine("### ⚠️ Dependency Cycles (${currentCycles.size})")
+                currentCycles.forEach { cycle ->
+                    appendLine("- 🔗 `${cycle.joinToString(" ➔ ")}`")
+                }
+                appendLine()
+            }
+
+            // Top Module Changes
+            val improved = currentReports.filter {
+                val base = baseSummary[it.projectPath]
+                base != null && it.score > base.score
+            }.sortedByDescending { it.score - (baseSummary[it.projectPath]?.score ?: 0) }.take(3)
+
+            val regressed = currentReports.filter {
+                val base = baseSummary[it.projectPath]
+                base != null && it.score < base.score
+            }.sortedBy { it.score - (baseSummary[it.projectPath]?.score ?: 0) }.take(3)
+
+            if (regressed.isNotEmpty()) {
+                appendLine("### 🔴 Regressions")
+                regressed.forEach {
+                    val delta = it.score - (baseSummary[it.projectPath]?.score ?: 0)
+                    appendLine("- **${it.projectPath}**: ${it.score}% (${formatDelta(delta)})")
+                }
+                appendLine()
+            }
+
+            if (improved.isNotEmpty()) {
+                appendLine("### 🟢 Improvements")
+                improved.forEach {
+                    val delta = it.score - (baseSummary[it.projectPath]?.score ?: 0)
+                    appendLine("- **${it.projectPath}**: ${it.score}% (${formatDelta(delta)})")
+                }
+                appendLine()
+            }
+
+            appendLine("> _Generated by Gradle Lighthouse PR Bot_")
+        }
+
+        File(reportOutputDir.get().asFile, "lighthouse-pr-summary.md").writeText(summaryMarkdown)
+    }
+
+    private fun formatDelta(delta: Int): String {
+        return when {
+            delta > 0 -> "Up +$delta"
+            delta < 0 -> "Down $delta"
+            else -> "±0"
+        }
+    }
+
+    private fun detectCycles(graph: Map<String, List<String>>): List<List<String>> {
+        val cycles = mutableListOf<List<String>>()
+        val WHITE = 0; val GRAY = 1; val BLACK = 2
+        val color = mutableMapOf<String, Int>().withDefault { WHITE }
+
+        graph.keys.forEach { start ->
+            if (color.getValue(start) != WHITE) return@forEach
+            val path = ArrayDeque<String>()
+            val frames = ArrayDeque<Pair<String, Iterator<String>>>()
+
+            color[start] = GRAY
+            path.addLast(start)
+            frames.addLast(start to (graph[start] ?: emptyList()).iterator())
+
+            while (frames.isNotEmpty()) {
+                val (node, children) = frames.last()
+                var pushed = false
+                while (children.hasNext()) {
+                    val dep = children.next()
+                    if (dep == node) continue
+                    when (color.getValue(dep)) {
+                        GRAY -> {
+                            val cycleStart = path.indexOf(dep)
+                            val cycleList = path.subList(cycleStart, path.size).toList() + dep
+                            val normalized = cycleList.dropLast(1).sorted().joinToString("->")
+                            if (cycles.none { it.dropLast(1).sorted().joinToString("->") == normalized }) {
+                                cycles.add(cycleList)
+                            }
+                        }
+                        WHITE -> {
+                            color[dep] = GRAY
+                            path.addLast(dep)
+                            frames.addLast(dep to (graph[dep] ?: emptyList()).iterator())
+                            pushed = true
+                            break
+                        }
+                    }
+                }
+                if (!pushed) {
+                    color[node] = BLACK
+                    path.removeLast()
+                    frames.removeLast()
+                }
+            }
+        }
+        return cycles
+    }
+
+    private fun generateGlobalReport(reports: List<ModuleReportData>, moduleGraph: Map<String, List<String>>) {
+        val outputDir = reportOutputDir.get().asFile
+        if (!outputDir.exists()) outputDir.mkdirs()
+
+        val dashboardFile = File(outputDir, "project-dashboard.html")
+        val avgScore = if (reports.isNotEmpty()) reports.map { it.score }.average().toInt() else 0
+        val totalFatal = reports.sumOf { it.fatalCount }
+        val totalErrors = reports.sumOf { it.errorCount }
+        val auditedCount = reports.size
+        val globalRank = HealthScoreEngine.ArchitectRank.fromScore(avgScore)
+        val scoreColor = HealthScoreEngine.scoreColor(avgScore)
 
         // Compute coupling density and save historical trend
         val tempTotalModules = moduleGraph.size.toDouble().coerceAtLeast(1.0)
@@ -235,7 +380,7 @@ abstract class LighthouseAggregateTask @Inject constructor() : DefaultTask() {
                 )
             }
         }
-        val globalScoringResult = com.gradlelighthouse.core.HealthScoreEngine.calculateModernResultWithBenchmarks(
+        val globalScoringResult = HealthScoreEngine.calculateModernResultWithBenchmarks(
             globalIssues,
             auditedCount,
             emptySet(), // Aggregate doesn't have plugin IDs easily, using default

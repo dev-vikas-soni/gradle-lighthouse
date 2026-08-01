@@ -21,15 +21,60 @@ inputs:
     description: 'Post score summary as PR comment'
     required: false
     default: 'true'
+  base-report-path:
+    description: 'Path to base reports for delta calculation (optional)'
+    required: false
+    default: '.lighthouse/base-reports'
 
 runs:
   using: 'composite'
   steps:
+    - name: Download Base Reports (Main Branch)
+      if: github.event_name == 'pull_request'
+      uses: actions/github-script@v9
+      with:
+        script: |
+          try {
+            const { data: runs } = await github.rest.actions.listWorkflowRuns({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: context.workflow,
+              branch: context.payload.pull_request.base.ref,
+              status: 'success',
+              per_page: 1
+            });
+            if (runs.workflow_runs.length > 0) {
+              const runId = runs.workflow_runs[0].id;
+              const { data: artifacts } = await github.rest.actions.listWorkflowRunArtifacts({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                run_id: runId
+              });
+              const match = artifacts.artifacts.find(a => a.name === 'lighthouse-reports');
+              if (match) {
+                const download = await github.rest.actions.downloadArtifact({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  artifact_id: match.id,
+                  archive_format: 'zip'
+                });
+                const fs = require('fs');
+                fs.writeFileSync('${{ github.workspace }}/base-reports.zip', Buffer.from(download.data));
+                const exec = require('@actions/exec');
+                await exec.exec('unzip', ['-o', '${{ github.workspace }}/base-reports.zip', '-d', '${{ inputs.base-report-path }}']);
+                console.log('Successfully downloaded base reports from run ' + runId);
+              }
+            }
+          } catch (e) {
+            console.log('Could not download base reports: ' + e.message);
+          }
+
     - name: Run Lighthouse Audit
       shell: bash
       run: |
         ./gradlew lighthouseAudit lighthouseAggregate \
           -Plighthouse.failOnSeverity=${{ inputs.fail-on-severity }} \
+          -Plighthouse.baseReportDir=${{ inputs.base-report-path }} \
           ${{ inputs.gradle-args }} \
           --no-daemon --stacktrace
       env:
@@ -59,16 +104,24 @@ runs:
       uses: actions/github-script@v9
       with:
         script: |
-          const score = '${{ steps.reports.outputs.score }}';
-          const body = `## 🏗️ Gradle Lighthouse Report
+          const fs = require('fs');
+          const summaryPath = 'build/reports/lighthouse/lighthouse-pr-summary.md';
+          let body = '';
 
-          | Metric | Value |
-          |--------|-------|
-          | **Health Score** | ${score}/100 |
-          | **Status** | ${parseInt(score) >= 70 ? '✅ Passing' : '⚠️ Needs attention'} |
+          if (fs.existsSync(summaryPath)) {
+            body = fs.readFileSync(summaryPath, 'utf8');
+          } else {
+            const score = '${{ steps.reports.outputs.score }}';
+            body = `## 🏗️ Gradle Lighthouse Report
 
-          > Full report available in the [Actions artifacts](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}).
-          > SARIF results uploaded to the Security tab.`;
+            | Metric | Value |
+            |--------|-------|
+            | **Health Score** | ${score}/100 |
+            | **Status** | ${parseInt(score) >= 70 ? '✅ Passing' : '⚠️ Needs attention'} |
+
+            > Full report available in the [Actions artifacts](${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}).
+            > SARIF results uploaded to the Security tab.`;
+          }
 
           // Find existing comment
           const { data: comments } = await github.rest.issues.listComments({
