@@ -14,3 +14,6 @@ No. Lighthouse targets Gradle 8.0 and higher to leverage the full power of Confi
 
 ## Why did my score drop suddenly?
 Check the "Trend Tracking" section in your report. Usually, this happens when a new "FATAL" issue is introduced, such as a circular dependency.
+
+## Are there other tools to help with Android performance?
+While Gradle Lighthouse focuses on architecture and build health, you might also be interested in **[LeakLens](https://plugins.jetbrains.com/plugin/32079-leaklens--android-memory-leak-detector--ai-fix-assistant/)**. It is a JetBrains plugin specifically designed to detect and fix memory leaks in Android apps using AI assistance.

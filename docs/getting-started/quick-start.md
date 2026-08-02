@@ -30,6 +30,10 @@ High-level overview of a single module's health.
 Aggregated view of all modules, including the **Galaxy Graph**.
 `build/reports/lighthouse/project-dashboard.html`
 
+> [!TIP]
+> **Don't have a project to audit yet?**
+> Check out the [Lighthouse Showcase Repository](https://github.com/dev-vikas-soni/lighthouse-showcase) to see what a complete report looks like.
+
 ### CI/CD Reports
 SARIF and JUnit XML formats are also generated for integration with tools like GitHub Security and Jenkins.
 `build/reports/lighthouse/module-report.sarif`

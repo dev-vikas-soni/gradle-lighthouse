@@ -10,6 +10,7 @@ Welcome to the official documentation for **Gradle Lighthouse**, the architectur
 * [**Configuration**](getting-started/configuration.md): Customize checks and enforcement gates.
 * [**First Audit**](getting-started/first-audit.md): Walkthrough of your initial results.
 * [**Understanding the Report**](getting-started/understanding-report.md): How to interpret scores and ranks.
+* [**Live Showcase**](https://github.com/dev-vikas-soni/lighthouse-showcase): Real-world audit reports and examples.
 
 ## 🧠 Core Concepts
 * [**What is Lighthouse?**](concepts/what-is-gradle-lighthouse.md): The problem and our philosophy.
@@ -46,3 +47,9 @@ Welcome to the official documentation for **Gradle Lighthouse**, the architectur
 * [**Compatibility Matrix**](compatibility.md): Supported versions of Gradle, Java, and AGP.
 * [**Troubleshooting**](troubleshooting.md): Solutions for common setup issues.
 * [**Glossary**](glossary.md): Terminology used throughout the project.
+
+---
+
+## 🛠️ Other Tools by the Author
+* **[LeakLens](https://plugins.jetbrains.com/plugin/32079-leaklens--android-memory-leak-detector--ai-fix-assistant/)**: An advanced Android memory leak detector for IntelliJ IDEA and Android Studio with an integrated AI fix assistant.
+  * [GitHub](https://github.com/dev-vikas-soni/leak-lens) | [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/32079-leaklens--android-memory-leak-detector--ai-fix-assistant/)

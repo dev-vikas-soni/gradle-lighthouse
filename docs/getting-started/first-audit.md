@@ -57,6 +57,12 @@ If you have a multi-module project, run the aggregate task:
 
 Open `build/reports/lighthouse/project-dashboard.html` to see the **Galaxy Graph**. This is an interactive map of your module dependencies. It automatically detects cycles and highlights coupling "hotspots" that might be slowing down your build.
 
+---
+
+## 🏗️ Live Showcase
+
+If you want to see what a complete, production-grade audit report looks like before running it yourself, visit our **[Showcase Repository](https://github.com/dev-vikas-soni/lighthouse-showcase)**. It contains full HTML reports, dependency maps, and architectural findings for a complex Android project.
+
 ## Next Steps
 
 * [Understanding the Report](understanding-report.md)

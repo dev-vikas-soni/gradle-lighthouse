@@ -63,17 +63,6 @@ Automated PR comments showing score deltas, new cycles, and regressions. Full in
 
 ---
 
-## 📋 Compatibility
-
-| Feature | Supported Versions |
-| :--- | :--- |
-| **Gradle** | 8.0 - 9.x+ |
-| **Java** | 17, 21+ |
-| **Android (AGP)** | 7.4 - 8.x+ |
-| **Kotlin** | 1.9.x, 2.x |
-
----
-
 ## 🚀 Quick Start
 
 ### 1. Installation
@@ -96,6 +85,14 @@ plugins {
 
 ---
 
+## 🏗️ Live Showcase
+
+Want to see Gradle Lighthouse in action on a real project? Explore our **Showcase Repository** which contains complete audit reports, architectural health scores, and dependency visualizations for a complex Android project.
+
+👉 [**Lighthouse Showcase Repository**](https://github.com/dev-vikas-soni/lighthouse-showcase)
+
+---
+
 ## 📖 Documentation
 
 * [**Getting Started**](docs/getting-started/installation.md)
@@ -112,3 +109,12 @@ We welcome contributions! See the [Contributing Guide](CONTRIBUTING.md) and [Dev
 
 ## 📄 License
 MIT License.
+
+---
+
+## 🛠️ Other Tools by the Author
+
+If you find Gradle Lighthouse useful, you might also like:
+
+* **[LeakLens](https://plugins.jetbrains.com/plugin/32079-leaklens--android-memory-leak-detector--ai-fix-assistant/)**: An advanced Android memory leak detector for IntelliJ IDEA and Android Studio with an integrated AI fix assistant.
+  * [GitHub](https://github.com/dev-vikas-soni/leak-lens) | [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/32079-leaklens--android-memory-leak-detector--ai-fix-assistant/)
