@@ -1,6 +1,7 @@
 package com.gradlelighthouse.reporting
 
 import com.gradlelighthouse.core.AuditIssue
+import com.gradlelighthouse.core.BaselineAnalysis
 import com.gradlelighthouse.core.Severity
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -29,7 +30,7 @@ object JunitXmlReportGenerator {
      * @param issues List of audit findings
      * @return Valid JUnit XML string
      */
-    fun generate(moduleName: String, issues: List<AuditIssue>): String {
+    fun generate(moduleName: String, issues: List<AuditIssue>, baselineAnalysis: BaselineAnalysis? = null): String {
         val timestamp = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.ROOT).apply {
             timeZone = TimeZone.getTimeZone("UTC")
         }.format(Date())
@@ -53,11 +54,12 @@ object JunitXmlReportGenerator {
         // Total tests = one testcase per issue + one passing testcase per empty category
         val passingCategories = allCategories.count { (grouped[it] ?: emptyList()).isEmpty() }
         val totalTests = issues.size + passingCategories
-        val totalFailures = issues.count { it.severity == Severity.FATAL || it.severity == Severity.ERROR }
+        val newIssues = baselineAnalysis?.newIssues?.toSet() ?: issues.toSet()
+        val totalFailures = newIssues.count { it.severity == Severity.FATAL || it.severity == Severity.ERROR }
 
         return buildString {
             appendLine("""<?xml version="1.0" encoding="UTF-8"?>""")
-            appendLine("""<testsuites name="Gradle Lighthouse-$moduleName" tests="$totalTests" failures="$totalFailures" errors="0" time="0">""")
+            appendLine("""<testsuites name="Gradle Lighthouse-$moduleName" tests="$totalTests" failures="$totalFailures" errors="0" time="0" total-findings="${baselineAnalysis?.totalIssueCount ?: issues.size}" new-findings="${baselineAnalysis?.newIssueCount ?: issues.size}" baselined-findings="${baselineAnalysis?.baselineIssueCount ?: 0}" stale-baseline-entries="${baselineAnalysis?.staleBaselineCount ?: 0}">""")
             testSuites.forEach { appendLine(it) }
             appendLine("</testsuites>")
         }
