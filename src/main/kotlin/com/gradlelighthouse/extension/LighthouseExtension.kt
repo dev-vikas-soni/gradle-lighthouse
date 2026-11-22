@@ -104,15 +104,20 @@ abstract class LighthouseExtension {
     abstract val useAi: Property<Boolean>
 
     /**
-     * Enables anonymized telemetry to provide predictive intelligence for dependencies.
-     * When enabled, Lighthouse collects dependency coordinates and build performance
-     * metrics to help the community estimate SDK impact.
-     * Default: false
+     * Opts in to sending a minimal usage event after each successful audit.
+     *
+     * The event contains a random installation identifier, plugin version, and Gradle
+     * version only. It does not include project names or paths, dependencies, source
+     * code, findings, or health scores. The identifier is stored in the Gradle user
+     * home directory and can be reset by deleting its telemetry/installation-id file.
+     *
+     * Default: false. No telemetry is sent unless explicitly enabled.
      */
     abstract val enableTelemetry: Property<Boolean>
 
     /**
-     * Optional: Custom telemetry endpoint for enterprise users.
+     * HTTPS endpoint that receives opt-in usage events.
+     * The default endpoint can be replaced for self-hosted deployments.
      */
     abstract val telemetryEndpoint: Property<String>
 
