@@ -1,47 +1,31 @@
-# The Health Score Model
+# Health score model
 
-Lighthouse uses a mathematical model to quantify architectural debt. It shifts the focus from simple "violation counting" to **Architectural Risk Assessment**.
+The Lighthouse score is a **heuristic summary of findings**, not a direct measurement of architecture quality, maintainability, runtime reliability, security posture, or team productivity. It is useful only as a consistent signal within a project when the enabled checks and scoring implementation remain comparable.
 
-## Severity Weights
+## Scoring model
 
-Every audit finding is assigned a severity that determines its impact:
+The implementation assigns weights to finding severities and derives category scores using a square-root deduction model. The exact constants and aggregation behavior are implementation details and may change between releases. Consult the source for the version you run before treating these values as a stable public contract.
 
-| Severity | Weight | Rationale |
-| :--- | :--- | :--- |
-| **FATAL** | 32.0 | Critical failure (e.g., Circular Dependency). |
-| **ERROR** | 8.0 | Significant debt or risk. |
-| **WARNING**| 2.0 | Minor debt or maintainability concern. |
-| **INFO** | 0.2 | Best practice opportunity. |
+A simplified description of the category calculation is:
 
-## Square Root Deduction Model
+```text
+category score = 100 - (coefficient * sqrt(sum of finding weights))
+```
 
-Lighthouse uses a **Square Root Deduction Model** for category scoring:
+The overall score combines category-level information. Do not compare scores across plugin versions, configurations, or unrelated repositories unless the scoring model, enabled auditors, and input data are known to be equivalent.
 
-$$CategoryScore = 100 - (K \times \sqrt{\sum SeverityWeights})$$
+## What the score does not mean
 
-* **Friction Coefficient ($K$)**: Set to **6.6** (tuned against industry benchmarks).
-* **Dampening Effect**: The square root curve ensures that the first few issues have the highest impact. This prevents large projects from having negative scores and ensures that every incremental fix matters.
+- It is not an industry benchmark or percentile.
+- It is not a certification or pass/fail statement about production quality.
+- It does not measure actual build duration, APK size, startup time, test coverage, or security exploitability.
+- It cannot account for architectural context that the available project metadata does not expose.
+- A higher score does not guarantee a better architecture.
 
-## The Weakest Link Principle
+## Baselines
 
-The overall module score is not a simple average. It uses the **Weakest Link Principle**:
+Baseline filtering and score calculation are distinct concerns. Until baseline semantics are fully specified and regression-tested across all report formats, interpret the score as the current implementation's summary of detected findings and consult the new/suppressed finding counts separately. See the [baseline system](baseline-system.md) and tracked [baseline scoring work](https://github.com/dev-vikas-soni/gradle-lighthouse/issues/53).
 
-$$OverallScore = \frac{WeightedAverage(Categories) + Min(CategoryScore)}{2}$$
+## Recommended use
 
-This ensures that a module cannot be considered "Healthy" if a major domain (like Security) is failing, even if other domains are perfect.
-
-## Rank Table
-
-Scores are mapped to qualitative ranks to provide immediate context:
-
-| Score Range | Rank |
-| :--- | :--- |
-| 95 - 100 | **ELITE** (Grandmaster Architect) |
-| 85 - 94 | **STRONG** (Expert Architect) |
-| 70 - 84 | **MAINTAINED** (Standard Architect) |
-| 50 - 69 | **AT RISK** |
-| 0 - 49 | **LEGACY** |
-
-## Path to 90: Health ROI
-
-Lighthouse calculates the **Potential Score Gain** for every finding. This allows developers to prioritize engineering work based on "Health ROI"—getting the largest quality improvement for the least amount of effort.
+Use the score as a navigation aid to identify areas for investigation. Prefer concrete findings, reproducible module relationships, and team-defined architecture rules over optimizing a numeric score.
