@@ -31,7 +31,7 @@ Delete this file to generate a new identifier. To disable telemetry, leave `enab
 
 ## Endpoint
 
-The default endpoint is `https://telemetry.gradle-lighthouse.dev/v1/metrics`. A deployment may override it using:
+No telemetry collector is bundled with the plugin. Configure an HTTPS endpoint operated by your organization or a service you trust:
 
 ```kotlin
 lighthouse {
@@ -40,7 +40,7 @@ lighthouse {
 }
 ```
 
-Only HTTPS endpoints are accepted. The endpoint operator is responsible for publishing its retention, access, and deletion policies. Lighthouse treats telemetry as best-effort and does not fail an audit when the endpoint is unavailable.
+The endpoint defaults to an empty value, so opting in without configuring an endpoint sends no event. Only HTTPS endpoints are accepted. The endpoint operator is responsible for publishing its retention, access, and deletion policies. Lighthouse treats telemetry as best-effort and does not fail an audit when the endpoint is unavailable.
 
 ## Interpreting counts
 
