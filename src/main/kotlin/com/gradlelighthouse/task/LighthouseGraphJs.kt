@@ -1,7 +1,7 @@
 package com.gradlelighthouse.task
 
 object LighthouseGraphJs {
-    val SCRIPT = $"""
+    val SCRIPT = $$"""
         // -----------------------------------------------------------------------------
         // Premium Gamified Galaxy Graph Engine (Jitter-free)
         // -----------------------------------------------------------------------------
