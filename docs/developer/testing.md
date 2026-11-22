@@ -1,40 +1,37 @@
-# Testing Strategy
+# Testing
 
-Gradle Lighthouse uses a multi-layered testing strategy to ensure reliability across Gradle and AGP versions.
+This guide describes useful test layers for changes to Gradle Lighthouse. The presence of a test category in this document is not a claim that every auditor, Gradle version, AGP version, or feature currently has comprehensive coverage.
 
-## 1. Unit Tests
+## Run the repository checks
 
-**Target**: Individual logic components like the `HealthScoreEngine`.
-**Location**: `src/test/kotlin/com/gradlelighthouse/core`
-**Tool**: JUnit 5 + Kotlin Test.
+Start with:
 
-These tests are fast and do not require a real Gradle environment. They are ideal for verifying the mathematical correctness of the scoring model.
+```bash
+./gradlew test
+./gradlew build
+```
 
-## 2. Functional Tests
+Use the tasks configured by the repository's current Gradle build. If a task name differs, inspect `./gradlew tasks --all`.
 
-**Target**: The full plugin lifecycle, task execution, and file generation.
-**Location**: `src/test/kotlin/com/gradlelighthouse/LighthousePluginTest.kt`
-**Tool**: `GradleRunner` (Gradle TestKit).
+## Unit tests
 
-These tests create a temporary project, apply the plugin, and execute tasks.
-* Use `withArguments("lighthouseAudit", "--stacktrace")`.
-* Assert against the content of generated files in the `build/` directory.
+Use focused unit tests for scoring, fingerprinting, parsing, graph algorithms, and individual auditor behavior. For each rule, cover:
+- A fixture where the issue should be reported.
+- A fixture where the issue should not be reported.
+- Boundary cases and malformed or missing inputs where relevant.
 
-## 3. The Integration Sandbox (`example/`)
+## Functional tests
 
-**Target**: Real-world multi-module scenarios and interactive features like the Galaxy Graph.
+Use Gradle TestKit for plugin application, task execution, generated reports, and failure behavior. Prefer small fixture projects checked into test resources.
 
-This is a permanent Gradle project inside the repository.
-* Run manually: `./gradlew :example:lighthouseAudit`.
-* It is also used during the CI build to ensure no regressions in the report visualization.
+## Compatibility tests
 
-## 4. Configuration Cache Verification
+Configuration Cache, Isolated Projects, Gradle/JDK versions, AGP, Kotlin, and KMP layouts need explicit functional tests. Do not infer compatibility from a unit test or design intention. Publish the exact passing matrix for each release.
 
-Every functional test should ideally verify compatibility:
-1. Run a task once.
-2. Run it again with `--configuration-cache`.
-3. Assert "Reusing configuration cache" in the output.
+## Regression tests
 
-## 5. Mocking AGP
+Every confirmed false positive or missed finding should become a reproducible regression fixture where practical. Test baseline behavior and ensure console/HTML/JSON/SARIF/JUnit outputs agree.
 
-Since Lighthouse analyze DTOs, you can test Android auditors without actually applying the Android plugin by manually populating the `sourceSetData` and `pluginIds` in a mock `AuditContext`.
+## Reporting test gaps
+
+When adding or changing a check, document the inputs it inspects, blind spots, and the fixture coverage. See the [roadmap](../../ROADMAP.md) for current reliability priorities.
