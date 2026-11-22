@@ -26,7 +26,7 @@ object SarifReportGenerator {
 
         return buildString {
             appendLine("{")
-            appendLine("""  "${"$"}schema": "${escapeJson(SCHEMA_URI)}",""")
+            appendLine($"""  "$schema": "${escapeJson(SCHEMA_URI)}",""")
             appendLine("""  "version": "$SARIF_VERSION",""")
             appendLine("""  "runs": [{""")
             appendLine("""    "tool": {""")
