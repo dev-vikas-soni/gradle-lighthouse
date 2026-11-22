@@ -1,7 +1,7 @@
 package com.gradlelighthouse.task
 
 object LighthouseGraphJs {
-    val SCRIPT = """
+    val SCRIPT = $"""
         // -----------------------------------------------------------------------------
         // Premium Gamified Galaxy Graph Engine (Jitter-free)
         // -----------------------------------------------------------------------------
@@ -16,7 +16,7 @@ object LighthouseGraphJs {
             let hash = 0;
             for (let i = 0; i < layerName.length; i++) hash = layerName.charCodeAt(i) + ((hash << 5) - hash);
             const hue = Math.abs(hash) % 360;
-            return `hsl(${'$'}{hue}, 85%, 65%)`;
+            return `hsl(${hue}, 85%, 65%)`;
         }
 
         const layerOrder = {
@@ -724,21 +724,21 @@ object LighthouseGraphJs {
             const outDeps = graphData.links.filter(l => linkSrc(l) === node.id).map(l => linkTgt(l));
 
             panel.innerHTML = `
-                <div style="border-left: 4px solid ${"$"}{color}; padding-left:12px; margin-bottom:20px;">
-                    <h3 style="margin:0; font-size:1.1rem; color:white;">${"$"}{node.id}</h3>
-                    <span style="font-size:0.7rem; background:${"$"}{color}33; color:${"$"}{color}; padding:2px 6px; border-radius:4px; font-weight:bold;">${"$"}{node.layer} Layer</span>
+                <div style="border-left: 4px solid ${color}; padding-left:12px; margin-bottom:20px;">
+                    <h3 style="margin:0; font-size:1.1rem; color:white;">${node.id}</h3>
+                    <span style="font-size:0.7rem; background:${color}33; color:${color}; padding:2px 6px; border-radius:4px; font-weight:bold;">${node.layer} Layer</span>
                 </div>
                 <div style="display:flex; gap:10px; margin-bottom:20px;">
                     <div style="background:rgba(255,255,255,0.05); padding:10px; flex:1; text-align:center; border-radius:8px; border: 1px solid rgba(255,255,255,0.1);">
-                        <div style="font-size:1.4rem; font-weight:bold; color:${"$"}{node.score>=90?'#10b981':node.score>=70?'#f59e0b':'#dc2626'}">${"$"}{node.score}%</div>
+                        <div style="font-size:1.4rem; font-weight:bold; color:${node.score>=90?'#10b981':node.score>=70?'#f59e0b':'#dc2626'}">${node.score}%</div>
                         <div style="font-size:0.6rem; text-transform:uppercase; color:rgba(255,255,255,0.4);">Health</div>
                     </div>
                     <div style="background:rgba(255,255,255,0.05); padding:10px; flex:1; text-align:center; border-radius:8px; border: 1px solid rgba(255,255,255,0.1);">
-                        <div style="font-size:1.4rem; font-weight:bold; color:white;">${"$"}{node.degree}</div>
+                        <div style="font-size:1.4rem; font-weight:bold; color:white;">${node.degree}</div>
                         <div style="font-size:0.6rem; text-transform:uppercase; color:rgba(255,255,255,0.4);">Coupling</div>
                     </div>
                 </div>
-                ${"$"}{node.isCycle ? (() => {
+                ${node.isCycle ? (() => {
                     const cyclePath = findCyclePath(node.id) || [node.id];
                     const leakSource = cyclePath.length > 2 ? cyclePath[cyclePath.length - 2] : 'Target';
                     return `
@@ -748,49 +748,49 @@ object LighthouseGraphJs {
                         </div>
 
                         <div style="background:rgba(239,68,68,0.15); border: 1px dashed rgba(239,68,68,0.4); border-radius:6px; padding:8px; margin-bottom:10px; font-family:'SF Mono', monospace; font-size:0.65rem; color:#f87171; overflow-x:auto; white-space:nowrap; display:flex; align-items:center; gap:4px;">
-                            ${"$"}{cyclePath.map(id => `<span style="background:rgba(239,68,68,0.3); padding:2px 4px; border-radius:4px; font-weight:bold; border:1px solid rgba(239,68,68,0.3);">${"$"}{id}</span>`).join('<span style="color:rgba(255,255,255,0.4); font-weight:bold;">➔</span>')}
+                            ${cyclePath.map(id => `<span style="background:rgba(239,68,68,0.3); padding:2px 4px; border-radius:4px; font-weight:bold; border:1px solid rgba(239,68,68,0.3);">${id}</span>`).join('<span style="color:rgba(255,255,255,0.4); font-weight:bold;">➔</span>')}
                         </div>
 
                         <div style="font-size:0.7rem; color:rgba(255,255,255,0.7); margin-bottom:10px; line-height:1.45;">
-                            Module loop detected! To fix this, you must decouple the backward leak where <code style="color:#f87171; font-weight:bold;">${"$"}{leakSource}</code> depends on <code style="color:#f87171; font-weight:bold;">${"$"}{node.id}</code>.
+                            Module loop detected! To fix this, you must decouple the backward leak where <code style="color:#f87171; font-weight:bold;">${leakSource}</code> depends on <code style="color:#f87171; font-weight:bold;">${node.id}</code>.
                         </div>
                         <div style="font-size:0.72rem; color:#f87171; font-weight:bold; margin-bottom:6px; text-transform:uppercase; letter-spacing:0.5px;">🛠️ Refactoring Playbook:</div>
                         <ul style="margin:0; padding-left:14px; font-size:0.7rem; color:rgba(255,255,255,0.85); display:flex; flex-direction:column; gap:6px; line-height:1.35;">
-                            <li><strong>1. Dependency Inversion:</strong> Create an interface in <code style="color:#a7f3d0;">${"$"}{node.id}</code> and let <code style="color:#f87171;">${"$"}{leakSource}</code> depend on it dynamically via Hilt/Dagger DI.</li>
+                            <li><strong>1. Dependency Inversion:</strong> Create an interface in <code style="color:#a7f3d0;">${node.id}</code> and let <code style="color:#f87171;">${leakSource}</code> depend on it dynamically via Hilt/Dagger DI.</li>
                             <li><strong>2. Extract Common:</strong> Move shared elements causing the loop into a separate, clean shared module (like <code>:core:model</code>).</li>
-                            <li><strong>3. Module Merger:</strong> If <code style="color:#a7f3d0;">${"$"}{node.id}</code> and <code style="color:#f87171;">${"$"}{leakSource}</code> are highly coupled, merge them into one single module to break the loop.</li>
+                            <li><strong>3. Module Merger:</strong> If <code style="color:#a7f3d0;">${node.id}</code> and <code style="color:#f87171;">${leakSource}</code> are highly coupled, merge them into one single module to break the loop.</li>
                         </ul>
                     </div>
                     `;
                 })() : ''}
                 <div style="margin-bottom:15px;">
-                    <div style="font-size:0.75rem; color:rgba(255,255,255,0.4); margin-bottom:4px;">Depends On (${"$"}{outDeps.length})</div>
+                    <div style="font-size:0.75rem; color:rgba(255,255,255,0.4); margin-bottom:4px;">Depends On (${outDeps.length})</div>
                     <div style="display:flex; flex-direction:column; gap:6px;">
-                        ${"$"}{outDeps.map(d=> {
+                        ${outDeps.map(d=> {
                             const isLeak = cycleEdges.has(node.id + '->' + d);
                             return `
-                            <div style="background:rgba(255,255,255,0.05); border:1px solid ${"$"}{isLeak ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.1)'}; padding:6px 10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; position:relative; overflow:hidden;">
-                                ${"$"}{isLeak ? `<div style="position:absolute; left:0; top:0; bottom:0; width:3px; background:#ef4444;"></div>` : ''}
+                            <div style="background:rgba(255,255,255,0.05); border:1px solid ${isLeak ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.1)'}; padding:6px 10px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; position:relative; overflow:hidden;">
+                                ${isLeak ? `<div style="position:absolute; left:0; top:0; bottom:0; width:3px; background:#ef4444;"></div>` : ''}
                                 <div style="display:flex; flex-direction:column;">
-                                    <span style="color:rgba(255,255,255,0.8); font-size:0.7rem; font-family:monospace;">${"$"}{d}</span>
-                                    ${"$"}{isLeak ? `<span style="color:#f87171; font-size:0.55rem; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;">⚠️ Cycle Leak</span>` : ''}
+                                    <span style="color:rgba(255,255,255,0.8); font-size:0.7rem; font-family:monospace;">${d}</span>
+                                    ${isLeak ? `<span style="color:#f87171; font-size:0.55rem; font-weight:bold; text-transform:uppercase; letter-spacing:0.5px;">⚠️ Cycle Leak</span>` : ''}
                                 </div>
-                                <button onclick="simulateCutLink('${"$"}{node.id}', '${"$"}{d}')" style="background:rgba(239,68,68,0.2); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:2px 8px; border-radius:4px; font-size:0.6rem; font-weight:bold; cursor:pointer;">✂️ Cut</button>
+                                <button onclick="simulateCutLink('${node.id}', '${d}')" style="background:rgba(239,68,68,0.2); color:#f87171; border:1px solid rgba(239,68,68,0.3); padding:2px 8px; border-radius:4px; font-size:0.6rem; font-weight:bold; cursor:pointer;">✂️ Cut</button>
                             </div>
                             `;
                         }).join('') || '<span style="color:rgba(255,255,255,0.2); font-size:0.7rem;">No outgoing dependencies</span>'}
                     </div>
                 </div>
                 <div>
-                    <div style="font-size:0.75rem; color:rgba(255,255,255,0.4); margin-bottom:4px;">Used By (${"$"}{inDeps.length})</div>
-                    <div style="display:flex; flex-wrap:wrap; gap:4px;">${"$"}{inDeps.map(d=>`<span style="background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.8); font-size:0.7rem; padding:2px 6px; border-radius:4px;">${"$"}{d}</span>`).join('') || '-'}</div>
+                    <div style="font-size:0.75rem; color:rgba(255,255,255,0.4); margin-bottom:4px;">Used By (${inDeps.length})</div>
+                    <div style="display:flex; flex-wrap:wrap; gap:4px;">${inDeps.map(d=>`<span style="background:rgba(255,255,255,0.08); color:rgba(255,255,255,0.8); font-size:0.7rem; padding:2px 6px; border-radius:4px;">${d}</span>`).join('') || '-'}</div>
                 </div>
             `;
         }
 
         function updateBreadcrumb() {
             const bc = document.getElementById('fs-breadcrumb');
-            if (bc) bc.innerHTML = focusedModule ? `Galaxy View &gt; <span style="color:white; font-weight:bold;">${"$"}{focusedModule}</span>` : 'Galaxy View';
+            if (bc) bc.innerHTML = focusedModule ? `Galaxy View &gt; <span style="color:white; font-weight:bold;">${focusedModule}</span>` : 'Galaxy View';
         }
 
         function toggleCyclesFilter() {
@@ -827,18 +827,18 @@ object LighthouseGraphJs {
                 <div style="background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.08); padding:15px; border-radius:12px; margin-bottom:20px; line-height:1.5;">
                     <div style="font-size:0.75rem; color:rgba(255,255,255,0.4); margin-bottom:6px;">Dependency Connection:</div>
                     <div style="font-size:0.8rem; font-family:monospace; color:#f87171; word-break:break-all; display:flex; flex-direction:column; gap:4px;">
-                        <span style="color:#a7f3d0; font-weight:bold;">Source:</span> ${"$"}{link.source.id}
+                        <span style="color:#a7f3d0; font-weight:bold;">Source:</span> ${link.source.id}
                         <span style="color:rgba(255,255,255,0.4);">⬇ depends on</span>
-                        <span style="color:#f87171; font-weight:bold;">Target:</span> ${"$"}{link.target.id}
+                        <span style="color:#f87171; font-weight:bold;">Target:</span> ${link.target.id}
                     </div>
 
-                    ${"$"}{link.isCycle ? `
+                    ${link.isCycle ? `
                     <div style="margin-top:15px; padding:10px; background:rgba(239,68,68,0.1); border:1px solid rgba(239,68,68,0.2); border-radius:8px; font-size:0.7rem; color:#f87171; display:flex; gap:6px; align-items:flex-start;">
                         <span>⚠️</span> This link forms a circular dependency loop! Cutting it will immediately break the cycle.
                     </div>
                     ` : ''}
 
-                    <button onclick="simulateCutLink('${"$"}{link.source.id}', '${"$"}{link.target.id}')" style="width:100%; margin-top:15px; background:#ef4444; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 0 15px rgba(239,68,68,0.3); transition:transform 0.2s; font-size:0.8rem;">
+                    <button onclick="simulateCutLink('${link.source.id}', '${link.target.id}')" style="width:100%; margin-top:15px; background:#ef4444; color:white; border:none; padding:10px; border-radius:8px; font-weight:bold; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; box-shadow:0 0 15px rgba(239,68,68,0.3); transition:transform 0.2s; font-size:0.8rem;">
                         ✂️ Cut Dependency Link
                     </button>
                 </div>
@@ -892,15 +892,15 @@ object LighthouseGraphJs {
         function updateSandboxStatus() {
             const btn = document.getElementById('btn-reset-sandbox');
             const fsBtn = document.getElementById('fs-btn-reset-sandbox');
-            const statusText = cutLinks.length > 0 ? ` ✂️ ${"$"}{cutLinks.length} Cut` : '';
+            const statusText = cutLinks.length > 0 ? ` ✂️ ${cutLinks.length} Cut` : '';
 
             if (btn) {
                 btn.style.display = cutLinks.length > 0 ? 'inline-block' : 'none';
-                btn.innerHTML = `🔄 Reset Sandbox ${"$"}{statusText}`;
+                btn.innerHTML = `🔄 Reset Sandbox ${statusText}`;
             }
             if (fsBtn) {
                 fsBtn.style.display = cutLinks.length > 0 ? 'inline-block' : 'none';
-                fsBtn.innerHTML = `🔄 Reset Sandbox ${"$"}{statusText}`;
+                fsBtn.innerHTML = `🔄 Reset Sandbox ${statusText}`;
             }
         }
 
@@ -965,7 +965,7 @@ object LighthouseGraphJs {
             // Draw stats
             ctx.fillStyle = '#94a3b8';
             ctx.font = '14px sans-serif';
-            ctx.fillText(`Architect Level ${'$'}{xpStats.level} | ${'$'}{xpStats.xp} XP`, w - 340, h - 35);
+            ctx.fillText(`Architect Level ${xpStats.level} | ${xpStats.xp} XP`, w - 340, h - 35);
 
             // Draw Legend
             const layers = [...new Set(graphData.nodes.map(n => n.layer))].sort();
@@ -1031,7 +1031,7 @@ object LighthouseGraphJs {
             // Trigger download
             const dataUrl = canvas.toDataURL('image/png');
             const link = document.createElement('a');
-            link.download = `lighthouse-galaxy-level-${'$'}{xpStats.level}.png`;
+            link.download = `lighthouse-galaxy-level-${xpStats.level}.png`;
             link.href = dataUrl;
             link.click();
 
@@ -1076,9 +1076,9 @@ object LighthouseGraphJs {
                     xpPanel.innerHTML = `
                         <div style="background:rgba(16,185,129,0.1); border:1px solid rgba(16,185,129,0.3); border-radius:8px; padding:12px; text-align:center; box-shadow: inset 0 0 15px rgba(16,185,129,0.1); position:relative;">
                             <div style="font-size:0.7rem; color:#10b981; font-weight:bold; margin-bottom:4px;">SIMULATED ARCHITECTURE STATE</div>
-                            <div style="font-size:1.1rem; color:white; font-weight:900; margin:2px 0;">${"$"}{rank.emoji} ${"$"}{rank.name}</div>
-                            <div style="font-size:1.8rem; color:#10b981; font-weight:900; margin:4px 0;">${"$"}{avgScore}%</div>
-                            <div style="font-size:0.65rem; color:rgba(255,255,255,0.7);">${"$"}{xp} Total XP &bull; ${"$"}{perfectModules} Perfect Modules 🎯</div>
+                            <div style="font-size:1.1rem; color:white; font-weight:900; margin:2px 0;">${rank.emoji} ${rank.name}</div>
+                            <div style="font-size:1.8rem; color:#10b981; font-weight:900; margin:4px 0;">${avgScore}%</div>
+                            <div style="font-size:0.65rem; color:rgba(255,255,255,0.7);">${xp} Total XP &bull; ${perfectModules} Perfect Modules 🎯</div>
 
                             <div style="position:absolute; top:5px; right:8px; display:inline-block; z-index:100;">
                                 <div class="xp-info-trigger" style="cursor:pointer; font-size:0.75rem; color:rgba(255,255,255,0.5); padding:4px; transition:color 0.2s;" onmouseenter="showXPTooltip()" onmouseleave="hideXPTooltip()" onclick="toggleXPTooltip(event)">ℹ️</div>
@@ -1427,9 +1427,9 @@ object LighthouseGraphJs {
             // Build Legend with Interactive Layer Isolation Focus!
             const layersSet = new Set(graphData.nodes.map(n => n.layer));
             const legendHtml = [...layersSet].sort().map(k =>
-                `<div class="legend-row" data-layer="${"$"}{k}" style="display:flex; align-items:center; gap:8px; margin-bottom:6px; cursor:pointer; padding:4px 8px; border-radius:6px; transition:background 0.2s;" title="Filter by layer: ${"$"}{k}">
-                    <div style="width:10px;height:10px;border-radius:50%;background:${"$"}{getLayerColor(k)};box-shadow: 0 0 8px ${"$"}{getLayerColor(k)};"></div>
-                    <span style="font-size:0.75rem;color:rgba(255,255,255,0.8); font-weight:bold;">${"$"}{k}</span>
+                `<div class="legend-row" data-layer="${k}" style="display:flex; align-items:center; gap:8px; margin-bottom:6px; cursor:pointer; padding:4px 8px; border-radius:6px; transition:background 0.2s;" title="Filter by layer: ${k}">
+                    <div style="width:10px;height:10px;border-radius:50%;background:${getLayerColor(k)};box-shadow: 0 0 8px ${getLayerColor(k)};"></div>
+                    <span style="font-size:0.75rem;color:rgba(255,255,255,0.8); font-weight:bold;">${k}</span>
                 </div>`
             ).join('') + `
                 <div style="margin-top:10px; padding-top:10px; border-top:1px solid #1e293b; display:flex; flex-direction:column; gap:6px;">
