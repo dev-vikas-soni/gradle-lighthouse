@@ -259,7 +259,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
 
         // SARIF Report
         if (enableSarif.get()) {
-            val sarifContent = SarifReportGenerator.generate(name, version, allIssues, baselineAnalysis)
+            val sarifContent = SarifReportGenerator.generate(name, version, newIssues)
             val sarifFile = File(outputDir, "${name}-report.sarif")
             sarifFile.writeText(sarifContent)
             ConsoleLogger.info("🔒", "[SARIF]", "SARIF: ${sarifFile.toURI()}")
