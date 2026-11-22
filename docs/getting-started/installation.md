@@ -1,16 +1,18 @@
 # Installation
 
-Gradle Lighthouse is distributed via the [Gradle Plugin Portal](https://plugins.gradle.org/plugin/io.github.dev-vikas-soni.lighthouse).
+Gradle Lighthouse is published through the [Gradle Plugin Portal](https://plugins.gradle.org/plugin/io.github.dev-vikas-soni.lighthouse).
 
 ## Requirements
 
-* **Gradle**: 8.0 or higher (Fully supports Gradle 9.0+)
-* **Java**: 17 or higher
-* **Android Gradle Plugin (Optional)**: 7.4 or higher (if auditing Android modules)
+- **Gradle:** 8.0 or later is the documented minimum.
+- **JDK:** 17 or later is the documented minimum.
+- **Android Gradle Plugin:** required for Android-specific checks.
 
-## Single Module Project
+These are minimum requirements, not a claim that every later Gradle/JDK/AGP/Kotlin combination is tested. See the [compatibility notes](../compatibility.md) and verify the exact versions used by your project.
 
-Add the following to your `build.gradle.kts` file:
+## Apply the plugin
+
+In a single-module project, add to `build.gradle.kts`:
 
 ```kotlin
 plugins {
@@ -18,40 +20,16 @@ plugins {
 }
 ```
 
-## Multi-Module Project
+For a multi-module project, apply the plugin where the audit tasks are needed. Root-level aggregation depends on the plugin's configuration and the report inputs available from participating modules.
 
-For multi-module projects, it is recommended to apply the plugin in the root `build.gradle.kts` to enable aggregation features, and then apply it to any sub-module you wish to audit.
-
-### Root Project
-
-```kotlin
-// root build.gradle.kts
-plugins {
-    id("io.github.dev-vikas-soni.lighthouse") version "2.3.2"
-}
-```
-
-### Sub-Modules
-
-You can apply the plugin to sub-modules individually:
-
-```kotlin
-// sub-module build.gradle.kts
-plugins {
-    id("io.github.dev-vikas-soni.lighthouse")
-}
-```
-
-### Using Version Catalogs (Recommended)
-
-If you are using Gradle Version Catalogs, add the plugin definition to your `libs.versions.toml`:
+### Version catalog
 
 ```toml
 [plugins]
 lighthouse = { id = "io.github.dev-vikas-soni.lighthouse", version = "2.3.2" }
 ```
 
-Then apply it in your build scripts:
+Then:
 
 ```kotlin
 plugins {
@@ -59,9 +37,15 @@ plugins {
 }
 ```
 
-## Configuration Cache & Project Isolation
+## Verify the installation
 
-Gradle Lighthouse is built from the ground up to be compatible with modern Gradle performance features.
+Run:
 
-* **Configuration Cache**: Fully supported. No `Project` access during task execution.
-* **Project Isolation**: Fully supported. Does not use `allprojects` or `subprojects` during execution.
+```bash
+./gradlew tasks --all
+./gradlew lighthouseAudit
+```
+
+Review the output and generated reports. If the task is not found or the audit fails, include the Gradle wrapper version, JDK, AGP/Kotlin versions, and stack trace when reporting the issue.
+
+Configuration Cache and Isolated Projects behavior should be verified in your own build; see the [Configuration Cache guide](../guides/configuration-cache.md).
