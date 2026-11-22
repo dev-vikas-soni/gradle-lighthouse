@@ -109,7 +109,7 @@ abstract class LighthouseExtension {
      * The event contains a random installation identifier, plugin version, and Gradle
      * version only. It does not include project names or paths, dependencies, source
      * code, findings, or health scores. The identifier is stored in the Gradle user
-     * home directory and can be reset by deleting its telemetry/installation-id file.
+     * home directory and can be reset by deleting its caches/gradle-lighthouse/installation-id file.
      *
      * Default: false. No telemetry is sent unless explicitly enabled.
      */
@@ -117,7 +117,7 @@ abstract class LighthouseExtension {
 
     /**
      * HTTPS endpoint that receives opt-in usage events.
-     * The default endpoint can be replaced for self-hosted deployments.
+     * An endpoint must be configured before events can be sent.
      */
     abstract val telemetryEndpoint: Property<String>
 
@@ -214,7 +214,7 @@ abstract class LighthouseExtension {
         enableTrendTracking.convention(true)
         useAi.convention(false)
         enableTelemetry.convention(false)
-        telemetryEndpoint.convention("https://telemetry.gradle-lighthouse.dev/v1/metrics")
+        telemetryEndpoint.convention("")
         failOnSeverity.convention("NONE")
         failOnDependencyCycle.convention(false)
         failOnLayerViolation.convention(false)
