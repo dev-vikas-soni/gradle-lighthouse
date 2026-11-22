@@ -295,7 +295,7 @@ object HtmlReportGenerator {
                     </div>
                 </section>""")
             }
-            appendLine("""<h2 class="section-title">Detailed Findings <span class="finding-count">${issues.size} issues across ${categories.size} categories</span></h2>""
+            appendLine("""<h2 class="section-title">Detailed Findings <span class="finding-count">${issues.size} issues across ${categories.size} categories</span></h2>""")
             appendLine("""<div class="tabs" role="tablist">$tabsHtml</div>""")
             appendLine("""<div class="tab-contents">$tabContentHtml</div>""")
             appendLine("""</section>""")
