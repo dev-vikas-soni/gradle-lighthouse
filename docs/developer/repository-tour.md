@@ -1,44 +1,36 @@
-# Repository Tour
+# Repository tour
 
-A map of the codebase for new contributors.
+This guide points contributors to the main implementation areas. Code and tests are the source of truth when this overview differs.
 
-## Root Directory
-* `build.gradle.kts`: The plugin's own build script. Uses `java-gradle-plugin`.
-* `action.yml`: The GitHub Action metadata.
-* `lighthouse-rules.yaml`: Example custom rules file.
+## Root files
 
-## `src/main/kotlin/com/gradlelighthouse`
+- `build.gradle.kts`: plugin build, dependencies, publication configuration.
+- `action.yml`: GitHub Action metadata.
+- `lighthouse-rules.yaml`: sample custom rules.
+- `docs/`: user and developer documentation.
 
-### `.core`
-**The Kernel.**
-* `AuditContext.kt`: The serializable DTO that auditors inspect.
-* `Auditor.kt`: The interface contract and severity enums.
-* `HealthScoreEngine.kt`: The mathematical scoring implementation.
-* `ConsoleLogger.kt`: Handles the colorful terminal dashboard.
+## Kotlin sources
 
-### `.auditors`
-**The Logic Workers.**
-* Every file here is a standalone diagnostic check.
-* *Example*: `BuildSpeedAuditor.kt` handles caching and KSP checks.
+Located under `src/main/kotlin/com/gradlelighthouse`:
 
-### `.task`
-**The Orchestration Layer.**
-* `LighthouseTask.kt`: The worker for a single module.
-* `LighthouseAggregateTask.kt`: The root-project aggregator and cycle detector.
-* `LighthouseFixTask.kt`: The repair engine (Deterministic + AI).
+- `core/`: audit data models, auditor contract, scoring, and logging.
+- `auditors/`: individual diagnostic checks.
+- `extension/`: user-configurable plugin properties.
+- `task/`: Gradle task orchestration, aggregation, fixes, and benchmark tasks.
+- `reporting/`: HTML, JSON, SARIF, and JUnit output.
 
-### `.reporting`
-**The Presentation Layer.**
-* `HtmlReportGenerator.kt`: Built-in template engine for dashboards.
-* `SarifReportGenerator.kt`: SARIF v2.1.0 implementation.
+## Tests
 
-### `.extension`
-**The User Interface.**
-* `LighthouseExtension.kt`: Defines the properties visible in the `lighthouse {}` block.
+`src/test/kotlin` contains unit and Gradle TestKit tests. Read the relevant test before changing behavior, then add focused positive, negative, and regression cases.
 
-## `src/test/kotlin`
-* Functional tests using `gradleTestKit`.
-* Unit tests for the `HealthScoreEngine`.
+## Example project
 
-## `example/`
-* A sandbox project for manual testing. Run `./gradlew :example:lighthouseAudit` to see your changes in action.
+The `example/` directory is a small Gradle project used for manual smoke testing. Run:
+
+```bash
+./gradlew :example:lighthouseAudit
+```
+
+## A good first contribution
+
+Choose a focused issue, describe the exact behavior and evidence, add a regression test, update the relevant user docs, and run the checks listed in [CONTRIBUTING.md](../../CONTRIBUTING.md).
