@@ -1,74 +1,56 @@
-# Auditor Catalog
+# Auditor catalog
 
-A complete reference of every architectural check performed by Gradle Lighthouse.
+This catalog describes the intent of selected checks. It is not a guarantee that every possible issue in a category is detected. Detection is limited to the inputs and patterns implemented by each auditor. Verify important findings manually and consult source/tests for the exact behavior of the release you use.
 
-## Dependency Hygiene
+## Dependency and build configuration
 
 ### DependencyAuditor
-* **Purpose**: Enforce build determinism and modern dependency standards.
-* **Checks**:
-  * **Dynamic Versions**: Flags `+` or `latest.release` versions (Severity: ERROR).
-  * **Sunset Repositories**: Flags `jcenter()` usage (Severity: FATAL).
-  * **Legacy Libraries**: Flags Guava/Commons usage in Kotlin projects (Severity: WARNING).
-* **Remediation**: Use strict versions and migrate to Version Catalogs.
+Inspects selected dependency declarations and repository configuration patterns, such as dynamic versions and legacy repository usage. It does not prove dependency safety or reproducibility.
 
 ### UnusedDependencyAuditor
-* **Purpose**: Remove binary bloat and speed up dependency resolution.
-* **Logic**: Compares declared dependencies against actual `import` statements in source files.
-* **Note**: Only flags direct dependencies.
+Uses source/import and dependency information available to the plugin to identify possible unused direct dependencies. Import-based analysis can miss reflection, generated code, service loading, dependency injection, and other indirect usage. Treat results as candidates for review, not safe-to-delete instructions.
 
 ### ConflictIntelligenceAuditor
-* **Purpose**: Prevent silent version regressions caused by Gradle resolution.
-* **Detection**: Flags when Gradle's conflict resolution makes a "major version jump" (e.g. 1.0.0 to 2.0.0).
-
----
-
-## Build Performance
+Reports selected dependency version-resolution patterns. It is not a full dependency vulnerability or compatibility analysis.
 
 ### BuildSpeedAuditor
-* **Purpose**: Optimize the developer loop.
-* **Checks**:
-  * `org.gradle.caching` (Severity: FATAL if false).
-  * `org.gradle.parallel` (Severity: WARNING if false).
-  * `android.enableJetifier` (Severity: ERROR if true in modern projects).
-  * KSP vs KAPT ROI calculation.
+Checks selected Gradle build settings and plugin/dependency patterns. It does not profile task execution or guarantee a specific build-time improvement. Any estimated savings should be treated as heuristic unless backed by measurements from your build.
 
 ### ConfigCacheReadinessAuditor
-* **Purpose**: Ensure compatibility with Gradle Configuration Cache.
-* **Detection**: Flags usage of `allprojects`, `subprojects`, and eager task registration.
+Checks selected configuration patterns that may be relevant to Configuration Cache readiness. A clean result does not certify compatibility; validate with Gradle's own Configuration Cache execution and the exact Gradle version in use.
 
----
-
-## Security & Compliance
+## Security and Android policy
 
 ### SecurityAuditor
-* **Purpose**: Hardening the build chain.
-* **Checks**: Hardcoded secrets, debug-signed release builds, wrapper checksums.
+Checks selected build and project configuration patterns. It is not a substitute for secret scanning, dependency vulnerability scanning, signing review, or a security audit.
 
 ### PlayPolicyAuditor
-* **Purpose**: Ensure Play Store compliance before the build reaches CI.
-* **Checks**: Target SDK version, dangerous permissions (SMS/Call Log), and exported component flags.
+Checks selected Android manifest or SDK-related patterns. It does not certify Google Play policy compliance; policy requirements change and require product-specific review.
 
----
-
-## Architecture & Complexity
+## Module architecture and complexity
 
 ### ModuleGraphAuditor
-* **Purpose**: Maintain structural integrity.
-* **Detection**: Circular dependencies (Cycles), feature-to-feature coupling density.
+Builds a module dependency representation from the data available to the plugin and detects cycles in that graph. The result is limited to relationships captured by the implementation.
 
 ### ModuleSizeAuditor
-* **Purpose**: Detect "God Modules" that slow down incremental builds.
-* **Metrics**: Lines of code (LOC), number of classes, public API surface area.
+Uses available source/project metadata to report size-related signals. Such signals are not direct measurements of incremental build cost or maintainability.
 
-### PredictiveIntelligenceAuditor
-* **Purpose**: Foresee SDK impact.
-* **Logic**: Estimates binary size and startup time based on global telemetry for popular SDKs like Facebook or Google Ads.
+## Kotlin Multiplatform
 
----
+KMP-oriented checks exist, but target/source-set discovery and dependency analysis are partial. Do not assume all target hierarchies, custom source sets, convention plugins, or platform-specific dependency paths are covered. Improvements and fixtures are tracked in [issue #55](https://github.com/dev-vikas-soni/gradle-lighthouse/issues/55).
 
-## Modernization
+## SDK impact and predictive estimates
 
-### ModernizationAuditor
-* **Purpose**: Track adoption of modern Android standards.
-* **Detection**: Jetpack Compose vs. XML Layout ratio. Flags "XML Monoliths" where Compose adoption is <10%.
+Any SDK impact numbers must be treated as estimates, not measured binary-size, method-count, or startup-time results, unless the output documents the exact measurement procedure, environment, and dataset. Do not describe these values as community-derived benchmarks without evidence of a sufficiently large, representative, consented dataset.
+
+## Test-related checks
+
+A source-file ratio or presence of test directories is not test coverage. Test discovery in multi-module repositories requires careful validation; do not interpret a "no tests" finding as proof that a repository has no tests until the relevant module paths have been inspected.
+
+## Health score
+
+The score is a heuristic summary of findings. It is not an industry ranking, quality certification, or measure of runtime behavior. See [health score model](../concepts/health-score.md).
+
+## Contribute
+
+Please submit minimal reproductions for missed findings and false positives. Every high-impact rule should eventually have positive and negative fixtures.
