@@ -1,50 +1,39 @@
-# Task Reference
+# Task reference
 
-Lighthouse exposes several tasks for auditing, aggregation, and automated fixing.
+Task availability and outputs depend on plugin version and project configuration. Confirm the tasks in your build with `./gradlew tasks --all`.
 
 ## `lighthouseAudit`
-Executes the full diagnostic scan for a module.
-* **Scope**: Individual module.
-* **Outputs**: Terminal summary, JSON, HTML, SARIF, JUnit.
-* **Configuration Cache**: Safe.
+
+Runs enabled diagnostics for the project/module where the task is registered. It can produce console output and configured reports. The auditor catalog describes the scope and limitations of the checks.
 
 ## `lighthouseAggregate`
-Aggregates module reports into a global project dashboard.
-* **Scope**: Root project.
-* **Prerequisite**: Must be run after (or with) `lighthouseAudit`.
-* **Gates**: Evaluates `failOnDependencyCycle`, `failOnLayerViolation`, and `minHealthScore`.
+
+Aggregates available module reports into a project-level report/visualization. It can evaluate configured aggregate gates. Run module audits first where required by your build configuration.
 
 ## `lighthouseFix`
-Automatically applies architectural improvements to build scripts.
-* **Deterministic Fixes**: Updating `gradle.properties` (caching, parallel).
-* **AI Fixes (`--ai=true`)**: KSP migration and Version Catalog bootstrapping.
+
+Applies a limited set of deterministic, pattern-based transformations. It may modify build files. Use a clean working tree, inspect the diff, and run your normal validation. It is not an LLM-powered feature; the historical `--ai` option should not be understood as GenAI integration.
 
 ## `lighthouseRecordBaseline`
-Captures all current audit issues and suppresses them in future runs.
-* **Scope**: Root or Module.
-* **Output**: `lighthouse-baseline.txt`.
 
-## `lighthouseBenchmarkStatus`
-Checks your current project health against embedded industry benchmarks.
-* **Reference Projects**: Signal Android, Now in Android.
+Records current findings in a baseline file. The relationship between baseline filtering, scores, report counts, and CI gates is being clarified and regression-tested in [issue #53](https://github.com/dev-vikas-soni/gradle-lighthouse/issues/53).
 
-## `lighthouseExportBenchmark`
-Exports your current architectural state as a benchmark JSON file for reuse.
-* **Output**: `benchmark.json`.
+## Benchmark-related tasks
 
-## Common CLI Options
+Benchmark snapshot/status tasks may exist in the plugin. Embedded snapshots or percentile outputs should not be interpreted as statistically representative industry benchmarks. Review the dataset size, provenance, version compatibility, and methodology before using such values.
 
-### Fail on Severity
+## Common CLI options
+
+### Fail on severity
+
 ```bash
 ./gradlew lighthouseAudit -Plighthouse.failOnSeverity=ERROR
 ```
 
-### Enable AI Fixes
-```bash
-./gradlew lighthouseFix --ai=true
-```
+### Base reports
 
-### Provide Base Reports (Deltas)
 ```bash
 ./gradlew lighthouseAggregate -Plighthouse.baseReportDir=build/base-reports
 ```
+
+Confirm option names and behavior against the exact plugin version in use.
