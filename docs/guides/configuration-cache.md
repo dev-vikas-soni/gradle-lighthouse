@@ -1,31 +1,30 @@
-# Configuration Cache Guide
+# Configuration Cache guide
 
-The **Configuration Cache** is the most significant build speed improvement in recent Gradle versions. It serializes the task graph after the first run and reuses it for subsequent builds.
+Gradle's Configuration Cache can reuse the configured task graph between builds when the build and participating plugins satisfy Gradle's requirements.
 
-## 100% Compatibility
-Gradle Lighthouse is built from day one to be 100% compatible with the Configuration Cache.
+Gradle Lighthouse is designed to keep task execution inputs explicit and avoid unnecessary access to Gradle project models from task actions. This design intent is not, by itself, proof of compatibility across every supported Gradle release or every plugin configuration.
 
-### How it works
-All task inputs in Lighthouse are **CC-Safe**:
-* Primitives (`String`, `Boolean`, `Int`)
-* Serializable DTOs (`AuditContext`)
-* Gradle File objects (`DirectoryProperty`, `RegularFileProperty`)
+## Verify in your build
 
-We strictly avoid capturing `org.gradle.api.Project`, `Configuration`, or `Task` references inside our task actions.
+Run the audit twice with Configuration Cache enabled:
 
-## Troubleshooting Cache Misses
-If you see "Configuration cache state could not be cached" while using Lighthouse, the cause is usually **external** to our plugin.
+```bash
+./gradlew lighthouseAudit --configuration-cache
+./gradlew lighthouseAudit --configuration-cache
+```
 
-### Common causes:
-1. **Capturing Project in a Closure**: If you have a custom task that uses `project` inside its action.
-2. **Third-party Plugins**: Ensure all other applied plugins are also CC-ready.
+Inspect Gradle's output for cache storage/reuse messages and any problems report. Repeat for aggregate tasks and the project configurations you actually use. Also test with the exact Gradle, JDK, AGP, and Kotlin plugin versions in your build.
 
-## Performance Comparison
-In a 50-module project:
+## Troubleshooting
 
-| Run | Time | Configuration Status |
-| :--- | :--- | :--- |
-| **First Run** | 15s | Configuring projects... |
-| **Second Run** | 0.8s | Reusing configuration cache. |
+If Gradle reports a Configuration Cache problem:
+1. Capture the complete Gradle output and problems report.
+2. Check whether the issue is attributed to Lighthouse, another plugin, or build logic.
+3. Create a minimal reproducer.
+4. Report the plugin version and environment versions in an issue.
 
-Lighthouse ensures that your architectural guardrails never slow down your daily developer loop.
+Do not assume a cache problem is external to Lighthouse without evidence.
+
+## Performance
+
+Configuration Cache reuse can reduce configuration work, but actual timings depend on the project and environment. This guide makes no universal speedup or audit-overhead guarantee.
