@@ -13,6 +13,16 @@ cd gradle-lighthouse
 
 Check the repository's Gradle tasks if a command is unavailable in your checkout.
 
+### Optional local Git hooks
+
+The scripts in `.githooks/` are not enabled automatically. To enable them for this clone:
+
+```bash
+git config core.hooksPath .githooks
+```
+
+The pre-commit hook runs `./gradlew check`; the pre-push hook runs `./gradlew test`. You can leave hooks disabled if they are not suitable for your workflow.
+
 ## Before changing an auditor
 
 1. Read the auditor implementation and its inputs in `AuditContext`.
