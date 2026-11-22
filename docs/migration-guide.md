@@ -1,5 +1,13 @@
 # Migration guide
 
+## Upgrading to v2.4.0
+
+Review the release notes and run the audit on a clean working tree. Compare reports before enabling CI enforcement.
+
+### From v2.3.x
+
+The v2.4.0 release introduces hardened task inputs for Gradle 9.x / Project Isolation readiness and an expanded engineering verification suite.
+
 ## Upgrading to v2.3.2
 
 Review the release notes and run the audit on a clean working tree. Compare reports before enabling CI enforcement.

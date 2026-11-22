@@ -25,7 +25,7 @@ Apply the plugin to a Gradle project:
 
 ```kotlin
 plugins {
-    id("io.github.dev-vikas-soni.lighthouse") version "2.3.2"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.4.0"
 }
 ```
 

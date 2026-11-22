@@ -21,7 +21,7 @@ jobs:
           distribution: 'temurin'
 
       - name: Run Gradle Lighthouse
-        uses: dev-vikas-soni/gradle-lighthouse@v2.3.2
+        uses: dev-vikas-soni/gradle-lighthouse@v2.4.0
         with:
           fail-on-severity: 'FATAL'
           upload-sarif: 'true'
@@ -46,7 +46,7 @@ To enable score deltas in your PR comments, you must upload the Lighthouse repor
 ```yaml
 # main.yml
 steps:
-  - uses: dev-vikas-soni/gradle-lighthouse@v2.3.2
+  - uses: dev-vikas-soni/gradle-lighthouse@v2.4.0
 
   - name: Upload Main Reports
     uses: actions/upload-artifact@v4
