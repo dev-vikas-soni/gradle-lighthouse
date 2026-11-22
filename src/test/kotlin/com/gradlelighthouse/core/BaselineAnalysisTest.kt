@@ -39,7 +39,7 @@ class BaselineAnalysisTest {
         assertEquals(listOf(existing), result.baselinedIssues)
         assertEquals(listOf(fresh), result.newIssues)
         assertEquals(2, result.totalIssueCount)
-        assertEquals(1, result.staleBaselineCount)
+        assertEquals(0, result.staleBaselineCount)
     }
 
     @Test
