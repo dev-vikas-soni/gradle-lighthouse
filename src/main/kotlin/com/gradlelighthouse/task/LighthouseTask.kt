@@ -267,7 +267,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
 
         // JUnit XML Report
         if (enableJunitXml.get()) {
-            val junitContent = JunitXmlReportGenerator.generate(name, allIssues, baselineAnalysis)
+            val junitContent = JunitXmlReportGenerator.generate(name, newIssues, baselineAnalysis)
             val junitFile = File(outputDir, "${name}-report.xml")
             junitFile.writeText(junitContent)
             ConsoleLogger.info("🧪", "[JUNIT]", "JUnit XML: ${junitFile.toURI()}")
