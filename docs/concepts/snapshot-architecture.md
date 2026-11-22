@@ -1,45 +1,33 @@
-# Snapshot Architecture
+# Snapshot architecture
 
-Gradle Lighthouse is designed as a stateless, input-driven diagnostic engine. This design is what allows it to be 100% compatible with modern Gradle features like **Configuration Cache** and **Project Isolation**.
+Gradle Lighthouse uses an input-driven design: project metadata is captured during Gradle configuration and passed to task execution as task inputs and serializable data. The intent is to keep auditor logic separate from direct Gradle project-model access.
 
-## The Snapshot/Memento Pattern
+## High-level flow
 
-Most Gradle plugins access the heavy `Project` object during task execution. This is forbidden in modern Gradle because it breaks task isolation and parallel execution.
-
-Lighthouse solves this by using a **Snapshot Architecture**:
-
-1. **Configuration Phase**: `LighthousePlugin` uses lazy Gradle `Provider` APIs to capture only the necessary metadata (dependencies, properties, paths) into a serializable DTO called `AuditContext`.
-2. **Execution Phase**: The `LighthouseTask` action runs. It has **zero** access to the `Project` object. It only sees the `AuditContext` snapshot.
+1. **Configuration:** plugin code wires selected project metadata and file inputs to tasks.
+2. **Execution:** the audit task reconstructs an audit context from its inputs.
+3. **Analysis:** enabled auditors inspect the context and return findings.
+4. **Reporting:** report generators serialize the findings.
 
 ```mermaid
 graph TD
-    A[Gradle Configuration] -->|Lazy Capture| B[AuditContext DTO]
-    B -->|Task Input| C[LighthouseTask]
-    C -->|Task Action| D[Auditor Engine]
-    D -->|Analysis| E[Report Generator]
+    A[Gradle configuration] --> B[Task inputs and snapshots]
+    B --> C[Audit task]
+    C --> D[Audit context]
+    D --> E[Auditors]
+    E --> F[Reports]
 ```
 
-## Why it matters
+## Why this design is useful
 
-### 1. Blazing Fast Configuration
-By using `Providers`, Lighthouse avoids resolving configurations during the configuration phase. This keeps your IDE sync times fast, even in massive multi-module repositories.
+Explicit task inputs make behavior easier to reason about and are a foundation for Gradle features such as Configuration Cache and isolated project configuration. They do not automatically guarantee compatibility. Those features must be verified with Gradle's diagnostics and automated tests for each release and project topology.
 
-### 2. Configuration Cache Support
-Since all task inputs are serializable primitives or data classes, Gradle can cache the entire task graph. The second time you run `./gradlew lighthouseAudit`, it starts almost instantly.
+## Auditor contract
 
-### 3. Thread Safety
-Auditors are pure, stateless functions. This allows Gradle to run audits for multiple modules in parallel across all your CPU cores without any risk of race conditions or memory corruption.
+Auditors should consume the supplied audit context and avoid performing independent Gradle model access or hidden network calls. If a check needs new information, add it as an explicit input and document its source and limitations.
 
-### 4. Cross-Project Isolation
-Lighthouse avoids using `allprojects` or `subprojects` during execution. Instead, the `LighthouseAggregateTask` uses a `ConfigurableFileCollection` to "pull" reports from child modules, adhering to the Gradle 9.0 Isolated Projects model.
+## Implementation details
 
-## Implementation Details
+The exact fields in `AuditContext`, the task inputs, and the aggregation mechanism evolve. Consult the source for the plugin version being changed. Do not assume that every dependency, source set, or project relationship is captured for every Android/KMP configuration.
 
-The `AuditContext` class (found in `com.gradlelighthouse.core`) is the source of truth for all auditors. It contains:
-
-* `dependencies`: List of all declared and resolved artifacts.
-* `gradleProperties`: All flags from `gradle.properties`.
-* `sourceSets`: Mapped paths to Kotlin/Java/Res directories.
-* `moduleDependencyGraph`: An adjacency list of project-to-project dependencies.
-
-For developers looking to contribute, this means your auditor **cannot** use the filesystem or Gradle APIs directly. You must use the data provided in the context.
+See the [compatibility notes](../compatibility.md) and [testing guide](../developer/testing.md).
