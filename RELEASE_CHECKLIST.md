@@ -1,32 +1,28 @@
-# Release Validation Checklist
+# Release checklist
 
-Use this checklist to verify build quality before publishing a new version to the Gradle Plugin Portal.
+Use this checklist for a release candidate. It is a manual gate; checked items must be verified for the release being prepared.
 
-## 🏗️ Build & Integrity
-- [ ] `./gradlew clean jar` succeeds.
-- [ ] All unit tests pass (`./gradlew test`).
-- [ ] No regression in `ModernHealthScoreEngineTest`.
-- [ ] `BenchmarkCalibrationTest` confirms industry ranges.
+## Build and validation
 
-## 📊 Benchmarking Engine
-- [ ] `./gradlew lighthouseBenchmarkStatus` displays loaded benchmarks.
-- [ ] `./gradlew lighthouseExportBenchmark` produces valid `benchmark.json`.
-- [ ] Local `benchmarks/*.json` files are correctly loaded and deduplicated.
-- [ ] Version mismatch warnings trigger for older snapshots.
+- [ ] `./gradlew clean build` passes on JDK 17.
+- [ ] `./gradlew validatePlugins` passes.
+- [ ] Test output has been reviewed (including TestKit tests).
+- [ ] The example project audit runs: `./gradlew :example:lighthouseAudit`.
+- [ ] Supported Gradle/JDK/Android Gradle Plugin/Kotlin combinations are documented with evidence. Do not treat untested versions as verified.
+- [ ] Configuration Cache or Isolated Projects claims are backed by tests for the release.
 
-## 🎨 Dashboard & Reporting
-- [ ] HTML dashboard renders all 9 categories.
-- [ ] "Architecture Health Breakdown" shows correct F/E/W counts.
-- [ ] "Industry Benchmarking" section shows correct deltas.
-- [ ] Galaxy Graph loads with layers and cycle detection.
-- [ ] SARIF and JUnit XML outputs contain all findings.
+## Reports and user-facing behavior
 
-## 📖 Documentation & DX
-- [ ] `README.md` features match implementation.
-- [ ] `docs/*.md` are up to date.
-- [ ] Version number in `gradle.properties` matches `LighthousePlugin.VERSION`.
-- [ ] `CHANGELOG.md` entry created for current version.
+- [ ] Console, HTML, JSON, SARIF, and JUnit behavior is reviewed for any changed report logic.
+- [ ] Baseline and CI gate behavior is tested, including new and existing findings.
+- [ ] Documentation and examples match the current implementation.
+- [ ] Changelog is updated and version references are consistent.
 
-## 🚀 Publication
-- [ ] `./gradlew publishToMavenLocal` succeeds.
-- [ ] Verified locally in Signal or NIA project.
+## Publishing
+
+- [ ] Plugin publication credentials are available as environment variables or Gradle properties; no credentials are committed.
+- [ ] Publishing to Maven Local is verified when appropriate: `./gradlew publishToMavenLocal`.
+- [ ] Release tag matches the version being published (`vX.Y.Z`).
+- [ ] Plugin Portal publication and GitHub release notes are verified after publish.
+
+See [release process](docs/developer/release-process.md) for the steps.
