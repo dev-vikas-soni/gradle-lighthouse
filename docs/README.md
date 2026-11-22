@@ -1,55 +1,45 @@
-# Gradle Lighthouse Documentation
+# Gradle Lighthouse documentation
 
-Welcome to the official documentation for **Gradle Lighthouse**, the architectural intelligence engine for Android and Kotlin Multiplatform projects.
+Gradle Lighthouse is an open-source Gradle plugin for selected Android, Kotlin, and Gradle project diagnostics. This documentation describes the current implementation where known and calls out areas that are heuristic, partial, or not yet validated.
 
----
+## Getting started
 
-## 🚀 Getting Started
-* [**Installation**](getting-started/installation.md): How to add Lighthouse to your project.
-* [**Quick Start**](getting-started/quick-start.md): Run your first audit in 60 seconds.
-* [**Configuration**](getting-started/configuration.md): Customize checks and enforcement gates.
-* [**First Audit**](getting-started/first-audit.md): Walkthrough of your initial results.
-* [**Understanding the Report**](getting-started/understanding-report.md): How to interpret scores and ranks.
-* [**Live Showcase**](https://github.com/dev-vikas-soni/lighthouse-showcase): Real-world audit reports and examples.
+- [Installation](getting-started/installation.md)
+- [Quick start](getting-started/quick-start.md)
+- [Configuration](getting-started/configuration.md)
+- [First audit](getting-started/first-audit.md)
+- [Understanding reports](getting-started/understanding-report.md)
 
-## 🧠 Core Concepts
-* [**What is Lighthouse?**](concepts/what-is-gradle-lighthouse.md): The problem and our philosophy.
-* [**Snapshot Architecture**](concepts/snapshot-architecture.md): How we achieve 100% Configuration Cache safety.
-* [**Audit Pipeline**](concepts/audit-pipeline.md): The journey from build script to finding.
-* [**Health Score Model**](concepts/health-score.md): Understanding the square root deduction math.
-* [**Galaxy Graph**](concepts/galaxy-graph.md): Interactive dependency visualization and sandbox.
-* [**Baseline System**](concepts/baseline-system.md): Managing historical technical debt.
-* [**Architectural Enforcement**](concepts/enforcement.md): Turning insights into build guardrails.
+## Concepts
 
-## 🛡️ Practical Guides
-* [**CI/CD Integration**](guides/ci-cd.md): Using Lighthouse in your pipeline.
-* [**GitHub Actions**](guides/github-actions.md): Setup the official composite action.
-* [**Lighthouse PR Bot**](guides/pr-bot.md): Intelligent deltas for code review.
-* [**Custom Rules**](guides/custom-rules.md): YAML-based layering and isolation rules.
-* [**AI Remediation**](guides/ai-remediation.md): Automated KSP and TOML migrations.
-* [**Multi-Module Strategy**](guides/multi-module.md): Best practices for large repositories.
+- [What is Gradle Lighthouse?](concepts/what-is-gradle-lighthouse.md)
+- [Audit pipeline](concepts/audit-pipeline.md)
+- [Health score](concepts/health-score.md)
+- [Galaxy Graph](concepts/galaxy-graph.md)
+- [Baseline system](concepts/baseline-system.md)
+- [Enforcement](concepts/enforcement.md)
+- [Snapshot architecture](concepts/snapshot-architecture.md)
 
-## 📋 Reference
-* [**Auditor Catalog**](reference/auditor-catalog.md): Detailed reference of every check.
-* [**DSL Reference**](reference/dsl-reference.md): Every property in the `lighthouse {}` block.
-* [**Task Reference**](reference/task-reference.md): CLI commands and options.
-* [**Remediation Recipes**](reference/recipes.md): Solutions for common findings.
+## Guides
 
-## 👩‍💻 Developer Resources
-* [**Developer Architecture**](developer/architecture.md): Internal mechanics of the plugin.
-* [**Repository Tour**](developer/repository-tour.md): A map of the codebase.
-* [**Adding an Auditor**](developer/adding-an-auditor.md): Contributor guide for new checks.
-* [**Design Principles**](developer/design-principles.md): The technical "Why" behind our choices.
-* [**Architecture Decisions (ADR)**](developer/architecture-decisions.md): Log of major design choices.
+- [CI/CD](guides/ci-cd.md)
+- [GitHub Actions](guides/github-actions.md)
+- [Custom rules](guides/custom-rules.md)
+- [Multi-module projects](guides/multi-module.md)
+- [Configuration Cache](guides/configuration-cache.md)
+- [Isolated Projects](guides/isolated-projects.md)
+- [Deterministic remediation](guides/ai-remediation.md) — historical filename; this is not an LLM feature.
 
-## ❓ Support & FAQ
-* [**FAQ**](faq.md): Frequently Asked Questions.
-* [**Compatibility Matrix**](compatibility.md): Supported versions of Gradle, Java, and AGP.
-* [**Troubleshooting**](troubleshooting.md): Solutions for common setup issues.
-* [**Glossary**](glossary.md): Terminology used throughout the project.
+## Reference
 
----
+- [Auditor catalog and limitations](reference/auditor-catalog.md)
+- [DSL reference](reference/dsl-reference.md)
+- [Task reference](reference/task-reference.md)
+- [Recipes](reference/recipes.md)
+- [Compatibility](compatibility.md)
+- [FAQ](faq.md)
+- [Troubleshooting](troubleshooting.md)
 
-## 🛠️ Other Tools by the Author
-* **[LeakLens](https://plugins.jetbrains.com/plugin/32079-leaklens--android-memory-leak-detector--ai-fix-assistant/)**: An advanced Android memory leak detector for IntelliJ IDEA and Android Studio with an integrated AI fix assistant.
-  * [GitHub](https://github.com/dev-vikas-soni/leak-lens) | [JetBrains Marketplace](https://plugins.jetbrains.com/plugin/32079-leaklens--android-memory-leak-detector--ai-fix-assistant/)
+## Contributing
+
+See [CONTRIBUTING.md](../CONTRIBUTING.md), the [roadmap](../ROADMAP.md), and the [issue tracker](https://github.com/dev-vikas-soni/gradle-lighthouse/issues). Please report false positives and missing coverage with a minimal reproducer.
