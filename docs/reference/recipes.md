@@ -1,44 +1,42 @@
-# Remediation Recipes
+# Remediation recipes
 
-Standardized solutions for common architectural issues flagged by Lighthouse.
+These are general investigation patterns, not guaranteed fixes. Check compatibility with your Gradle, AGP, Kotlin, and library versions before changing a build.
 
-## 1. Migrating to KSP
-KSP is up to 2x faster than KAPT.
+## 1. Evaluating KAPT to KSP migration
 
-1. Add the KSP plugin to your version catalog or build script.
-2. Replace `kapt` with `ksp` in your dependencies.
-3. Remove `id("kotlin-kapt")`.
+KSP may be appropriate when the annotation processor and its version support it. It is not a drop-in replacement for every KAPT processor.
 
-**Lighthouse Shortcut:** Run `./gradlew lighthouseFix --ai=true`.
+1. Check the processor's official KSP support and version compatibility.
+2. Consult the library's migration guide.
+3. Update the plugin and processor dependency deliberately.
+4. Run compilation and tests for all affected variants and targets.
+5. Compare build performance using repeatable measurements if speed is the reason for migrating.
 
-## 2. Bootstrapping a Version Catalog
-Hardcoded versions make updates painful.
+The `lighthouseFix` task may offer pattern-based transformations, but it is not an AI migration engine and must not be assumed safe for arbitrary builds.
 
-1. Create `gradle/libs.versions.toml`.
-2. Move version strings to the `[versions]` block.
-3. Define library aliases in the `[libraries]` block.
-4. Replace strings in `build.gradle.kts` with `libs.*` accessors.
+## 2. Using a version catalog
 
-**Lighthouse Shortcut:** Run `./gradlew lighthouseAudit` to generate the suggested TOML structure in your console.
+1. Create or update `gradle/libs.versions.toml`.
+2. Move selected version declarations into the `[versions]` section.
+3. Add aliases under `[libraries]` and `[plugins]` as appropriate.
+4. Replace build-script declarations carefully.
+5. Run Gradle sync/build and inspect the resulting dependency graph.
 
-## 3. Breaking a Circular Dependency
-Cycles prevent task parallelization and make refactoring impossible.
+Automated text transformations can miss aliases, convention plugins, or unusual declaration forms. Review every changed file.
 
-1. Use the **Galaxy Graph** to identify the edge closing the loop.
-2. Extract common interfaces/models into a new `:domain` or `:api` module.
-3. Have both cyclic modules depend on the new common module.
-4. Remove the direct dependency between them.
+## 3. Investigating a circular module dependency
 
-## 4. Disabling Jetifier
-Jetifier adds several minutes to clean builds in large repositories.
+1. Inspect the module dependency graph and identify the cycle.
+2. Confirm that the reported edge corresponds to a real project dependency.
+3. Consider extracting a stable API or shared model module if that matches the domain.
+4. Change the build graph and run compilation/tests for affected modules.
 
-1. Ensure all your dependencies have migrated to AndroidX.
-2. Set `android.enableJetifier=false` in `gradle.properties`.
-3. Run `./gradlew lighthouseAudit` to check if any non-AndroidX libraries remain.
+A graph visualization is diagnostic; it does not prove which refactor is architecturally correct.
 
-## 5. Enabling Configuration Cache
-Dramatically speed up the configuration phase.
+## 4. Reviewing Jetifier configuration
 
-1. Set `org.gradle.configuration-cache=true` in `gradle.properties`.
-2. Fix "Capturing Project" errors by removing `project` access from custom task actions.
-3. Use `Provider<T>` for all task inputs.
+Do not disable Jetifier solely because a heuristic recommends it. Verify all dependencies and transitive dependencies are AndroidX-compatible, then test relevant build variants.
+
+## 5. Evaluating Configuration Cache
+
+Follow Gradle's Configuration Cache diagnostics and the [project guide](../guides/configuration-cache.md). Measure build impact in your own environment rather than relying on generic speed claims.
