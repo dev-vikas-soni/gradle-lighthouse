@@ -89,12 +89,14 @@ object HtmlReportGenerator {
             val cards = catIssues.mapIndexed { i, issue ->
                 val hoursSaved = HealthScoreEngine.estimatedHoursSaved(issue.severity)
                 val severityClass = issue.severity.name.lowercase()
+                val baselineLabel = if (baselineAnalysis?.baselinedIssues?.contains(issue) == true) "Baselined" else "New"
                 """
                 <div class="issue-card fade-in" style="animation-delay: ${0.04 * i}s;">
                     <div class="issue-card-border" style="background: ${issue.severity.color}"></div>
                     <div class="issue-card-body">
                         <div class="card-header">
                             <span class="severity-pill $severityClass">${issue.severity.name}</span>
+                            <span class="baseline-label">$baselineLabel</span>
                             <h3 class="issue-title">${esc(issue.title)}</h3>
                         </div>
                         <div class="issue-details">
@@ -356,7 +358,8 @@ object HtmlReportGenerator {
       "reasoning": "${escJson(issue.reasoning)}",
       "impact": "${escJson(issue.impactAnalysis)}",
       "resolution": "${escJson(issue.resolution)}",
-      "roiAfterFix": "${escJson(issue.roiAfterFix)}"
+      "roiAfterFix": "${escJson(issue.roiAfterFix)}",
+      "baselined": ${baselineAnalysis?.baselinedIssues?.contains(issue) ?: false}
     }"""
         }
 
