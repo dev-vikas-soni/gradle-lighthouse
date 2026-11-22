@@ -286,7 +286,7 @@ object HtmlReportGenerator {
             baselineAnalysis?.let { baseline ->
                 appendLine("""<section class="baseline-summary">
                     <h2 class="section-title">Baseline Summary</h2>
-                    <p>Health score represents current-state findings. Baselined findings are accepted existing debt; only new findings are considered by the regression gate.</p>
+                    <p>Health score represents current-state findings. Baselined findings are accepted existing debt; only new findings are considered by the regression gate. Baseline counts exclude TrendTracking informational results.</p>
                     <div class="hero-stats">
                         <div class="stat-chip"><span class="stat-num">${baseline.totalIssueCount}</span><span class="stat-label">Total</span></div>
                         <div class="stat-chip"><span class="stat-num">${baseline.newIssueCount}</span><span class="stat-label">New</span></div>
