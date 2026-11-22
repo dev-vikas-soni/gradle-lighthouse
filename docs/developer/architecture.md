@@ -1,53 +1,39 @@
-# Developer Architecture Guide
+# Developer architecture guide
 
-This document is for engineers looking to contribute to Gradle Lighthouse or understand its internal mechanics.
+This document gives a high-level orientation to the plugin. The source code for the release being modified is authoritative when details differ.
 
-## Core Design Principles
+## Design considerations
 
-1. **Snapshot First**: The analysis logic must be decoupled from the Gradle `Project` object.
-2. **Stateless Logic**: Auditors must not hold mutable state.
-3. **Lazy Execution**: Use Gradle `Providers` to defer expensive calculations.
-4. **Zero CDNs**: All reporting assets must be inlined.
+1. **Explicit inputs:** keep analysis inputs visible and testable.
+2. **Small auditor logic:** avoid hidden state and make checks reproducible.
+3. **Lazy Gradle integration:** use Gradle providers and task properties appropriately.
+4. **Portable reports:** keep report assets and dependencies deliberate.
 
-## The Snapshot Mechanism
+## Audit flow
 
-Execution is split into two distinct phases:
-
-### Phase 1: Configuration (Capture)
-Classes: `LighthousePlugin`, `LighthouseExtension`.
-Logic: Wires project metadata into task inputs.
-* *Challenge*: AGP (Android Gradle Plugin) models are complex and often not serializable.
-* *Solution*: Lighthouse maps AGP models into flat, serializable string-based POJOs (`DependencySnapshot`, `SourceSetSnapshot`).
-
-### Phase 2: Execution (Analysis)
-Classes: `LighthouseTask`, `AuditContext`, `Auditor`.
-Logic:
-1. `buildAuditContext()` reconstructs the structured model from serialized inputs.
-2. `Auditor.audit(AuditContext)` is called for every active check.
-3. `HealthScoreEngine` aggregates the results.
+At a high level, plugin configuration wires project metadata and file inputs to task properties. The audit task builds an audit context, invokes enabled auditors, and passes findings to report generators.
 
 ```mermaid
 graph TD
-    A[LighthousePlugin] -->|Captures| B[Task Inputs]
-    B -->|Serialized| C[LighthouseTask]
-    C -->|Reconstructs| D[AuditContext]
-    D -->|Passed to| E[Auditor Engine]
+    A[Plugin configuration] --> B[Task inputs]
+    B --> C[Audit task]
+    C --> D[Audit context]
+    D --> E[Auditors]
+    E --> F[Report generators]
 ```
 
-## Aggregation & Isolated Projects
+Exact data captured, task boundaries, and report behavior are implementation details. Do not assume every Gradle/AGP/KMP model is represented.
 
-`LighthouseAggregateTask` is designed to be compatible with Gradle 9.0 Project Isolation.
-* It uses a `ConfigurableFileCollection` to pull `module-report.json` files from subprojects.
-* It performs an **Iterative DFS** for cycle detection to avoid stack-overflow issues on deep graphs.
+## Aggregation
 
-## Extension Points
+The aggregate task consumes module reports and constructs a project-level view from the data it can access. Its compatibility with Gradle features must be established by tests for the relevant versions and topologies.
 
-* **New Auditor**: Implement `Auditor`, add to the registry in `LighthouseTask.buildAuditorList`.
-* **New Report**: Implement a new generator in `.reporting` and call it from `LighthouseTask.execute`.
-* **AI Fix**: Add logic to `LighthouseFixTask.applyAiFix`.
+## Extension points
 
-## Performance Considerations
+- **Auditors:** implement the auditor contract and register the check.
+- **Reports:** add a report generator and tests for output correctness.
+- **Remediation:** changes to the fix task must be deterministic, reviewable, and covered by fixtures. Do not describe the current implementation as AI/LLM-powered.
 
-* Avoid `walkTopDown()` in auditors where possible.
-* Use `AuditContext.buildFileContent` instead of reading the file from disk repeatedly.
-* Prefer `List` over `Set` for serialized inputs to maintain order.
+## Performance and correctness
+
+Avoid repeated file traversal where inputs can be captured once. Prefer explicit, reproducible inputs. Measure performance claims and document the environment rather than relying on estimates.
