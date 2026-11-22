@@ -106,7 +106,7 @@ class VersionCatalogHygieneAuditor : Auditor {
         for (line in content.lines()) {
             val trimmed = line.trim()
             if (trimmed == "[libraries]") { inLibraries = true; continue }
-            if (trimmed.startsWith("[") && trimmed != "[libraries]") { inLibraries = false; continue }
+            if (trimmed.startsWith("[")) { inLibraries = false; continue }
             if (inLibraries && trimmed.isNotEmpty() && !trimmed.startsWith("#")) {
                 val alias = trimmed.substringBefore("=").trim()
                 if (alias.isNotEmpty()) libraries.add(alias)
