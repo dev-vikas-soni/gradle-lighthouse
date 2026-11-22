@@ -1,43 +1,39 @@
-# Release Process
+# Release process
 
-This document outlines the steps for publishing a new version of the Gradle Lighthouse plugin.
+This document describes the repository's tag-triggered release flow. Confirm the release checklist before publishing.
 
-## 1. Pre-Release Checklist
+## 1. Prepare
 
-1. [ ] Update `CHANGELOG.md` with all new features and fixes.
-2. [ ] Bump the version in `build.gradle.kts` and `LighthousePlugin.VERSION`.
-3. [ ] Run all tests: `./gradlew test`.
-4. [ ] Verify the example project: `./gradlew :example:lighthouseAudit`.
+1. Review changes and test them on JDK 17.
+2. Update `CHANGELOG.md` and version declarations in the build/plugin sources.
+3. Run `./gradlew clean build validatePlugins`.
+4. Run the example audit: `./gradlew :example:lighthouseAudit`.
+5. Verify documentation and compatibility claims for the release.
 
-## 2. Publish to Maven Local (Verification)
+## 2. Verify locally
 
-Before going public, verify the artifacts locally:
+If useful, publish to Maven Local before the official release:
 
 ```bash
 ./gradlew publishToMavenLocal
 ```
 
-Then in the `example/` project, change the version to the new one and ensure everything still works.
+## 3. Publish
 
-## 3. Official Publication
+The GitHub Actions workflow `.github/workflows/publish-plugin.yml` publishes when a version tag in the form `vX.Y.Z` is pushed.
 
-Lighthouse is published to the **Gradle Plugin Portal**.
-
-1. Ensure you have your `gradle.publish.key` and `gradle.publish.secret` in your environment or `local.properties`.
-2. Execute the publish task:
+1. Ensure `GRADLE_PUBLISH_KEY` and `GRADLE_PUBLISH_SECRET` are configured in repository Actions secrets.
+2. Create and push the tag for the release version:
 
 ```bash
-./gradlew publishPlugins
+git tag vX.Y.Z
+git push origin vX.Y.Z
 ```
 
-## 4. GitHub Release
+3. Review the publishing workflow and confirm the plugin is available on the Gradle Plugin Portal.
 
-1. Create a new tag in Git: `git tag v2.3.x`.
-2. Push the tag: `git push origin v2.3.x`.
-3. Draft a new release on GitHub, pasting the latest section of the `CHANGELOG.md`.
+## 4. GitHub release and documentation
 
-## 5. Documentation Update
+Create the GitHub release from the tag and include the relevant changelog section. Update the auditor catalog and DSL reference if their behavior or configuration changes.
 
-If new auditors or DSL properties were added:
-1. Update `docs/reference/auditor-catalog.md`.
-2. Update `docs/reference/dsl-reference.md`.
+Never commit publication credentials or put them in release logs.
