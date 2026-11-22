@@ -192,6 +192,7 @@ class LighthousePlugin : Plugin<Project> {
         task.useAi.set(ext.useAi)
         task.enableTelemetry.set(ext.enableTelemetry)
         task.telemetryEndpoint.set(ext.telemetryEndpoint)
+        task.telemetryStorageDirPath.set(project.gradle.gradleUserHomeDir.resolve("caches/gradle-lighthouse").absolutePath)
         task.reportOutputDir.set(project.layout.buildDirectory.dir("reports/lighthouse"))
 
         // New Features

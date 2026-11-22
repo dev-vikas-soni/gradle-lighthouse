@@ -51,6 +51,22 @@ See [installation](docs/getting-started/installation.md), [quick start](docs/get
 - Baselines affect which findings are treated as new; consult the baseline documentation before interpreting scores and CI gates.
 - Fix tasks can modify build files. Review the diff and keep your work under version control.
 
+## Optional usage analytics
+
+Gradle Lighthouse does not send usage telemetry by default. Projects that explicitly opt in can enable a minimal audit-completed event:
+
+```kotlin
+lighthouse {
+    enableTelemetry.set(true)
+}
+```
+
+When enabled, Lighthouse sends a random, persistent installation identifier, the plugin version, and the Gradle version to the configured HTTPS telemetry endpoint. The identifier is stored under the user's Gradle User Home (in `caches/gradle-lighthouse/installation-id`), not in the project. This allows opted-in installations to be counted across multiple projects without collecting a developer's name or email.
+
+Telemetry does **not** include project names or paths, module names, dependencies, source code, audit findings, or health scores. Events are best-effort: network failures never fail the build. To opt out, leave `enableTelemetry` unset (the default) or set it to `false`. To reset the installation identifier, delete the file described above.
+
+See [the telemetry and privacy notes](docs/telemetry.md) for the event contract and endpoint configuration.
+
 ## Compatibility and maturity
 
 Compatibility claims should be read alongside the [compatibility notes](docs/compatibility.md). A Gradle or Android Gradle Plugin version is not considered verified merely because it appears in a badge or broad version range. Please report your exact Gradle, AGP, Kotlin, and JDK versions when filing compatibility issues.
