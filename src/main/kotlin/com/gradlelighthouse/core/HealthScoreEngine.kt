@@ -17,6 +17,9 @@ object HealthScoreEngine : Serializable {
     private const val serialVersionUID = 1L
     private val modernEngine = ModernHealthScoreEngine()
 
+    /** Preserve Kotlin object identity when deserialized from Java serialization. */
+    private fun readResolve(): Any = HealthScoreEngine
+
     /**
      * Calculates the modern health result containing detailed breakdowns.
      */
