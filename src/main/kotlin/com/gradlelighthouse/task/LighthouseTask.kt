@@ -275,11 +275,6 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
             ConsoleLogger.info("🧪", "[JUNIT]", "JUnit XML: ${junitFile.toURI()}")
         }
 
-        // 6. Telemetry (Predictive Dependency Intelligence)
-        if (enableTelemetry.get()) {
-            sendTelemetry()
-        }
-
         ConsoleLogger.rule()
 
         // 5. CI/CD Build Gate
@@ -295,6 +290,11 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
                     )
                 }
             }
+        }
+
+        // Send telemetry only after the audit and any configured CI gate pass.
+        if (enableTelemetry.get()) {
+            sendTelemetry()
         }
     }
 
