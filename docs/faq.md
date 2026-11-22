@@ -1,19 +1,33 @@
-# Frequently Asked Questions
+# Frequently asked questions
 
 ## Is Lighthouse a replacement for Detekt or Android Lint?
-No. Detekt and Android Lint focus on **code-level** issues (syntax, formatting, local bugs). Lighthouse focuses on **architectural** issues (module coupling, build performance, structural hygiene). They are complementary.
 
-## Does Lighthouse support Kotlin Multiplatform (KMP)?
-Yes. Lighthouse includes a specific `KmpStructureAuditor` that verifies source set alignment and targets.
+No. Those tools focus on source-level correctness, style, and Android-specific code checks. Lighthouse focuses on selected Gradle configuration and project/module diagnostics. They are complementary, and none replaces code review or tests.
+
+## Does Lighthouse support Kotlin Multiplatform?
+
+The plugin contains KMP-oriented checks, but their coverage is partial. They should not be treated as a complete analysis of all targets, source sets, or dependency relationships. See the [auditor catalog](reference/auditor-catalog.md).
 
 ## Will Lighthouse make my build slower?
-Minimal impact. Most of the heavy lifting happens in the background or during CI. The configuration phase is near-zero cost due to our Snapshot Architecture.
 
-## Can I use Lighthouse with Gradle 7?
-No. Lighthouse targets Gradle 8.0 and higher to leverage the full power of Configuration Cache and the Provider API.
+The audit itself adds work to a Gradle invocation. Its overhead depends on project size, enabled checks, and environment. We do not make a universal "near-zero" overhead claim. Measure it in your own CI and share reproducible results.
 
-## Why did my score drop suddenly?
-Check the "Trend Tracking" section in your report. Usually, this happens when a new "FATAL" issue is introduced, such as a circular dependency.
+## Which Gradle versions are supported?
 
-## Are there other tools to help with Android performance?
-While Gradle Lighthouse focuses on architecture and build health, you might also be interested in **[LeakLens](https://plugins.jetbrains.com/plugin/32079-leaklens--android-memory-leak-detector--ai-fix-assistant/)**. It is a JetBrains plugin specifically designed to detect and fix memory leaks in Android apps using AI assistance.
+Gradle 8+ is the documented minimum. Exact tested versions and combinations should be confirmed from release CI; see [compatibility](compatibility.md).
+
+## What does the health score mean?
+
+It is a heuristic derived from detected findings and configured weights. It is not a certification, industry percentile, measure of engineering quality, or prediction of production reliability. Baseline behavior also matters; see [the score model](concepts/health-score.md) and [baseline system](concepts/baseline-system.md).
+
+## Does Lighthouse use AI to fix issues?
+
+No. The current fix task uses deterministic, pattern-based transformations. The historical `--ai` flag and documentation wording should not be interpreted as LLM integration. Review all modifications manually.
+
+## Are SDK impact predictions based on community measurements?
+
+Do not interpret current SDK impact estimates as measured community benchmarks. Unless a report includes a reproducible dataset and methodology, treat such values as curated heuristics or do not rely on them for decisions.
+
+## How do I report a false positive?
+
+Open an issue with a minimal reproducer, expected behavior, actual finding, plugin version, Gradle/JDK versions, and AGP/Kotlin versions where applicable. False-positive reports are valuable contributions.
