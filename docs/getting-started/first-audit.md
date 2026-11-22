@@ -1,70 +1,42 @@
-# Your First Audit
+# Your first audit
 
-Running your first audit with Gradle Lighthouse is the first step toward a healthier, more maintainable project.
+## 1. Run the audit
 
-## Step 1: Execute the audit
-
-Open your terminal and run:
+From the root of your Gradle build:
 
 ```bash
 ./gradlew lighthouseAudit
 ```
 
-You will see colorful output in your terminal. Lighthouse prints a high-level summary of every audited module directly to the console.
-
-### Console Summary Example
-
-```text
-┌──────────────────────────────────────────────────────────┐
-│ 🏗️  :app                                                 │
-│ Score: 72/100  ·  ⭐ Standard Architect                   │
-├──────────────────────────────────────────────────────────┤
-│ ✅ Build caching enabled                                  │
-│ ✅ Parallel execution enabled                             │
-│ ❌ Dynamic Version Detected: com.squareup.okhttp3:okhttp  │
-│ ⚠️  KSP ROI Engine: Save 15h/year                         │
-├──────────────────────────────────────────────────────────┤
-│ 8 issues: 0 fatal · 2 error · 4 warn · 2 info            │
-└──────────────────────────────────────────────────────────┘
-```
-
-## Step 2: Understand the Score
-
-Lighthouse uses a **Square Root Deduction Model**. Instead of just counting issues, it evaluates the **architectural impact** of every finding.
-
-* **FATAL**: Critical architectural risk (e.g., circular dependency). Huge score impact.
-* **ERROR**: High risk or significant technical debt.
-* **WARNING**: Maintainability concern or legacy pattern.
-* **INFO**: Best practice opportunity.
-
-A module with 100% score is following all Lighthouse best practices.
-
-## Step 3: Explore the Reports
-
-While the console is great for a quick look, the **HTML reports** contain the deep-dive intelligence you need to fix issues.
-
-1. Navigate to your module's build directory: `app/build/reports/lighthouse/index.html`.
-2. Open it in your browser.
-3. Look for the **"Path to 90"** section. This prioritized list tells you exactly which fixes will result in the largest score gains.
-
-## Step 4: Aggregate and Visualize
-
-If you have a multi-module project, run the aggregate task:
+For a multi-module build, you may also run the aggregate task if it is configured:
 
 ```bash
 ./gradlew lighthouseAggregate
 ```
 
-Open `build/reports/lighthouse/project-dashboard.html` to see the **Galaxy Graph**. This is an interactive map of your module dependencies. It automatically detects cycles and highlights coupling "hotspots" that might be slowing down your build.
+## 2. Review findings
 
----
+The console output summarizes findings detected by enabled auditors. Open the generated report under the relevant project's `build/reports/lighthouse` directory.
 
-## 🏗️ Live Showcase
+For each finding, ask:
+- Does the check inspect the relevant part of this build?
+- Is the finding accurate for this project's conventions?
+- Is the suggested resolution valid for the versions and plugins in use?
+- Is the impact a measured value or a heuristic estimate?
 
-If you want to see what a complete, production-grade audit report looks like before running it yourself, visit our **[Showcase Repository](https://github.com/dev-vikas-soni/lighthouse-showcase)**. It contains full HTML reports, dependency maps, and architectural findings for a complex Android project.
+Severity and score are prioritization aids, not proof of production risk or project quality. A score of 100 means only that the enabled checks did not deduct points under the current scoring model; it does not certify the project.
 
-## Next Steps
+## 3. Explore aggregate output
 
-* [Understanding the Report](understanding-report.md)
-* [Using AI Remediation](../guides/ai-remediation.md)
-* [Setting up the PR Bot](../guides/pr-bot.md)
+If the aggregate task is available, inspect the generated project report and module dependency visualization. Treat it as a view of the relationships captured by the plugin, not a complete representation of every dependency or runtime relationship.
+
+## 4. Validate before acting
+
+Do not automatically apply a recommendation just because it appears in a report. Review build files, run the normal build and tests, and measure performance changes in your own environment.
+
+## Next steps
+
+- [Understanding reports](understanding-report.md)
+- [Auditor catalog and limitations](../reference/auditor-catalog.md)
+- [Deterministic remediation](../guides/ai-remediation.md)
+- [Roadmap](../../ROADMAP.md)
