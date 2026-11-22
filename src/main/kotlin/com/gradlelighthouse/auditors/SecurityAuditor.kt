@@ -33,7 +33,7 @@ class SecurityAuditor : Auditor {
         "providers.environmentVariable",
         "findProperty",
         "local.properties",
-        "\${",
+        $"""${""",
         "KEYSTORE_PASSWORD",
         "System.env"
     )
