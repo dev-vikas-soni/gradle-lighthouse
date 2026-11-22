@@ -1,54 +1,31 @@
-# Quick Start
+# Quick start
 
-Get up and running with your first architectural audit in under 60 seconds.
+Run the audit task from the Gradle project:
 
-## 1. Run your first audit
+```bash
+./gradlew lighthouseAudit
+```
 
-Execute the `lighthouseAudit` task on any module:
+For a multi-module build, the aggregate task may be available when the plugin is applied/configured at the root:
 
- ```bash
- ./gradlew :app:lighthouseAudit
- ```
+```bash
+./gradlew lighthouseAudit lighthouseAggregate
+```
 
-## 2. Aggregating results
+## Reports
 
-In multi-module projects, run the `lighthouseAggregate` task to generate a global dashboard and dependency graph:
+The default report directory is under the relevant project's `build/reports/lighthouse`. Exact report names and availability depend on the task and plugin configuration. Common outputs include HTML and machine-readable reports such as JSON, SARIF, and JUnit XML.
 
- ```bash
- ./gradlew lighthouseAudit lighthouseAggregate
- ```
+## Fix task
 
-## 3. View the reports
+The plugin also provides a fix task in supported versions:
 
-After the tasks finish, you can find the results in your `build/reports` directory.
+```bash
+./gradlew lighthouseFix
+```
 
-### Per-Module Dashboard
-High-level overview of a single module's health.
-`path/to/module/build/reports/lighthouse/index.html`
+This task applies limited deterministic transformations. It is not an AI/LLM feature and may modify build files. Use a clean working tree, inspect the complete diff, and run your normal build and tests before keeping any changes. See [deterministic remediation](../guides/ai-remediation.md).
 
-### Project Global Dashboard
-Aggregated view of all modules, including the **Galaxy Graph**.
-`build/reports/lighthouse/project-dashboard.html`
+## Interpret findings carefully
 
-> [!TIP]
-> **Don't have a project to audit yet?**
-> Check out the [Lighthouse Showcase Repository](https://github.com/dev-vikas-soni/lighthouse-showcase) to see what a complete report looks like.
-
-### CI/CD Reports
-SARIF and JUnit XML formats are also generated for integration with tools like GitHub Security and Jenkins.
-`build/reports/lighthouse/module-report.sarif`
-`build/reports/lighthouse/module-report.xml`
-
-## 4. Automatic Fixes
-
-Found issues? Lighthouse can fix deterministic problems (like `gradle.properties` optimizations) automatically:
-
- ```bash
- ./gradlew lighthouseFix
- ```
-
-For complex refactorings like KSP migration, use the **GenAI Remediation** mode:
-
- ```bash
- ./gradlew lighthouseFix --ai=true
- ```
+Lighthouse findings are diagnostic signals, not proof of a defect. Check the relevant source/build configuration and the [auditor catalog](../reference/auditor-catalog.md) before changing your project.
