@@ -1,43 +1,26 @@
 # What is Gradle Lighthouse?
 
-**Architecture Intelligence for Android & Kotlin Multiplatform**
+Gradle Lighthouse is an open-source Gradle plugin for inspecting selected aspects of Gradle projects, with a focus on Android and Kotlin Multiplatform repositories.
 
-Gradle Lighthouse is a diagnostic engine for Gradle projects. Unlike traditional linters that focus on code syntax or style, Lighthouse analyzes the **structural health** of your project.
+It collects project and build metadata exposed to the plugin, runs configured checks, and produces findings and reports. Its purpose is to make certain structural and build-configuration concerns easier to inspect—not to provide a complete model of a software system.
 
-## The Problem: Architectural Rot
+## What it can help investigate
 
-As a project grows, it becomes harder to maintain.
+- Module dependency relationships and detected cycles.
+- Selected dependency declarations and Gradle configuration practices.
+- Team-defined architecture constraints supported by the rules implementation.
+- Findings across modules, with report formats intended for local review and CI.
 
-* Modules become highly coupled, leading to circular dependencies.
-* Build scripts accumulate technical debt (KAPT, Jetifier, hardcoded versions).
-* New features take longer to implement because the architecture is opaque.
-* Build times explode because of misconfigured tools and caching.
+## Important limitations
 
-## The Solution: Architectural Visibility
+Static checks only see the information they are implemented to inspect. A finding may require human validation, and the absence of a finding does not prove the project is free of a problem.
 
-Lighthouse makes these invisible problems visible and actionable.
+Some checks are heuristics. A score is not a quality certification; source-file ratios are not test coverage; configuration flags are not measured build performance; and estimated SDK impacts are not empirical benchmarks unless accompanied by a reproducible measurement method.
 
-### 1. Unified Health Model
-A transparent scoring engine that evaluates every module across multiple domains like Security, Performance, and Complexity.
+Kotlin Multiplatform analysis is partial. The plugin should not currently be described as a comprehensive KMP architecture verifier.
 
-### 2. Actionable Improvement Roadmap
-The "Path to 90" feature tells you which 3 or 4 changes will have the largest impact on your build speed and maintenance cost.
+## Design direction
 
-### 3. Dependency Visualization
-The **Galaxy Graph** provides an interactive map of your module graph, automatically detecting cycles and architectural layer leaks.
+The long-term direction is deterministic architecture regression testing: make team-defined module boundaries explicit, detect changes that violate those contracts, and provide reproducible diagnostics in Gradle and CI. This is a roadmap direction, not a claim that complete base-versus-head architecture drift detection is already available.
 
-### 4. Automated Remediation
-The `lighthouseFix` task can automatically apply best practices to your build scripts, including complex refactorings like KAPT-to-KSP and Version Catalog migration.
-
-## Why Lighthouse?
-
-Lighthouse is built on three core pillars:
-
-1. **Enterprise Grade**: Hardened for projects with 500+ modules.
-2. **Zero-Config**: Works out of the box with sensible industry standards.
-3. **Gradle Native**: 100% compatible with Configuration Cache and Isolated Projects.
-
-## Next Steps
-
-* [Learn about Snapshot Architecture](snapshot-architecture.md)
-* [Understand the Scoring Model](health-score.md)
+See the [roadmap](../../ROADMAP.md), [auditor catalog](../reference/auditor-catalog.md), and [compatibility notes](../compatibility.md).
