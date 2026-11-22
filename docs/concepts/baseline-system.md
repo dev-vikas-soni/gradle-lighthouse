@@ -1,38 +1,33 @@
-# The Baseline System
+# Baseline system
 
-The Baseline System allows teams to adopt Gradle Lighthouse in large, existing codebases without being overwhelmed by technical debt.
+Baselines are intended to help teams distinguish previously recorded findings from findings that appear after a baseline is created. Exact effects on reports, scores, and CI gates must be interpreted according to the implementation and plugin version.
 
-## The Problem: Legacy Noise
-When applying Lighthouse to a mature project, you might see hundreds of "Warnings" or "Errors" related to years of historical debt. This "noise" can make it difficult for developers to see **new** architectural regressions in their Pull Requests.
+## Recording a baseline
 
-## The Solution: Record and Suppress
-Lighthouse allows you to record all current findings into a baseline file. Once recorded, these specific instances of issues are suppressed from terminal output and CI build gates.
-
-### 1. Create a baseline
-Run the following task to record the current state:
+If the task is available in your plugin version, run:
 
 ```bash
 ./gradlew lighthouseRecordBaseline
 ```
 
-This generates a `lighthouse-baseline.txt` file in your root project (or module directory).
+Review the generated file before committing it. Keep the baseline in version control so CI and developers use the same reference.
 
-### 2. Commit the baseline
-Add the baseline file to your Version Control (Git). This ensures every developer on the team shares the same "clean slate."
+## What a baseline is intended to do
 
-### 3. Focus on the Delta
-Future runs of `./gradlew lighthouseAudit` will only flag **new** issues introduced after the baseline was created.
+A baseline stores fingerprints for findings already known to the team. On later runs, matching findings may be classified as existing/suppressed while unmatched findings are treated as new.
 
-## How it works: Fingerprinting
-Lighthouse identifies issues using a stable fingerprinting algorithm:
-`Category + Title + FilePath (Relative)`
+The fingerprint format and stability are implementation details. A change to a finding's category, title, path, or fingerprint algorithm may cause it to be reported again. Do not assume a fingerprint remains stable across every refactor or plugin upgrade.
 
-* If you fix a baselined issue, it is automatically removed from the report.
-* If you move a file, the fingerprint changes, and the issue will reappear (promoting "Clean Refactoring").
-* If you introduce the same type of issue in a new file, it will be flagged as a new violation.
+## Important scoring distinction
 
-## Strategy: Ratcheting Quality
-We recommend a "Rachet" strategy:
-1. Baseline all existing debt today.
-2. Enforce "Zero New Issues" in your CI pipeline using `failOnSeverity`.
-3. Periodically run a "Baseline Cleanup" sprint to resolve debt and re-record the baseline.
+Baseline filtering, current-state health scoring, report counts, and CI failure behavior are separate concepts. The intended contract is being made explicit and tested in [issue #53](https://github.com/dev-vikas-soni/gradle-lighthouse/issues/53). Until that work is complete, do not assume that recording a baseline removes the underlying finding from every score or report.
+
+## Suggested workflow
+
+1. Run an audit and review the findings.
+2. Record a baseline only for debt the team has consciously accepted.
+3. Commit the baseline.
+4. Review new findings in subsequent runs.
+5. Periodically remove resolved entries and reassess accepted debt.
+
+A baseline is not a waiver of security review or a declaration that existing findings are harmless.
