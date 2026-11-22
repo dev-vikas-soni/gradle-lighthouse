@@ -1,6 +1,7 @@
 package com.gradlelighthouse.reporting
 
 import com.gradlelighthouse.core.AuditIssue
+import com.gradlelighthouse.core.BaselineAnalysis
 import com.gradlelighthouse.core.HealthScoreEngine
 import com.gradlelighthouse.core.Severity
 import com.gradlelighthouse.core.scoring.ScoringResult
@@ -19,7 +20,8 @@ object HtmlReportGenerator {
         pluginVersion: String,
         gradleVersion: String,
         issues: List<AuditIssue>,
-        scoringResult: ScoringResult
+        scoringResult: ScoringResult,
+        baselineAnalysis: BaselineAnalysis? = null
     ): String {
         val dateString = SimpleDateFormat("MMM dd, yyyy • HH:mm", Locale.ROOT).format(Date())
         val report = HealthScoreEngine.generateReport(issues)
@@ -281,7 +283,19 @@ object HtmlReportGenerator {
 
             // Tabs
             appendLine("""<section class="findings-section">""")
-            appendLine("""<h2 class="section-title">Detailed Findings <span class="finding-count">${issues.size} issues across ${categories.size} categories</span></h2>""")
+            baselineAnalysis?.let { baseline ->
+                appendLine("""<section class="baseline-summary">
+                    <h2 class="section-title">Baseline Summary</h2>
+                    <p>Health score represents current-state findings. Baselined findings are accepted existing debt; only new findings are considered by the regression gate.</p>
+                    <div class="hero-stats">
+                        <div class="stat-chip"><span class="stat-num">${baseline.totalIssueCount}</span><span class="stat-label">Total</span></div>
+                        <div class="stat-chip"><span class="stat-num">${baseline.newIssueCount}</span><span class="stat-label">New</span></div>
+                        <div class="stat-chip"><span class="stat-num">${baseline.baselineIssueCount}</span><span class="stat-label">Baselined</span></div>
+                        <div class="stat-chip"><span class="stat-num">${baseline.staleBaselineCount}</span><span class="stat-label">Stale Entries</span></div>
+                    </div>
+                </section>""")
+            }
+            appendLine("""<h2 class="section-title">Detailed Findings <span class="finding-count">${issues.size} issues across ${categories.size} categories</span></h2>""
             appendLine("""<div class="tabs" role="tablist">$tabsHtml</div>""")
             appendLine("""<div class="tab-contents">$tabContentHtml</div>""")
             appendLine("""</section>""")
@@ -305,7 +319,7 @@ object HtmlReportGenerator {
     /**
      * Generates the module-report JSON for aggregation.
      */
-    fun generateJson(projectName: String, projectPath: String, issues: List<AuditIssue>, scoringResult: ScoringResult): String {
+    fun generateJson(projectName: String, projectPath: String, issues: List<AuditIssue>, scoringResult: ScoringResult, baselineAnalysis: BaselineAnalysis? = null): String {
         val report = HealthScoreEngine.generateReport(issues)
 
         val topIssue = issues.maxByOrNull {
@@ -346,6 +360,10 @@ object HtmlReportGenerator {
     }"""
         }
 
+        val baselineJson = baselineAnalysis?.let { baseline ->
+            """{"totalFindings":${baseline.totalIssueCount},"newFindings":${baseline.newIssueCount},"baselinedFindings":${baseline.baselineIssueCount},"staleBaselineEntries":${baseline.staleBaselineCount}}"""
+        } ?: "null"
+
         return """{
   "module": "${escJson(projectName)}",
   "path": "${escJson(projectPath)}",
@@ -356,6 +374,7 @@ object HtmlReportGenerator {
   "warningCount": ${report.warningCount},
   "infoCount": ${report.infoCount},
   "totalIssues": ${report.totalIssueCount},
+  "baseline": $baselineJson,
   "topResolution": "${escJson(topResolution)}",
   "categoryScores": [
 $categoriesJson
