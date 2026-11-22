@@ -2,6 +2,7 @@ package com.gradlelighthouse.task
 
 import com.gradlelighthouse.auditors.*
 import com.gradlelighthouse.core.AuditContext
+import com.gradlelighthouse.core.BaselineAnalysis
 import com.gradlelighthouse.core.Auditor
 import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
@@ -171,13 +172,15 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
 
         // Filter out baselined issues
         val rootDir = File(rootDirPath.get())
-        val newIssues = allIssues.filter { it.fingerprint(rootDir) !in baselineIssueIds }
-        val suppressedCount = allIssues.size - newIssues.size
+        val baselineAnalysis = BaselineAnalysis.analyze(allIssues, baselineIssueIds, rootDir)
+        val newIssues = baselineAnalysis.newIssues
+        val suppressedCount = baselineAnalysis.baselineIssueCount
 
         // 4. Generate reports
         ConsoleLogger.info("🎯", "[DONE]", "[$name] Analysis Complete. Exporting Intelligence...")
+        ConsoleLogger.info("🛡️", "[BASE]", "Findings: ${baselineAnalysis.totalIssueCount} total, ${baselineAnalysis.newIssueCount} new, ${baselineAnalysis.baselineIssueCount} baselined, ${baselineAnalysis.staleBaselineCount} stale baseline entries.")
         if (suppressedCount > 0) {
-            ConsoleLogger.info("🛡️", "[BASE]", "Suppressed $suppressedCount issues found in baseline.")
+            ConsoleLogger.info("🛡️", "[BASE]", "Suppressed $suppressedCount existing findings from regression gate.")
         }
         val outputDir = reportOutputDir.get().asFile
         if (!outputDir.exists()) outputDir.mkdirs()
@@ -244,19 +247,19 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
         ConsoleLogger.printImprovements(scoringResult.improvements, healthReport.score)
 
         // HTML Report
-        val htmlContent = HtmlReportGenerator.generate(name, version, gradleVersionStr.get(), allIssues, scoringResult)
+        val htmlContent = HtmlReportGenerator.generate(name, version, gradleVersionStr.get(), allIssues, scoringResult, baselineAnalysis)
         val htmlFile = File(outputDir, "${name}-index.html")
         htmlFile.writeText(htmlContent)
         ConsoleLogger.info("📊", "[HTML]", "Report: ${htmlFile.toURI()}")
 
         // JSON Report (for aggregation)
-        val jsonContent = HtmlReportGenerator.generateJson(name, modulePath.get(), allIssues, scoringResult)
+        val jsonContent = HtmlReportGenerator.generateJson(name, modulePath.get(), allIssues, scoringResult, baselineAnalysis)
         val jsonFile = File(outputDir, "module-report.json")
         jsonFile.writeText(jsonContent)
 
         // SARIF Report
         if (enableSarif.get()) {
-            val sarifContent = SarifReportGenerator.generate(name, version, allIssues)
+            val sarifContent = SarifReportGenerator.generate(name, version, allIssues, baselineAnalysis)
             val sarifFile = File(outputDir, "${name}-report.sarif")
             sarifFile.writeText(sarifContent)
             ConsoleLogger.info("🔒", "[SARIF]", "SARIF: ${sarifFile.toURI()}")
@@ -264,7 +267,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
 
         // JUnit XML Report
         if (enableJunitXml.get()) {
-            val junitContent = JunitXmlReportGenerator.generate(name, newIssues)
+            val junitContent = JunitXmlReportGenerator.generate(name, allIssues, baselineAnalysis)
             val junitFile = File(outputDir, "${name}-report.xml")
             junitFile.writeText(junitContent)
             ConsoleLogger.info("🧪", "[JUNIT]", "JUnit XML: ${junitFile.toURI()}")
