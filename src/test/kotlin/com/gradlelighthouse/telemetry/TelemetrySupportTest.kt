@@ -146,6 +146,13 @@ class TelemetrySupportTest {
     }
 
     @Test
+    fun `sendTelemetry returns false on invalid host`() {
+        val endpoint = "https://invalid-nonexistent-domain-123456789.com/telemetry"
+        val success = TelemetrySupport.sendTelemetry(endpoint, UUID.randomUUID().toString(), "2.4.0", "9.0")
+        assertFalse(success, "Invalid host should return false gracefully")
+    }
+
+    @Test
     fun `sendTelemetry returns false on timeout`() {
         server = HttpServer.create(InetSocketAddress("localhost", 0), 0)
         server!!.createContext("/telemetry") { exchange ->

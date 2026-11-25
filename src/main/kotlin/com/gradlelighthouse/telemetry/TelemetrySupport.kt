@@ -137,7 +137,7 @@ internal object TelemetrySupport {
                 connection.errorStream?.use { it.bufferedReader(StandardCharsets.UTF_8).readText() } ?: ""
             }
 
-            responseCode == 202 && Regex(""""accepted"\s*:\s*true""").containsMatchIn(responseBody)
+            responseCode in 200..299 && Regex(""""accepted"\s*:\s*true""").containsMatchIn(responseBody)
         } catch (_: Exception) {
             false
         } finally {
@@ -152,4 +152,5 @@ internal object TelemetrySupport {
             .replace("\"", "\\\"")
             .replace("\n", "\\n")
             .replace("\r", "\\r")
+            .replace("\t", "\\t")
 }

@@ -193,17 +193,19 @@ class LighthousePlugin : Plugin<Project> {
         task.enableSarif.set(ext.enableSarifReport)
         task.enableJunitXml.set(ext.enableJunitXmlReport)
         task.useAi.set(ext.useAi)
-        val propVal = project.findProperty("gradleLighthouseTelemetry")?.toString()
-        val envVal = System.getenv("GRADLE_LIGHTHOUSE_TELEMETRY")
-        val cliOrEnvOptOut = when {
-            propVal?.equals("false", ignoreCase = true) == true -> false
-            propVal?.equals("true", ignoreCase = true) == true -> true
-            envVal?.equals("false", ignoreCase = true) == true -> false
-            envVal?.equals("true", ignoreCase = true) == true -> true
-            else -> null
-        }
+        val cliProp = project.providers.gradleProperty("gradleLighthouseTelemetry")
+        val envVar = project.providers.environmentVariable("GRADLE_LIGHTHOUSE_TELEMETRY")
 
         task.enableTelemetry.set(project.provider {
+            val propVal = cliProp.orNull
+            val envVal = envVar.orNull
+            val cliOrEnvOptOut = when {
+                propVal?.equals("false", ignoreCase = true) == true -> false
+                propVal?.equals("true", ignoreCase = true) == true -> true
+                envVal?.equals("false", ignoreCase = true) == true -> false
+                envVal?.equals("true", ignoreCase = true) == true -> true
+                else -> null
+            }
             cliOrEnvOptOut ?: ext.enableTelemetry.get()
         })
         task.telemetryEndpoint.set(ext.telemetryEndpoint)
