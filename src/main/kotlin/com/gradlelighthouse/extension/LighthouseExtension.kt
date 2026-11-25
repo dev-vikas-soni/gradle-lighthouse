@@ -104,10 +104,9 @@ abstract class LighthouseExtension {
     abstract val useAi: Property<Boolean>
 
     /**
-     * Enables anonymized telemetry to provide predictive intelligence for dependencies.
-     * When enabled, Lighthouse collects dependency coordinates and build performance
-     * metrics to help the community estimate SDK impact.
-     * Default: false
+     * Enables anonymous audit-completion telemetry with a random installation ID,
+     * plugin version, and Gradle version. Dependency coordinates and audit findings
+     * are not sent. Default: true
      */
     abstract val enableTelemetry: Property<Boolean>
 
@@ -208,8 +207,8 @@ abstract class LighthouseExtension {
         enablePredictiveIntelligence.convention(true)
         enableTrendTracking.convention(true)
         useAi.convention(false)
-        enableTelemetry.convention(false)
-        telemetryEndpoint.convention("https://telemetry.gradle-lighthouse.dev/v1/metrics")
+        enableTelemetry.convention(true)
+        telemetryEndpoint.convention(com.gradlelighthouse.telemetry.TelemetrySupport.DEFAULT_ENDPOINT)
         failOnSeverity.convention("NONE")
         failOnDependencyCycle.convention(false)
         failOnLayerViolation.convention(false)

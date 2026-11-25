@@ -57,6 +57,40 @@ Compatibility claims should be read alongside the [compatibility notes](docs/com
 
 Kotlin Multiplatform checks are evolving and should be treated as partial diagnostics, not comprehensive KMP architecture validation.
 
+## Anonymous Usage Telemetry
+
+Gradle Lighthouse collects anonymous telemetry upon successful completion of an audit execution to understand plugin adoption and Gradle version compatibility across the ecosystem.
+
+### What is collected
+Each telemetry payload contains exactly four anonymous fields:
+- `event`: Always `"audit_completed"`.
+- `installationId`: A randomly generated UUID persisted in Gradle User Home (`~/.gradle/caches/gradle-lighthouse/installation-id`) and reused across invocations.
+- `pluginVersion`: The version of Gradle Lighthouse executing (e.g., `"2.4.0"`).
+- `gradleVersion`: The Gradle runtime version executing the build (e.g., `"9.0"`).
+
+### What is NEVER collected
+Gradle Lighthouse never collects project names, project paths, source code, dependency coordinates, repository URLs, audit findings, health scores, usernames, machine names, IP addresses, or build metadata.
+
+### How to disable telemetry
+Telemetry is enabled by default. You can disable telemetry using any of the following mechanisms:
+
+1. **Gradle Command-line Property:**
+   ```bash
+   ./gradlew lighthouseAudit -PgradleLighthouseTelemetry=false
+   ```
+
+2. **Environment Variable:**
+   ```bash
+   export GRADLE_LIGHTHOUSE_TELEMETRY=false
+   ```
+
+3. **Gradle Build Script DSL:**
+   ```kotlin
+   lighthouse {
+       enableTelemetry.set(false)
+   }
+   ```
+
 ## Open source
 
 Issues, bug reports, documentation improvements, and focused pull requests are welcome. Please include a minimal reproducer and environment versions for behavior reports.

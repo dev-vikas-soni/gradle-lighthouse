@@ -11,6 +11,7 @@ import com.gradlelighthouse.core.Severity
 import com.gradlelighthouse.reporting.HtmlReportGenerator
 import com.gradlelighthouse.reporting.SarifReportGenerator
 import com.gradlelighthouse.reporting.JunitXmlReportGenerator
+import com.gradlelighthouse.telemetry.TelemetrySupport
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.work.DisableCachingByDefault
@@ -85,6 +86,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
     @get:Internal abstract val moduleDirPath: Property<String>
     @get:Internal abstract val rootDirPath: Property<String>
     @get:Internal abstract val buildFilePath: Property<String>
+    @get:Internal abstract val gradleUserHomeDir: DirectoryProperty
 
     // =========================================================================
     // Extension configuration
@@ -273,9 +275,9 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
             ConsoleLogger.info("🧪", "[JUNIT]", "JUnit XML: ${junitFile.toURI()}")
         }
 
-        // 6. Telemetry (Predictive Dependency Intelligence)
+        // The audit result is complete here; telemetry intentionally precedes the severity gate.
         if (enableTelemetry.get()) {
-            sendTelemetry(context, healthReport.score)
+            sendTelemetry(context)
         }
 
         ConsoleLogger.rule()
@@ -406,34 +408,24 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
         return graph
     }
 
-    private fun sendTelemetry(context: AuditContext, score: Int) {
+    private fun sendTelemetry(context: AuditContext) {
         try {
-            val endpoint = telemetryEndpoint.get()
-            val url = java.net.URL(endpoint)
-            val conn = url.openConnection() as java.net.HttpURLConnection
-            conn.requestMethod = "POST"
-            conn.doOutput = true
-            conn.setRequestProperty("Content-Type", "application/json")
-            conn.connectTimeout = 2000
-            conn.readTimeout = 2000
-
-            val deps = context.dependencies.joinToString(",") { "${it.group}:${it.name}:${it.version}" }
-            val payload = """
-                {
-                    "projectHash": "${context.projectName.hashCode()}",
-                    "score": $score,
-                    "gradleVersion": "${context.gradleVersion}",
-                    "dependencies": "$deps"
-                }
-            """.trimIndent()
-
-            conn.outputStream.use { it.write(payload.toByteArray()) }
-            val responseCode = conn.responseCode
-            if (responseCode in 200..299) {
-                ConsoleLogger.info("📡", "[TELEMETRY]", "Anonymized intelligence shared with the Lighthouse community.")
+            val installationId = TelemetrySupport.getOrCreateInstallationId(
+                gradleUserHomeDir.get().asFile
+            )
+            val success = TelemetrySupport.sendTelemetry(
+                telemetryEndpoint.get(),
+                installationId,
+                pluginVersion.get(),
+                context.gradleVersion
+            )
+            if (success) {
+                ConsoleLogger.info("📡", "[TELEMETRY]", "Gradle Lighthouse: anonymous telemetry submitted.")
+            } else {
+                ConsoleLogger.info("📡", "[TELEMETRY]", "Gradle Lighthouse: telemetry unavailable; continuing without telemetry.")
             }
         } catch (_: Exception) {
-            // Silently fail telemetry to not break the build
+            ConsoleLogger.info("📡", "[TELEMETRY]", "Gradle Lighthouse: telemetry unavailable; continuing without telemetry.")
         }
     }
 }
