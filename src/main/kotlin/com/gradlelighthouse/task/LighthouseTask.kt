@@ -8,10 +8,10 @@ import com.gradlelighthouse.core.AuditIssue
 import com.gradlelighthouse.core.ConsoleLogger
 import com.gradlelighthouse.core.LighthouseCategory
 import com.gradlelighthouse.core.Severity
-import com.gradlelighthouse.core.TelemetryPayload
 import com.gradlelighthouse.reporting.HtmlReportGenerator
 import com.gradlelighthouse.reporting.SarifReportGenerator
 import com.gradlelighthouse.reporting.JunitXmlReportGenerator
+import com.gradlelighthouse.telemetry.TelemetrySupport
 import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.work.DisableCachingByDefault
@@ -86,6 +86,7 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
     @get:Internal abstract val moduleDirPath: Property<String>
     @get:Internal abstract val rootDirPath: Property<String>
     @get:Internal abstract val buildFilePath: Property<String>
+    @get:Internal abstract val gradleUserHomeDir: DirectoryProperty
 
     // =========================================================================
     // Extension configuration
@@ -98,7 +99,6 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
     @get:Input abstract val useAi: Property<Boolean>
     @get:Input abstract val enableTelemetry: Property<Boolean>
     @get:Input abstract val telemetryEndpoint: Property<String>
-    @get:Internal abstract val telemetryStorageDirPath: Property<String>
 
     @get:InputFiles
     @get:PathSensitive(PathSensitivity.RELATIVE)
@@ -275,6 +275,11 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
             ConsoleLogger.info("🧪", "[JUNIT]", "JUnit XML: ${junitFile.toURI()}")
         }
 
+        // The audit result is complete here; telemetry intentionally precedes the severity gate.
+        if (enableTelemetry.get()) {
+            sendTelemetry(context)
+        }
+
         ConsoleLogger.rule()
 
         // 5. CI/CD Build Gate
@@ -290,11 +295,6 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
                     )
                 }
             }
-        }
-
-        // Send telemetry only after the audit and any configured CI gate pass.
-        if (enableTelemetry.get()) {
-            sendTelemetry()
         }
     }
 
@@ -408,52 +408,24 @@ abstract class LighthouseTask @Inject constructor() : DefaultTask() {
         return graph
     }
 
-    private fun sendTelemetry() {
-        val endpoint = telemetryEndpoint.orNull?.trim().orEmpty()
-        if (endpoint.isBlank()) return
-
+    private fun sendTelemetry(context: AuditContext) {
         try {
-            val endpointUrl = java.net.URL(endpoint)
-            require(endpointUrl.protocol.equals("https", ignoreCase = true)) {
-                "Telemetry endpoint must use HTTPS."
-            }
-
-            // Store a random, pseudonymous identifier in Gradle User Home rather than
-            // the project directory. It is shared across this user's Gradle projects.
-            val storageDir = File(telemetryStorageDirPath.get())
-            if (!storageDir.exists() && !storageDir.mkdirs()) return
-            val idFile = File(storageDir, "installation-id")
-            val installationId = idFile.takeIf { it.isFile }
-                ?.readText()
-                ?.trim()
-                ?.takeIf { value -> runCatching { java.util.UUID.fromString(value) }.isSuccess }
-                ?: java.util.UUID.randomUUID().toString().also { idFile.writeText(it) }
-
-            val payload = TelemetryPayload.create(
-                installationId = installationId,
-                pluginVersion = pluginVersion.get(),
-                gradleVersion = gradleVersionStr.get()
+            val installationId = TelemetrySupport.getOrCreateInstallationId(
+                gradleUserHomeDir.get().asFile
             )
-
-            val connection = endpointUrl.openConnection() as java.net.HttpURLConnection
-            try {
-                connection.requestMethod = "POST"
-                connection.doOutput = true
-                connection.connectTimeout = 2000
-                connection.readTimeout = 2000
-                connection.setRequestProperty("Content-Type", "application/json")
-                connection.setRequestProperty("User-Agent", "Gradle-Lighthouse/${pluginVersion.get()}")
-                connection.outputStream.use { it.write(payload.toByteArray(Charsets.UTF_8)) }
-                val responseCode = connection.responseCode
-                if (responseCode in 200..299) {
-                    ConsoleLogger.info("📡", "[TELEMETRY]", "Opt-in usage event sent.")
-                }
-            } finally {
-                connection.disconnect()
+            val success = TelemetrySupport.sendTelemetry(
+                telemetryEndpoint.get(),
+                installationId,
+                pluginVersion.get(),
+                context.gradleVersion
+            )
+            if (success) {
+                ConsoleLogger.info("📡", "[TELEMETRY]", "Gradle Lighthouse: anonymous telemetry submitted.")
+            } else {
+                ConsoleLogger.info("📡", "[TELEMETRY]", "Gradle Lighthouse: telemetry unavailable; continuing without telemetry.")
             }
         } catch (_: Exception) {
-            // Telemetry is best-effort and must never fail or slow down the audit materially.
+            ConsoleLogger.info("📡", "[TELEMETRY]", "Gradle Lighthouse: telemetry unavailable; continuing without telemetry.")
         }
     }
-
 }

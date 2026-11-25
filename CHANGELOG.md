@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [2.4.0] - 2025-03-04
+
+### Added
+- Release readiness engineering verification suite and automated health score benchmarking.
+- Enhanced Gradle 9.x compatibility safeguards and Project Isolation task input providers.
+
+### Changed
+- Promoted plugin version to 2.4.0 for minor feature release.
+
 ## [2.3.2] - 2026-08-02
 
 ### Changed
