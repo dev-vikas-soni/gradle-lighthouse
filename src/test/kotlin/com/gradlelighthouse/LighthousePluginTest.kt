@@ -32,6 +32,7 @@ class LighthousePluginTest {
 
                 lighthouse {
                     enableDependencyHealth.set(true)
+                    enableTelemetry.set(false)
                 }
             """.trimIndent())
         }

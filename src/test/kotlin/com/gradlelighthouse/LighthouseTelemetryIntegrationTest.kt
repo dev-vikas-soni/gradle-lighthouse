@@ -171,6 +171,16 @@ class LighthouseTelemetryIntegrationTest {
 
     @Test
     fun `backend unavailability does not fail the audit`() {
+        val unavailableEndpoint = "http://127.0.0.1:65534/telemetry"
+        File(testProjectDir, "build.gradle.kts").writeText("""
+            plugins {
+                id("io.github.dev-vikas-soni.lighthouse")
+            }
+
+            lighthouse {
+                telemetryEndpoint.set("$unavailableEndpoint")
+            }
+        """.trimIndent())
         mockServer?.stop(0) // Stop server so port becomes unavailable
 
         val srcDir = File(testProjectDir, "src/main/kotlin").apply { mkdirs() }

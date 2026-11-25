@@ -27,6 +27,7 @@ class LighthouseMultiModuleTest {
 
             lighthouse {
                 minHealthScore.set(10)
+                enableTelemetry.set(false)
             }
         """.trimIndent())
 
@@ -41,6 +42,9 @@ class LighthouseMultiModuleTest {
             plugins {
                 kotlin("jvm") version "2.0.0"
                 id("io.github.dev-vikas-soni.lighthouse")
+            }
+            lighthouse {
+                enableTelemetry.set(false)
             }
             dependencies {
                 $depLines
