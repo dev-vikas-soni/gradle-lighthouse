@@ -19,7 +19,7 @@ import java.util.Properties
 class LighthousePlugin : Plugin<Project> {
 
     companion object {
-        const val VERSION = "2.4.0"
+        const val VERSION = "2.5.0"
     }
 
     override fun apply(project: Project) {

@@ -1,7 +1,7 @@
 plugins {
     id("com.google.devtools.ksp") version "1.9.22-1.0.17"
     kotlin("jvm") version "1.9.22"
-    id("io.github.dev-vikas-soni.lighthouse") version "2.4.0"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.5.0"
     // id("kotlin-kapt") removed by Lighthouse AI
 }
 

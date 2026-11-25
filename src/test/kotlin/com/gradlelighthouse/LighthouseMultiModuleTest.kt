@@ -43,6 +43,9 @@ class LighthouseMultiModuleTest {
                 kotlin("jvm") version "2.0.0"
                 id("io.github.dev-vikas-soni.lighthouse")
             }
+            repositories {
+                mavenCentral()
+            }
             lighthouse {
                 enableTelemetry.set(false)
             }

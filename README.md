@@ -25,7 +25,7 @@ Apply the plugin to a Gradle project:
 
 ```kotlin
 plugins {
-    id("io.github.dev-vikas-soni.lighthouse") version "2.4.0"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.5.0"
 }
 ```
 
@@ -65,7 +65,7 @@ Gradle Lighthouse collects anonymous telemetry upon successful completion of an 
 Each telemetry payload contains exactly four anonymous fields:
 - `event`: Always `"audit_completed"`.
 - `installationId`: A randomly generated UUID persisted in Gradle User Home (`~/.gradle/caches/gradle-lighthouse/installation-id`) and reused across invocations.
-- `pluginVersion`: The version of Gradle Lighthouse executing (e.g., `"2.4.0"`).
+- `pluginVersion`: The version of Gradle Lighthouse executing (e.g., `"2.5.0"`).
 - `gradleVersion`: The Gradle runtime version executing the build (e.g., `"9.0"`).
 
 ### What is NEVER collected

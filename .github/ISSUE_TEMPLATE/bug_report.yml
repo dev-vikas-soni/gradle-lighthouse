@@ -21,7 +21,7 @@ body:
         Please provide a minimal set of steps to reproduce the issue.
         Include a link to a sample project if possible.
       placeholder: |
-        1. Apply plugin v2.4.0
+        1. Apply plugin v2.5.0
         2. Run task './gradlew lighthouseAudit'
         3. See error...
     validations:

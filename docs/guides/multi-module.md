@@ -12,7 +12,7 @@ Apply the plugin once in the root project to enable aggregation.
 ```kotlin
 // root build.gradle.kts
 plugins {
-    id("io.github.dev-vikas-soni.lighthouse") version "2.4.0"
+    id("io.github.dev-vikas-soni.lighthouse") version "2.5.0"
 }
 
 lighthouse {

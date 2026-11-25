@@ -8,6 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 
 ---
 
+## [2.5.0] - 2026-11-25
+
+### Added
+- Anonymous audit completion telemetry system reporting `audit_completed`, `installationId`, `pluginVersion`, and `gradleVersion`.
+- Persistent anonymous installation identifier saved in `$GRADLE_USER_HOME/caches/gradle-lighthouse/installation-id`.
+- Telemetry opt-out controls via CLI property (`-PgradleLighthouseTelemetry=false`), environment variable (`GRADLE_LIGHTHOUSE_TELEMETRY=false`), and plugin DSL (`lighthouse { enableTelemetry.set(false) }`).
+- Support for enterprise custom telemetry endpoint overrides (`lighthouse { telemetryEndpoint.set(...) }`).
+
+### Fixed
+- Hardened automated integration test suite isolation to prevent test builds from issuing production telemetry requests (`d089c05`).
+- Non-blocking failure isolation ensuring network timeouts, HTTP errors, or missing connectivity never fail audit tasks.
+
+### Changed
+- Promoted plugin version to 2.5.0.
+
 ## [2.4.0] - 2025-03-04
 
 ### Added
