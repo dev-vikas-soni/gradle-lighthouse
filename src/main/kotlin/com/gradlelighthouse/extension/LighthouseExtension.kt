@@ -104,20 +104,14 @@ abstract class LighthouseExtension {
     abstract val useAi: Property<Boolean>
 
     /**
-     * Opts in to sending a minimal usage event after each successful audit.
-     *
-     * The event contains a random installation identifier, plugin version, and Gradle
-     * version only. It does not include project names or paths, dependencies, source
-     * code, findings, or health scores. The identifier is stored in the Gradle user
-     * home directory and can be reset by deleting its caches/gradle-lighthouse/installation-id file.
-     *
-     * Default: false. No telemetry is sent unless explicitly enabled.
+     * Enables anonymous audit-completion telemetry with a random installation ID,
+     * plugin version, and Gradle version. Dependency coordinates and audit findings
+     * are not sent. Default: true
      */
     abstract val enableTelemetry: Property<Boolean>
 
     /**
-     * HTTPS endpoint that receives opt-in usage events.
-     * An endpoint must be configured before events can be sent.
+     * Optional: Custom telemetry endpoint for enterprise users.
      */
     abstract val telemetryEndpoint: Property<String>
 
@@ -213,8 +207,8 @@ abstract class LighthouseExtension {
         enablePredictiveIntelligence.convention(true)
         enableTrendTracking.convention(true)
         useAi.convention(false)
-        enableTelemetry.convention(false)
-        telemetryEndpoint.convention("")
+        enableTelemetry.convention(true)
+        telemetryEndpoint.convention(com.gradlelighthouse.telemetry.TelemetrySupport.DEFAULT_ENDPOINT)
         failOnSeverity.convention("NONE")
         failOnDependencyCycle.convention(false)
         failOnLayerViolation.convention(false)

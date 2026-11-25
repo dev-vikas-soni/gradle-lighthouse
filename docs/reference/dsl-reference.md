@@ -43,7 +43,13 @@ A test-source/file ratio is not code coverage. SDK impact values are not measure
 
 ## Telemetry
 
-Do not assume telemetry is enabled or disabled based solely on this page. Before enabling any telemetry-related option, inspect the release's implementation and verify its default, destination, payload, consent flow, and opt-out behavior. The project should publish those details before presenting telemetry as privacy-first or community-sourced.
+Telemetry is enabled by default to send anonymous adoption and version analytics upon audit completion. You can opt out via `-PgradleLighthouseTelemetry=false`, environment variable `GRADLE_LIGHTHOUSE_TELEMETRY=false`, or `lighthouse { enableTelemetry.set(false) }`. The default endpoint is `https://asia-south1-gradle-lighthouse-telemetry.cloudfunctions.net/telemetry`; `telemetryEndpoint` can override it for enterprise users.
+
+The `audit_completed` JSON payload contains exactly `event`, a random `installationId`, `pluginVersion`, and `gradleVersion`. The installation ID is stored in Gradle User Home (`~/.gradle/caches/gradle-lighthouse/installation-id`) and reused across projects and Gradle invocations. Project names and paths, repositories, dependencies, scores, audit findings, and build metadata are strictly excluded.
+
+`audit_completed` means analysis and report generation completed. Telemetry is sent before the `failOnSeverity` gate, so a severity-gate failure does not suppress an otherwise completed audit event. An uncaught failure before the telemetry step does not send the event.
+
+Delivery is best-effort: exceptions, non-202 responses, and network failures do not fail the audit, and the plugin does not retry. The HTTP client uses 3-second connect and read timeouts to prevent build delays.
 
 ## Reports and baselines
 

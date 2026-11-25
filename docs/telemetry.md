@@ -1,47 +1,55 @@
 # Usage telemetry and privacy
 
-Gradle Lighthouse usage telemetry is **disabled by default**. It is sent only when a project owner explicitly sets:
-
-```kotlin
-lighthouse {
-    enableTelemetry.set(true)
-}
-```
+Gradle Lighthouse includes anonymous usage telemetry to help understand plugin adoption and Gradle version compatibility across the ecosystem.
 
 ## Event contract
 
-An audit-completed event contains only:
+An audit-completed event contains strictly four fields:
 
-- `event`: the fixed value `audit_completed`
+- `event`: the fixed value `"audit_completed"`
 - `installationId`: a randomly generated UUID persisted in the Gradle User Home directory
-- `pluginVersion`: the running Gradle Lighthouse version
-- `gradleVersion`: the running Gradle version
+- `pluginVersion`: the running Gradle Lighthouse plugin version (e.g., `"2.4.0"`)
+- `gradleVersion`: the running Gradle runtime version (e.g., `"9.0"`)
 
-The identifier is pseudonymous, not a claim of perfect anonymity. It is shared by Gradle builds using the same Gradle User Home, so it represents an opted-in installation environment rather than a person or a unique repository.
+The installation identifier is pseudonymous and represents the Gradle installation environment. It is stored under the user's Gradle User Home (`$GRADLE_USER_HOME/caches/gradle-lighthouse/installation-id`) and reused across projects and invocations.
 
-The event deliberately excludes project and module names, filesystem paths, dependency coordinates, source code, repository URLs, audit findings, health scores, and build performance measurements.
+The event strictly excludes project names, module paths, filesystem paths, dependency coordinates, source code, repository URLs, audit findings, health scores, and build metadata.
 
-## Storage and opt-out
+## Opt-out controls
 
-The identifier is stored at:
+Telemetry is enabled by default. You can disable telemetry using any of the following mechanisms:
 
-`$GRADLE_USER_HOME/caches/gradle-lighthouse/installation-id`
+1. **Gradle Command-line Property:**
+   ```bash
+   ./gradlew lighthouseAudit -PgradleLighthouseTelemetry=false
+   ```
 
-Delete this file to generate a new identifier. To disable telemetry, leave `enableTelemetry` unset (the default) or set it to `false`. No event is sent when telemetry is disabled.
+2. **Environment Variable:**
+   ```bash
+   export GRADLE_LIGHTHOUSE_TELEMETRY=false
+   ```
 
-## Endpoint
+3. **Gradle Build Script DSL:**
+   ```kotlin
+   lighthouse {
+       enableTelemetry.set(false)
+   }
+   ```
 
-No telemetry collector is bundled with the plugin. Configure an HTTPS endpoint operated by your organization or a service you trust:
+When telemetry is disabled, no network requests occur, no background threads are created, and no installation ID is generated or persisted.
+
+## Production endpoint
+
+The default production telemetry endpoint is:
+
+`https://asia-south1-gradle-lighthouse-telemetry.cloudfunctions.net/telemetry`
+
+Enterprise users running custom internal telemetry collectors can override the default endpoint in `build.gradle.kts`:
 
 ```kotlin
 lighthouse {
-    enableTelemetry.set(true)
-    telemetryEndpoint.set("https://your-telemetry.example/v1/events")
+    telemetryEndpoint.set("https://your-custom-endpoint.example/telemetry")
 }
 ```
 
-The endpoint defaults to an empty value, so opting in without configuring an endpoint sends no event. Only HTTPS endpoints are accepted. The endpoint operator is responsible for publishing its retention, access, and deletion policies. Lighthouse treats telemetry as best-effort and does not fail an audit when the endpoint is unavailable.
-
-## Interpreting counts
-
-The installation identifier supports counting distinct opted-in Gradle User Home environments and identifying repeat activity. It does not measure total downloads, all plugin users, unique people, or all repositories. Users who disable telemetry are not counted.
+Telemetry delivery is best-effort and non-blocking: network failures or server errors never affect task outcomes or build execution.

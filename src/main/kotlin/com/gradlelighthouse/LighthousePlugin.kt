@@ -120,6 +120,9 @@ class LighthousePlugin : Plugin<Project> {
         task.moduleDirPath.set(project.projectDir.absolutePath)
         task.rootDirPath.set(project.rootDir.absolutePath)
         task.buildFilePath.set(project.buildFile.absolutePath)
+        task.gradleUserHomeDir.set(
+            project.layout.dir(project.provider { project.gradle.gradleUserHomeDir })
+        )
         task.gradleVersionStr.set(project.gradle.gradleVersion)
         task.pluginVersion.set(VERSION)
 
@@ -190,9 +193,20 @@ class LighthousePlugin : Plugin<Project> {
         task.enableSarif.set(ext.enableSarifReport)
         task.enableJunitXml.set(ext.enableJunitXmlReport)
         task.useAi.set(ext.useAi)
-        task.enableTelemetry.set(ext.enableTelemetry)
+        val propVal = project.findProperty("gradleLighthouseTelemetry")?.toString()
+        val envVal = System.getenv("GRADLE_LIGHTHOUSE_TELEMETRY")
+        val cliOrEnvOptOut = when {
+            propVal?.equals("false", ignoreCase = true) == true -> false
+            propVal?.equals("true", ignoreCase = true) == true -> true
+            envVal?.equals("false", ignoreCase = true) == true -> false
+            envVal?.equals("true", ignoreCase = true) == true -> true
+            else -> null
+        }
+
+        task.enableTelemetry.set(project.provider {
+            cliOrEnvOptOut ?: ext.enableTelemetry.get()
+        })
         task.telemetryEndpoint.set(ext.telemetryEndpoint)
-        task.telemetryStorageDirPath.set(project.gradle.gradleUserHomeDir.resolve("caches/gradle-lighthouse").absolutePath)
         task.reportOutputDir.set(project.layout.buildDirectory.dir("reports/lighthouse"))
 
         // New Features
